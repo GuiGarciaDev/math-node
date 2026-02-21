@@ -1,0 +1,163 @@
+/* ─── MathFlow Global Styles ──────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+/* ─── Reset & Base ─────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  background: #0f1117;
+  color: #d4d4d4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.3);
+}
+
+/* ─── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #262830;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* ─── React Flow Overrides ────────────────────────────────── */
+.react-flow {
+  background: #0f1117 !important;
+}
+
+.react-flow__node {
+  cursor: grab !important;
+}
+
+.react-flow__node.selected,
+.react-flow__node:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.react-flow__edge-path {
+  stroke: #8b5cf680 !important;
+  stroke-width: 2 !important;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #8b5cf6 !important;
+  stroke-width: 2.5 !important;
+}
+
+.react-flow__connection-line {
+  stroke: #8b5cf6 !important;
+  stroke-dasharray: 5 5 !important;
+}
+
+.react-flow__handle {
+  cursor: crosshair !important;
+  transition: transform 0.15s ease !important;
+}
+
+.react-flow__handle:hover {
+  transform: scale(1.25) !important;
+}
+
+.react-flow__minimap {
+  border-radius: 8px !important;
+  border: 1px solid #262830 !important;
+  overflow: hidden !important;
+}
+
+.react-flow__controls {
+  display: none !important;
+}
+
+.react-flow__background {
+  opacity: 1 !important;
+}
+
+/* ─── Animations ───────────────────────────────────────────── */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.wire-animated {
+  stroke-dasharray: 4 4;
+  animation: dash 1s linear infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ─── Node Input Focus ─────────────────────────────────────── */
+.node-input:focus {
+  border-color: rgba(139, 92, 246, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* ─── Drag Preview ─────────────────────────────────────────── */
+[draggable="true"] {
+  -webkit-user-drag: element;
+}
+
+/* ─── Attribution hide ─────────────────────────────────────── */
+.react-flow__panel.bottom.right {
+  display: none !important;
+}
