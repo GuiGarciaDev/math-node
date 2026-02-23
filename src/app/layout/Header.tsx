@@ -9,18 +9,25 @@ export const Header: React.FC = React.memo(() => {
   const computeMode = useFlowStore((s) => s.computeMode);
   const setComputeMode = useFlowStore((s) => s.setComputeMode);
   const isRunning = useFlowStore((s) => s.isRunning);
+  const theme = useFlowStore((s) => s.theme);
+  const toggleTheme = useFlowStore((s) => s.toggleTheme);
+  const showLanding = useFlowStore((s) => s.showLanding);
 
   const toggleAutoRun = useCallback(() => {
     setExecutionMode(executionMode === "auto" ? "manual" : "auto");
   }, [executionMode, setExecutionMode]);
 
+  const isDark = theme === "dark";
+
   return (
     <header
       style={{
         height: 56,
-        background: "rgba(17, 19, 26, 0.8)",
+        background: isDark
+          ? "rgba(17, 19, 26, 0.8)"
+          : "rgba(255, 255, 255, 0.85)",
         backdropFilter: "blur(16px)",
-        borderBottom: "1px solid #262830",
+        borderBottom: "1px solid var(--border)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -28,6 +35,7 @@ export const Header: React.FC = React.memo(() => {
         position: "relative",
         flexShrink: 0,
         zIndex: 50,
+        transition: "background 0.3s ease",
       }}
     >
       {/* Top glow line */}
@@ -45,13 +53,19 @@ export const Header: React.FC = React.memo(() => {
 
       {/* Left section */}
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        {/* Logo */}
-        <div
+        {/* Logo — clickable to return to landing */}
+        <button
+          onClick={showLanding}
+          title="Return to landing page"
           style={{
             display: "flex",
             alignItems: "center",
             gap: 10,
             marginRight: 16,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
           }}
         >
           <div
@@ -75,15 +89,15 @@ export const Header: React.FC = React.memo(() => {
               fontWeight: 600,
               fontSize: 13,
               letterSpacing: "-0.02em",
-              color: "#f5f5f5",
+              color: "var(--text-primary)",
             }}
           >
             MATHFLOW
           </span>
-        </div>
+        </button>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 16, background: "#262830" }} />
+        <div style={{ width: 1, height: 16, background: "var(--border)" }} />
 
         {/* Run Button */}
         <button
@@ -133,7 +147,7 @@ export const Header: React.FC = React.memo(() => {
             display: "flex",
             alignItems: "center",
             gap: 8,
-            color: "#9ca3af",
+            color: "var(--text-secondary)",
             background: "none",
             border: "none",
             padding: "6px 8px",
@@ -145,11 +159,14 @@ export const Header: React.FC = React.memo(() => {
             fontFamily: "'Inter', sans-serif",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "#e5e5e5";
-            (e.currentTarget as HTMLElement).style.background = "#1c1e26";
+            (e.currentTarget as HTMLElement).style.color =
+              "var(--text-primary)";
+            (e.currentTarget as HTMLElement).style.background =
+              "var(--bg-tertiary)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "#9ca3af";
+            (e.currentTarget as HTMLElement).style.color =
+              "var(--text-secondary)";
             (e.currentTarget as HTMLElement).style.background = "none";
           }}
         >
@@ -163,7 +180,7 @@ export const Header: React.FC = React.memo(() => {
             display: "flex",
             alignItems: "center",
             gap: 6,
-            color: executionMode === "auto" ? "#10b981" : "#6b7280",
+            color: executionMode === "auto" ? "#10b981" : "var(--text-muted)",
             background:
               executionMode === "auto" ? "rgba(16, 185, 129, 0.1)" : "none",
             border:
@@ -179,7 +196,7 @@ export const Header: React.FC = React.memo(() => {
             fontFamily: "'Inter', sans-serif",
           }}
         >
-          {executionMode === "auto" ? "⚡ Auto" : "⚡ Auto"}
+          ⚡ Auto
         </button>
       </div>
 
@@ -189,10 +206,10 @@ export const Header: React.FC = React.memo(() => {
         <div
           style={{
             display: "flex",
-            background: "#1c1e26",
+            background: "var(--bg-tertiary)",
             borderRadius: 8,
             padding: 2,
-            border: "1px solid #262830",
+            border: "1px solid var(--border)",
           }}
         >
           <button
@@ -205,12 +222,18 @@ export const Header: React.FC = React.memo(() => {
               cursor: "pointer",
               border: "none",
               fontFamily: "'Inter', sans-serif",
-              background: computeMode === "numeric" ? "#2d303b" : "transparent",
-              color: computeMode === "numeric" ? "#e5e5e5" : "#6b7280",
-              boxShadow:
+              background:
                 computeMode === "numeric"
-                  ? "0 1px 2px rgba(0,0,0,0.2)"
-                  : "none",
+                  ? isDark
+                    ? "#2d303b"
+                    : "#ffffff"
+                  : "transparent",
+              color:
+                computeMode === "numeric"
+                  ? "var(--text-primary)"
+                  : "var(--text-muted)",
+              boxShadow:
+                computeMode === "numeric" ? "0 1px 2px var(--shadow)" : "none",
               transition: "all 0.15s",
             }}
           >
@@ -227,18 +250,53 @@ export const Header: React.FC = React.memo(() => {
               border: "none",
               fontFamily: "'Inter', sans-serif",
               background:
-                computeMode === "symbolic" ? "#2d303b" : "transparent",
-              color: computeMode === "symbolic" ? "#e5e5e5" : "#6b7280",
-              boxShadow:
                 computeMode === "symbolic"
-                  ? "0 1px 2px rgba(0,0,0,0.2)"
-                  : "none",
+                  ? isDark
+                    ? "#2d303b"
+                    : "#ffffff"
+                  : "transparent",
+              color:
+                computeMode === "symbolic"
+                  ? "var(--text-primary)"
+                  : "var(--text-muted)",
+              boxShadow:
+                computeMode === "symbolic" ? "0 1px 2px var(--shadow)" : "none",
               transition: "all 0.15s",
             }}
           >
             Symbolic
           </button>
         </div>
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            background: "var(--bg-tertiary)",
+            border: "1px solid var(--border)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 16,
+            transition: "all 0.2s",
+            color: "var(--text-secondary)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "var(--accent)";
+            e.currentTarget.style.boxShadow = "0 0 8px var(--accent-glow)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        >
+          {isDark ? "☀" : "🌙"}
+        </button>
       </div>
     </header>
   );

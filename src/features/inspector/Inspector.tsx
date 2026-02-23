@@ -22,13 +22,14 @@ export const Inspector: React.FC = React.memo(() => {
       <aside
         style={{
           width: 288,
-          background: "rgba(17, 19, 26, 0.95)",
+          height: "100%",
+          background: "var(--bg-secondary)",
           backdropFilter: "blur(12px)",
-          borderLeft: "1px solid #262830",
+          borderLeft: "1px solid var(--border)",
           display: "flex",
           flexDirection: "column",
           flexShrink: 0,
-          boxShadow: "-10px 0 30px rgba(0,0,0,0.5)",
+          boxShadow: "-10px 0 30px var(--shadow)",
         }}
       >
         <div
@@ -85,13 +86,14 @@ export const Inspector: React.FC = React.memo(() => {
     <aside
       style={{
         width: 288,
-        background: "rgba(17, 19, 26, 0.95)",
+        height: "100%",
+        background: "var(--bg-secondary)",
         backdropFilter: "blur(12px)",
-        borderLeft: "1px solid #262830",
+        borderLeft: "1px solid var(--border)",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
-        boxShadow: "-10px 0 30px rgba(0,0,0,0.5)",
+        boxShadow: "-10px 0 30px var(--shadow)",
       }}
     >
       {/* Header */}

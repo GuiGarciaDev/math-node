@@ -3,6 +3,7 @@
 // No useEffect-driven computation — all updates are event-driven.
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import {
   applyNodeChanges,
   applyEdgeChanges,
@@ -178,7 +179,9 @@ interface FlowState {
   isRunning: boolean;
   computeMode: "numeric" | "symbolic";
   consoleOpen: boolean;
+  inspectorOpen: boolean;
   appStarted: boolean;
+  theme: "dark" | "light";
 
   // React Flow handlers
   onNodesChange: (changes: NodeChange<MathNode>[]) => void;
@@ -199,6 +202,9 @@ interface FlowState {
   clearConsole: () => void;
   setAppStarted: (started: boolean) => void;
   toggleConsole: () => void;
+  toggleInspector: () => void;
+  toggleTheme: () => void;
+  showLanding: () => void;
 }
 
 // ─── Default scene ────────────────────────────────────────
@@ -291,216 +297,249 @@ const defaultEdges: MathEdge[] = [
 
 // ─── Create Store ─────────────────────────────────────────
 
-export const useFlowStore = create<FlowState>((set, get) => ({
-  // Initial data
-  nodes: defaultNodes,
-  edges: defaultEdges,
-  computedValues: new Map(),
+export const useFlowStore = create<FlowState>()(
+  persist(
+    (set, get) => ({
+      // Initial data
+      nodes: defaultNodes,
+      edges: defaultEdges,
+      computedValues: new Map(),
 
-  // UI State
-  executionMode: "manual",
-  selectedNodeId: null,
-  consoleLogs: [],
-  isRunning: false,
-  computeMode: "numeric",
-  consoleOpen: true,
-  appStarted: false,
+      // UI State
+      executionMode: "manual",
+      selectedNodeId: null,
+      consoleLogs: [],
+      isRunning: false,
+      computeMode: "numeric",
+      consoleOpen: true,
+      inspectorOpen: true,
+      appStarted: false,
+      theme: "dark" as const,
 
-  // ─── React Flow Handlers ────────────────────────────────
-  onNodesChange: (changes) => {
-    set({
-      nodes: applyNodeChanges(changes, get().nodes),
-    });
-  },
+      // ─── React Flow Handlers ────────────────────────────────
+      onNodesChange: (changes) => {
+        set({
+          nodes: applyNodeChanges(changes, get().nodes),
+        });
+      },
 
-  onEdgesChange: (changes) => {
-    set({
-      edges: applyEdgeChanges(changes, get().edges),
-    });
-  },
+      onEdgesChange: (changes) => {
+        set({
+          edges: applyEdgeChanges(changes, get().edges),
+        });
+      },
 
-  onConnect: (connection) => {
-    const { nodes, edges, executionMode } = get();
-    const validation = validateConnection(connection, nodes, edges);
+      onConnect: (connection) => {
+        const { nodes, edges, executionMode } = get();
+        const validation = validateConnection(connection, nodes, edges);
 
-    if (!validation.valid) {
-      set({
-        consoleLogs: [
-          ...get().consoleLogs,
-          {
-            id: `log_${Date.now()}`,
-            timestamp: Date.now(),
-            level: "warn",
-            message: `Connection rejected: ${validation.reason}`,
-          },
-        ],
-      });
-      return;
-    }
+        if (!validation.valid) {
+          set({
+            consoleLogs: [
+              ...get().consoleLogs,
+              {
+                id: `log_${Date.now()}`,
+                timestamp: Date.now(),
+                level: "warn",
+                message: `Connection rejected: ${validation.reason}`,
+              },
+            ],
+          });
+          return;
+        }
 
-    const newEdge: MathEdge = {
-      id: `e_${connection.source}_${connection.target}_${Date.now()}`,
-      source: connection.source!,
-      target: connection.target!,
-      sourceHandle: connection.sourceHandle,
-      targetHandle: connection.targetHandle,
-    };
+        const newEdge: MathEdge = {
+          id: `e_${connection.source}_${connection.target}_${Date.now()}`,
+          source: connection.source!,
+          target: connection.target!,
+          sourceHandle: connection.sourceHandle,
+          targetHandle: connection.targetHandle,
+        };
 
-    // Mark target and downstream nodes as dirty
-    const newNodes = nodes.map((n) =>
-      n.id === connection.target
-        ? { ...n, data: { ...n.data, dirty: true } }
-        : n,
-    );
+        // Mark target and downstream nodes as dirty
+        const newNodes = nodes.map((n) =>
+          n.id === connection.target
+            ? { ...n, data: { ...n.data, dirty: true } }
+            : n,
+        );
 
-    set({ edges: [...edges, newEdge], nodes: newNodes });
+        set({ edges: [...edges, newEdge], nodes: newNodes });
 
-    // Auto-run if in auto mode
-    if (executionMode === "auto") {
-      setTimeout(() => get().runPipeline(), 0);
-    }
-  },
+        // Auto-run if in auto mode
+        if (executionMode === "auto") {
+          setTimeout(() => get().runPipeline(), 0);
+        }
+      },
 
-  // ─── Actions ────────────────────────────────────────────
-  addNode: (type, position) => {
-    const newNode: MathNode = {
-      id: generateNodeId(),
-      type,
-      position,
-      data: createNodeData(type),
-    };
-    set({ nodes: [...get().nodes, newNode] });
-  },
+      // ─── Actions ────────────────────────────────────────────
+      addNode: (type, position) => {
+        const newNode: MathNode = {
+          id: generateNodeId(),
+          type,
+          position,
+          data: createNodeData(type),
+        };
+        set({ nodes: [...get().nodes, newNode] });
+      },
 
-  removeNode: (nodeId) => {
-    set({
-      nodes: get().nodes.filter((n) => n.id !== nodeId),
-      edges: get().edges.filter(
-        (e) => e.source !== nodeId && e.target !== nodeId,
-      ),
-      selectedNodeId:
-        get().selectedNodeId === nodeId ? null : get().selectedNodeId,
-    });
-  },
+      removeNode: (nodeId) => {
+        set({
+          nodes: get().nodes.filter((n) => n.id !== nodeId),
+          edges: get().edges.filter(
+            (e) => e.source !== nodeId && e.target !== nodeId,
+          ),
+          selectedNodeId:
+            get().selectedNodeId === nodeId ? null : get().selectedNodeId,
+        });
+      },
 
-  updateNodeParam: (nodeId, key, value) => {
-    const { nodes, executionMode } = get();
-    const newNodes = nodes.map((n) =>
-      n.id === nodeId
-        ? {
-            ...n,
-            data: {
-              ...n.data,
-              params: { ...n.data.params, [key]: value },
-              dirty: true,
-            },
+      updateNodeParam: (nodeId, key, value) => {
+        const { nodes, executionMode } = get();
+        const newNodes = nodes.map((n) =>
+          n.id === nodeId
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  params: { ...n.data.params, [key]: value },
+                  dirty: true,
+                },
+              }
+            : n,
+        );
+        set({ nodes: newNodes });
+
+        // Auto-run if in auto mode
+        if (executionMode === "auto") {
+          setTimeout(() => get().runPipeline(), 0);
+        }
+      },
+
+      selectNode: (nodeId) => {
+        set({ selectedNodeId: nodeId });
+      },
+
+      setExecutionMode: (mode) => {
+        set({ executionMode: mode });
+      },
+
+      setComputeMode: (mode) => {
+        set({ computeMode: mode });
+      },
+
+      // ─── Execution ──────────────────────────────────────────
+      runPipeline: () => {
+        const { nodes, edges } = get();
+        set({ isRunning: true });
+
+        // Mark all nodes as running
+        const runningNodes = nodes.map((n) => ({
+          ...n,
+          data: { ...n.data, status: "running" as const },
+        }));
+        set({ nodes: runningNodes });
+
+        // Execute (using requestAnimationFrame for visual feedback)
+        requestAnimationFrame(() => {
+          const result = runPipeline(nodes, edges);
+
+          // Update node statuses and clear dirty flags
+          const updatedNodes = get().nodes.map((n) => {
+            const computed = result.computedValues.get(n.id);
+            return {
+              ...n,
+              data: {
+                ...n.data,
+                dirty: false,
+                status: computed?.error
+                  ? ("error" as const)
+                  : ("success" as const),
+                computeTimeMs: result.totalTimeMs,
+              },
+            };
+          });
+
+          set({
+            nodes: updatedNodes,
+            computedValues: result.computedValues,
+            consoleLogs: [...get().consoleLogs, ...result.logs],
+            isRunning: false,
+          });
+        });
+      },
+
+      stepExecute: () => {
+        const { nodes, edges, computedValues } = get();
+
+        // Find first dirty node in topo order
+        const dirtyNode = nodes.find((n) => n.data.dirty);
+        if (!dirtyNode) {
+          set({
+            consoleLogs: [
+              ...get().consoleLogs,
+              {
+                id: `log_${Date.now()}`,
+                timestamp: Date.now(),
+                level: "info",
+                message: "All nodes are up to date.",
+              },
+            ],
+          });
+          return;
+        }
+
+        const result = runSingleNode(
+          dirtyNode.id,
+          nodes,
+          edges,
+          computedValues,
+        );
+
+        const updatedNodes = nodes.map((n) => {
+          if (n.id === dirtyNode.id) {
+            const computed = result.computedValues.get(n.id);
+            return {
+              ...n,
+              data: {
+                ...n.data,
+                dirty: false,
+                status: computed?.error
+                  ? ("error" as const)
+                  : ("success" as const),
+              },
+            };
           }
-        : n,
-    );
-    set({ nodes: newNodes });
+          return n;
+        });
 
-    // Auto-run if in auto mode
-    if (executionMode === "auto") {
-      setTimeout(() => get().runPipeline(), 0);
-    }
-  },
+        set({
+          nodes: updatedNodes,
+          computedValues: result.computedValues,
+          consoleLogs: [...get().consoleLogs, ...result.logs],
+        });
+      },
 
-  selectNode: (nodeId) => {
-    set({ selectedNodeId: nodeId });
-  },
-
-  setExecutionMode: (mode) => {
-    set({ executionMode: mode });
-  },
-
-  setComputeMode: (mode) => {
-    set({ computeMode: mode });
-  },
-
-  // ─── Execution ──────────────────────────────────────────
-  runPipeline: () => {
-    const { nodes, edges } = get();
-    set({ isRunning: true });
-
-    // Mark all nodes as running
-    const runningNodes = nodes.map((n) => ({
-      ...n,
-      data: { ...n.data, status: "running" as const },
-    }));
-    set({ nodes: runningNodes });
-
-    // Execute (using requestAnimationFrame for visual feedback)
-    requestAnimationFrame(() => {
-      const result = runPipeline(nodes, edges);
-
-      // Update node statuses and clear dirty flags
-      const updatedNodes = get().nodes.map((n) => {
-        const computed = result.computedValues.get(n.id);
-        return {
-          ...n,
-          data: {
-            ...n.data,
-            dirty: false,
-            status: computed?.error ? ("error" as const) : ("success" as const),
-            computeTimeMs: result.totalTimeMs,
-          },
-        };
-      });
-
-      set({
-        nodes: updatedNodes,
-        computedValues: result.computedValues,
-        consoleLogs: [...get().consoleLogs, ...result.logs],
-        isRunning: false,
-      });
-    });
-  },
-
-  stepExecute: () => {
-    const { nodes, edges, computedValues } = get();
-
-    // Find first dirty node in topo order
-    const dirtyNode = nodes.find((n) => n.data.dirty);
-    if (!dirtyNode) {
-      set({
-        consoleLogs: [
-          ...get().consoleLogs,
-          {
-            id: `log_${Date.now()}`,
-            timestamp: Date.now(),
-            level: "info",
-            message: "All nodes are up to date.",
-          },
-        ],
-      });
-      return;
-    }
-
-    const result = runSingleNode(dirtyNode.id, nodes, edges, computedValues);
-
-    const updatedNodes = nodes.map((n) => {
-      if (n.id === dirtyNode.id) {
-        const computed = result.computedValues.get(n.id);
-        return {
-          ...n,
-          data: {
-            ...n.data,
-            dirty: false,
-            status: computed?.error ? ("error" as const) : ("success" as const),
-          },
-        };
-      }
-      return n;
-    });
-
-    set({
-      nodes: updatedNodes,
-      computedValues: result.computedValues,
-      consoleLogs: [...get().consoleLogs, ...result.logs],
-    });
-  },
-
-  clearConsole: () => set({ consoleLogs: [] }),
-  setAppStarted: (started) => set({ appStarted: started }),
-  toggleConsole: () => set({ consoleOpen: !get().consoleOpen }),
-}));
+      clearConsole: () => set({ consoleLogs: [] }),
+      setAppStarted: (started) => set({ appStarted: started }),
+      toggleConsole: () => set({ consoleOpen: !get().consoleOpen }),
+      toggleInspector: () => set({ inspectorOpen: !get().inspectorOpen }),
+      toggleTheme: () => {
+        const next = get().theme === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        set({ theme: next });
+      },
+      showLanding: () => set({ appStarted: false }),
+    }),
+    {
+      name: "mathflow-prefs",
+      partialize: (state) => ({
+        appStarted: state.appStarted,
+        consoleOpen: state.consoleOpen,
+        inspectorOpen: state.inspectorOpen,
+        theme: state.theme,
+        computeMode: state.computeMode,
+        executionMode: state.executionMode,
+      }),
+    },
+  ),
+);
