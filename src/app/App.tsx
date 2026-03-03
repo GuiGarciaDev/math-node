@@ -1,23 +1,24 @@
-import React, { useEffect } from "react";
-import { ReactFlowProvider } from "@xyflow/react";
-import { Header } from "./layout/Header";
-import { LandingPage } from "./layout/LandingPage";
-import { Sidebar } from "../features/sidebar/Sidebar";
-import { FlowCanvas } from "../features/flow/FlowCanvas";
-import { Inspector } from "../features/inspector/Inspector";
-import { Console } from "../features/console/Console";
-import { useFlowStore } from "../features/flow/flowStore";
+import React, { useEffect } from "react"
+import { ReactFlowProvider } from "@xyflow/react"
+import { Header } from "./layout/Header"
+import { LandingPage } from "./layout/LandingPage"
+import { Sidebar } from "../features/sidebar/Sidebar"
+import { FlowCanvas } from "../features/flow/FlowCanvas"
+import { GraphModal } from "../features/flow/GraphModal"
+import { Inspector } from "../features/inspector/Inspector"
+import { Console } from "../features/console/Console"
+import { useFlowStore } from "../features/flow/flowStore"
 
 const App: React.FC = () => {
-  const appStarted = useFlowStore((s) => s.appStarted);
-  const inspectorOpen = useFlowStore((s) => s.inspectorOpen);
-  const toggleInspector = useFlowStore((s) => s.toggleInspector);
-  const theme = useFlowStore((s) => s.theme);
+  const appStarted = useFlowStore((s) => s.appStarted)
+  const inspectorOpen = useFlowStore((s) => s.inspectorOpen)
+  const toggleInspector = useFlowStore((s) => s.toggleInspector)
+  const theme = useFlowStore((s) => s.theme)
 
   // Sync theme attribute on mount and changes
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-  }, [theme]);
+    document.documentElement.setAttribute("data-theme", theme)
+  }, [theme])
 
   return (
     <>
@@ -92,10 +93,10 @@ const App: React.FC = () => {
                   padding: 0,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "var(--text-primary)";
+                  e.currentTarget.style.color = "var(--text-primary)"
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "var(--text-muted)";
+                  e.currentTarget.style.color = "var(--text-muted)"
                 }}
               >
                 {inspectorOpen ? "▶" : "◀"}
@@ -126,8 +127,10 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
-    </>
-  );
-};
 
-export default App;
+      <GraphModal />
+    </>
+  )
+}
+
+export default App

@@ -1,30 +1,30 @@
-import React, { useCallback } from "react";
-import { useFlowStore } from "../../features/flow/flowStore";
+import React, { useCallback } from "react"
+import { useFlowStore } from "../../features/flow/flowStore"
 
 export const Header: React.FC = React.memo(() => {
-  const runPipeline = useFlowStore((s) => s.runPipeline);
-  const stepExecute = useFlowStore((s) => s.stepExecute);
-  const executionMode = useFlowStore((s) => s.executionMode);
-  const setExecutionMode = useFlowStore((s) => s.setExecutionMode);
-  const computeMode = useFlowStore((s) => s.computeMode);
-  const setComputeMode = useFlowStore((s) => s.setComputeMode);
-  const isRunning = useFlowStore((s) => s.isRunning);
-  const theme = useFlowStore((s) => s.theme);
-  const toggleTheme = useFlowStore((s) => s.toggleTheme);
-  const showLanding = useFlowStore((s) => s.showLanding);
+  const runPipeline = useFlowStore((s) => s.runPipeline)
+  const stepExecute = useFlowStore((s) => s.stepExecute)
+  const executionMode = useFlowStore((s) => s.executionMode)
+  const setExecutionMode = useFlowStore((s) => s.setExecutionMode)
+  const computeMode = useFlowStore((s) => s.computeMode)
+  const setComputeMode = useFlowStore((s) => s.setComputeMode)
+  const isRunning = useFlowStore((s) => s.isRunning)
+  const theme = useFlowStore((s) => s.theme)
+  const toggleTheme = useFlowStore((s) => s.toggleTheme)
+  const showLanding = useFlowStore((s) => s.showLanding)
 
   const toggleAutoRun = useCallback(() => {
-    setExecutionMode(executionMode === "auto" ? "manual" : "auto");
-  }, [executionMode, setExecutionMode]);
+    setExecutionMode(executionMode === "auto" ? "manual" : "auto")
+  }, [executionMode, setExecutionMode])
 
-  const isDark = theme === "dark";
+  const isDark = theme === "dark"
 
   return (
     <header
       style={{
         height: 56,
         background: isDark
-          ? "rgba(17, 19, 26, 0.8)"
+          ? "rgba(37, 37, 38, 0.86)"
           : "rgba(255, 255, 255, 0.85)",
         backdropFilter: "blur(16px)",
         borderBottom: "1px solid var(--border)",
@@ -47,7 +47,7 @@ export const Header: React.FC = React.memo(() => {
           width: "100%",
           height: 1,
           background:
-            "linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.2), transparent)",
+            "linear-gradient(90deg, transparent, var(--accent-glow), transparent)",
         }}
       />
 
@@ -73,13 +73,14 @@ export const Header: React.FC = React.memo(() => {
               width: 28,
               height: 28,
               borderRadius: 6,
-              background: "linear-gradient(135deg, #7c3aed, #3b82f6)",
+              background:
+                "linear-gradient(135deg, var(--accent), var(--category-input))",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#fff",
+              color: "var(--text-primary)",
               fontSize: 14,
-              boxShadow: "0 0 15px rgba(139, 92, 246, 0.3)",
+              boxShadow: "0 0 15px var(--accent-glow)",
             }}
           >
             Σ
@@ -108,33 +109,35 @@ export const Header: React.FC = React.memo(() => {
             alignItems: "center",
             gap: 8,
             background: isRunning
-              ? "rgba(139, 92, 246, 0.2)"
-              : "rgba(139, 92, 246, 0.1)",
-            color: "#a78bfa",
-            border: "1px solid rgba(139, 92, 246, 0.2)",
+              ? "rgba(162, 89, 255, 0.2)"
+              : "rgba(162, 89, 255, 0.12)",
+            color: "var(--accent)",
+            border: "1px solid rgba(162, 89, 255, 0.24)",
             padding: "6px 12px",
             borderRadius: 8,
             fontSize: 12,
             fontWeight: 500,
             cursor: isRunning ? "wait" : "pointer",
             transition: "all 0.2s",
-            boxShadow: "0 0 10px rgba(139, 92, 246, 0.1)",
+            boxShadow: "0 0 10px var(--accent-glow)",
             fontFamily: "'Inter', sans-serif",
           }}
           onMouseEnter={(e) => {
             if (!isRunning) {
-              (e.currentTarget as HTMLElement).style.background = "#7c3aed";
-              (e.currentTarget as HTMLElement).style.color = "#fff";
-              (e.currentTarget as HTMLElement).style.boxShadow =
-                "0 0 20px rgba(139, 92, 246, 0.4)";
+              ;(e.currentTarget as HTMLElement).style.background =
+                "var(--accent)"
+              ;(e.currentTarget as HTMLElement).style.color =
+                "var(--text-primary)"
+              ;(e.currentTarget as HTMLElement).style.boxShadow =
+                "0 0 20px var(--accent-glow)"
             }
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background =
-              "rgba(139, 92, 246, 0.1)";
-            (e.currentTarget as HTMLElement).style.color = "#a78bfa";
-            (e.currentTarget as HTMLElement).style.boxShadow =
-              "0 0 10px rgba(139, 92, 246, 0.1)";
+            ;(e.currentTarget as HTMLElement).style.background =
+              "rgba(162, 89, 255, 0.12)"
+            ;(e.currentTarget as HTMLElement).style.color = "var(--accent)"
+            ;(e.currentTarget as HTMLElement).style.boxShadow =
+              "0 0 10px var(--accent-glow)"
           }}
         >
           ▶ {isRunning ? "Running..." : "Run Pipeline"}
@@ -159,15 +162,15 @@ export const Header: React.FC = React.memo(() => {
             fontFamily: "'Inter', sans-serif",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.color =
-              "var(--text-primary)";
-            (e.currentTarget as HTMLElement).style.background =
-              "var(--bg-tertiary)";
+            ;(e.currentTarget as HTMLElement).style.color =
+              "var(--text-primary)"
+            ;(e.currentTarget as HTMLElement).style.background =
+              "var(--bg-tertiary)"
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color =
-              "var(--text-secondary)";
-            (e.currentTarget as HTMLElement).style.background = "none";
+            ;(e.currentTarget as HTMLElement).style.color =
+              "var(--text-secondary)"
+            ;(e.currentTarget as HTMLElement).style.background = "none"
           }}
         >
           ⏭ Step
@@ -180,12 +183,15 @@ export const Header: React.FC = React.memo(() => {
             display: "flex",
             alignItems: "center",
             gap: 6,
-            color: executionMode === "auto" ? "#10b981" : "var(--text-muted)",
+            color:
+              executionMode === "auto"
+                ? "var(--status-success)"
+                : "var(--text-muted)",
             background:
-              executionMode === "auto" ? "rgba(16, 185, 129, 0.1)" : "none",
+              executionMode === "auto" ? "rgba(20, 174, 92, 0.12)" : "none",
             border:
               executionMode === "auto"
-                ? "1px solid rgba(16, 185, 129, 0.2)"
+                ? "1px solid rgba(20, 174, 92, 0.25)"
                 : "none",
             padding: "6px 8px",
             borderRadius: 8,
@@ -225,7 +231,7 @@ export const Header: React.FC = React.memo(() => {
               background:
                 computeMode === "numeric"
                   ? isDark
-                    ? "#2d303b"
+                    ? "var(--bg-input)"
                     : "#ffffff"
                   : "transparent",
               color:
@@ -252,7 +258,7 @@ export const Header: React.FC = React.memo(() => {
               background:
                 computeMode === "symbolic"
                   ? isDark
-                    ? "#2d303b"
+                    ? "var(--bg-input)"
                     : "#ffffff"
                   : "transparent",
               color:
@@ -287,19 +293,19 @@ export const Header: React.FC = React.memo(() => {
             color: "var(--text-secondary)",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--accent)";
-            e.currentTarget.style.boxShadow = "0 0 8px var(--accent-glow)";
+            e.currentTarget.style.borderColor = "var(--accent)"
+            e.currentTarget.style.boxShadow = "0 0 8px var(--accent-glow)"
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
-            e.currentTarget.style.boxShadow = "none";
+            e.currentTarget.style.borderColor = "var(--border)"
+            e.currentTarget.style.boxShadow = "none"
           }}
         >
           {isDark ? "☀" : "🌙"}
         </button>
       </div>
     </header>
-  );
-});
+  )
+})
 
-Header.displayName = "Header";
+Header.displayName = "Header"

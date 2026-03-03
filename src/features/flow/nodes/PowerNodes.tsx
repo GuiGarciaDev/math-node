@@ -1,13 +1,13 @@
-import React from "react";
-import type { NodeProps } from "@xyflow/react";
-import type { MathNodeData } from "../../../types";
-import { NodeShell } from "./NodeShell";
-import { useFlowStore } from "../flowStore";
+import React from "react"
+import type { NodeProps } from "@xyflow/react"
+import type { MathNodeData } from "../../../types"
+import { NodeShell } from "./NodeShell"
+import { useFlowStore } from "../flowStore"
 
 export const PowerNode: React.FC<NodeProps> = React.memo(
   ({ id, data, selected }) => {
-    const nodeData = data as unknown as MathNodeData;
-    const computed = useFlowStore((s) => s.computedValues.get(id));
+    const nodeData = data as unknown as MathNodeData
+    const computed = useFlowStore((s) => s.computedValues.get(id))
 
     const displayValue =
       computed?.value !== undefined && !computed.error
@@ -16,7 +16,7 @@ export const PowerNode: React.FC<NodeProps> = React.memo(
             ? computed.value.toString()
             : (computed.value as number).toFixed(4)
           : String(computed.value)
-        : "base ^ exp";
+        : "base ^ exp"
 
     return (
       <NodeShell data={nodeData} selected={selected}>
@@ -26,33 +26,33 @@ export const PowerNode: React.FC<NodeProps> = React.memo(
             fontSize: 13,
             fontFamily: "'JetBrains Mono', monospace",
             color: computed?.error
-              ? "#ef4444"
+              ? "var(--status-error)"
               : computed?.value !== undefined
-                ? "#e5e5e5"
-                : "#6b7280",
+                ? "var(--text-primary)"
+                : "var(--text-muted)",
             padding: "8px 0",
           }}
         >
           {computed?.error ? "⚠ Error" : displayValue}
         </div>
       </NodeShell>
-    );
+    )
   },
-);
+)
 
-PowerNode.displayName = "PowerNode";
+PowerNode.displayName = "PowerNode"
 
 export const SqrtNode: React.FC<NodeProps> = React.memo(
   ({ id, data, selected }) => {
-    const nodeData = data as unknown as MathNodeData;
-    const computed = useFlowStore((s) => s.computedValues.get(id));
+    const nodeData = data as unknown as MathNodeData
+    const computed = useFlowStore((s) => s.computedValues.get(id))
 
     const displayValue =
       computed?.value !== undefined && !computed.error
         ? typeof computed.value === "number"
           ? (computed.value as number).toFixed(4)
           : String(computed.value)
-        : "√x";
+        : "√x"
 
     return (
       <NodeShell data={nodeData} selected={selected}>
@@ -62,18 +62,18 @@ export const SqrtNode: React.FC<NodeProps> = React.memo(
             fontSize: 13,
             fontFamily: "'JetBrains Mono', monospace",
             color: computed?.error
-              ? "#ef4444"
+              ? "var(--status-error)"
               : computed?.value !== undefined
-                ? "#e5e5e5"
-                : "#6b7280",
+                ? "var(--text-primary)"
+                : "var(--text-muted)",
             padding: "8px 0",
           }}
         >
           {computed?.error ? "⚠ Error" : displayValue}
         </div>
       </NodeShell>
-    );
+    )
   },
-);
+)
 
-SqrtNode.displayName = "SqrtNode";
+SqrtNode.displayName = "SqrtNode"

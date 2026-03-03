@@ -1,65 +1,57 @@
-import React from "react";
-import { Handle, Position } from "@xyflow/react";
-import type { MathNodeData, PortDefinition, PortType } from "../../../types";
+import React from "react"
+import { Handle, Position } from "@xyflow/react"
+import type { MathNodeData } from "../../../types"
 
 interface NodeShellProps {
-  data: MathNodeData;
-  selected?: boolean;
-  children?: React.ReactNode;
+  data: MathNodeData
+  selected?: boolean
+  children?: React.ReactNode
+  headerActions?: React.ReactNode
 }
 
 const categoryColors: Record<string, string> = {
-  input: "#3b82f6",
-  arithmetic: "#3b82f6",
-  calculus: "#8b5cf6",
-  display: "#10b981",
-  advanced: "#f59e0b",
-};
+  input: "var(--category-input)",
+  arithmetic: "var(--category-arithmetic)",
+  calculus: "var(--category-calculus)",
+  display: "var(--category-display)",
+  advanced: "var(--category-advanced)",
+}
 
-const portTypeColors: Record<PortType, string> = {
-  number: "#3b82f6",
-  symbolic: "#a855f7",
-  matrix: "#10b981",
-  function: "#f59e0b",
-  array: "#6366f1",
-};
-
-const handleStyle = (port: PortDefinition, index: number, total: number) => {
-  const topPercent = total === 1 ? 50 : 20 + (index * 60) / (total - 1);
-  const color = portTypeColors[port.type] ?? "#6b7280";
+const handleStyle = (index: number, total: number, accentColor: string) => {
+  const topPercent = total === 1 ? 50 : 20 + (index * 60) / (total - 1)
   return {
     top: `${topPercent}%`,
-    width: 12,
-    height: 12,
+    width: 11,
+    height: 11,
     borderRadius: "50%",
-    background: "#1c1e26",
-    border: `2px solid ${color}`,
-    "--handle-glow": `${color}80`,
-  } as React.CSSProperties;
-};
+    background: accentColor,
+    border: "2px solid var(--bg-secondary)",
+    boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.25)",
+  } as React.CSSProperties
+}
 
 export const NodeShell: React.FC<NodeShellProps> = React.memo(
-  ({ data, selected, children }) => {
-    const accentColor = categoryColors[data.category] ?? "#6b7280";
+  ({ data, selected, children, headerActions }) => {
+    const accentColor = categoryColors[data.category] ?? "#6b7280"
     const borderColor =
       data.status === "error"
-        ? "#ef4444"
+        ? "var(--status-error)"
         : data.status === "success"
-          ? "#10b981"
+          ? "var(--status-success)"
           : selected
             ? accentColor
-            : "#262830";
+            : "var(--border)"
 
     return (
       <div style={{ position: "relative", width: 220 }}>
         {/* Inner body — clipped for rounded corners */}
         <div
           style={{
-            background: "rgba(17, 19, 26, 0.95)",
+            background: "var(--bg-secondary)",
             backdropFilter: "blur(16px)",
             borderRadius: 12,
             border: `1px solid ${borderColor}`,
-            boxShadow: `0 4px 20px rgba(0,0,0,0.3), 0 0 15px ${accentColor}10`,
+            boxShadow: `0 4px 20px rgba(0,0,0,0.3)`,
             transition: "border-color 0.2s, box-shadow 0.2s",
             overflow: "hidden",
           }}
@@ -80,7 +72,7 @@ export const NodeShell: React.FC<NodeShellProps> = React.memo(
               alignItems: "center",
               justifyContent: "space-between",
               padding: "8px 12px",
-              borderBottom: "1px solid #1c1e26",
+              borderBottom: "1px solid var(--border)",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -97,7 +89,7 @@ export const NodeShell: React.FC<NodeShellProps> = React.memo(
                 style={{
                   fontSize: 11,
                   fontWeight: 500,
-                  color: "#e5e5e5",
+                  color: "var(--text-primary)",
                   letterSpacing: "-0.01em",
                 }}
               >
@@ -105,26 +97,28 @@ export const NodeShell: React.FC<NodeShellProps> = React.memo(
               </span>
             </div>
 
-            {/* Status indicator */}
-            {data.status !== "idle" && (
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background:
-                    data.status === "success"
-                      ? "#10b981"
-                      : data.status === "error"
-                        ? "#ef4444"
-                        : "#f59e0b",
-                  animation:
-                    data.status === "running"
-                      ? "pulse 1s ease infinite"
-                      : undefined,
-                }}
-              />
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {headerActions}
+              {data.status !== "idle" && (
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background:
+                      data.status === "success"
+                        ? "var(--status-success)"
+                        : data.status === "error"
+                          ? "var(--status-error)"
+                          : "var(--status-warn)",
+                    animation:
+                      data.status === "running"
+                        ? "pulse 1s ease infinite"
+                        : undefined,
+                  }}
+                />
+              )}
+            </div>
           </div>
 
           {/* Body */}
@@ -138,7 +132,7 @@ export const NodeShell: React.FC<NodeShellProps> = React.memo(
             type="target"
             position={Position.Left}
             id={port.name}
-            style={handleStyle(port, i, data.inputs.length)}
+            style={handleStyle(i, data.inputs.length, accentColor)}
           />
         ))}
 
@@ -148,12 +142,12 @@ export const NodeShell: React.FC<NodeShellProps> = React.memo(
             type="source"
             position={Position.Right}
             id={port.name}
-            style={handleStyle(port, i, data.outputs.length)}
+            style={handleStyle(i, data.outputs.length, accentColor)}
           />
         ))}
       </div>
-    );
+    )
   },
-);
+)
 
-NodeShell.displayName = "NodeShell";
+NodeShell.displayName = "NodeShell"

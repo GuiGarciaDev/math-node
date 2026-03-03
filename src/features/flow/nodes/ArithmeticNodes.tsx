@@ -1,8 +1,8 @@
-import React from "react";
-import type { NodeProps } from "@xyflow/react";
-import type { MathNodeData } from "../../../types";
-import { NodeShell } from "./NodeShell";
-import { useFlowStore } from "../flowStore";
+import React from "react"
+import type { NodeProps } from "@xyflow/react"
+import type { MathNodeData } from "../../../types"
+import { NodeShell } from "./NodeShell"
+import { useFlowStore } from "../flowStore"
 
 /** Shared component for binary arithmetic nodes (add, subtract, multiply, divide) */
 function createArithmeticNode(
@@ -12,8 +12,8 @@ function createArithmeticNode(
 ) {
   const ArithmeticNode: React.FC<NodeProps> = React.memo(
     ({ id, data, selected }) => {
-      const nodeData = data as unknown as MathNodeData;
-      const computed = useFlowStore((s) => s.computedValues.get(id));
+      const nodeData = data as unknown as MathNodeData
+      const computed = useFlowStore((s) => s.computedValues.get(id))
 
       const displayValue =
         computed?.value !== undefined && computed.value !== null
@@ -22,9 +22,9 @@ function createArithmeticNode(
               ? computed.value.toString()
               : (computed.value as number).toFixed(4)
             : String(computed.value)
-          : operatorSymbol;
+          : operatorSymbol
 
-      const hasError = computed?.error;
+      const hasError = computed?.error
 
       return (
         <NodeShell data={nodeData} selected={selected}>
@@ -34,10 +34,10 @@ function createArithmeticNode(
               fontSize: 13,
               fontFamily: "'JetBrains Mono', monospace",
               color: hasError
-                ? "#ef4444"
+                ? "var(--status-error)"
                 : computed?.value !== undefined
-                  ? "#e5e5e5"
-                  : "#6b7280",
+                  ? "var(--text-primary)"
+                  : "var(--text-muted)",
               padding: "8px 0",
               minHeight: 32,
               display: "flex",
@@ -48,15 +48,15 @@ function createArithmeticNode(
             {hasError ? "⚠ Error" : displayValue}
           </div>
         </NodeShell>
-      );
+      )
     },
-  );
+  )
 
-  ArithmeticNode.displayName = displayName;
-  return ArithmeticNode;
+  ArithmeticNode.displayName = displayName
+  return ArithmeticNode
 }
 
-export const AddNode = createArithmeticNode("AddNode", "＋", "a + b");
-export const SubtractNode = createArithmeticNode("SubtractNode", "−", "a − b");
-export const MultiplyNode = createArithmeticNode("MultiplyNode", "×", "a × b");
-export const DivideNode = createArithmeticNode("DivideNode", "÷", "a ÷ b");
+export const AddNode = createArithmeticNode("AddNode", "＋", "a + b")
+export const SubtractNode = createArithmeticNode("SubtractNode", "−", "a − b")
+export const MultiplyNode = createArithmeticNode("MultiplyNode", "×", "a × b")
+export const DivideNode = createArithmeticNode("DivideNode", "÷", "a ÷ b")

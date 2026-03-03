@@ -2,15 +2,15 @@
 // Central state management for the entire application.
 // No useEffect-driven computation — all updates are event-driven.
 
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 import {
   applyNodeChanges,
   applyEdgeChanges,
   type NodeChange,
   type EdgeChange,
   type Connection,
-} from "@xyflow/react";
+} from "@xyflow/react"
 import type {
   MathNode,
   MathEdge,
@@ -19,9 +19,9 @@ import type {
   LogEntry,
   MathNodeType,
   MathNodeData,
-} from "../../types";
-import { runPipeline, runSingleNode } from "./executionEngine";
-import { validateConnection } from "./edgeValidation";
+} from "../../types"
+import { runPipeline, runSingleNode } from "./executionEngine"
+import { validateConnection } from "./edgeValidation"
 
 // ─── Node Factory ─────────────────────────────────────────
 
@@ -148,63 +148,75 @@ const nodeDefaults: Record<
       cols: 2,
     },
   },
-};
+}
 
-let nodeIdCounter = 0;
+let nodeIdCounter = 0
 function generateNodeId(): string {
-  return `node_${(++nodeIdCounter).toString(36)}_${Date.now().toString(36).slice(-4)}`;
+  return `node_${(++nodeIdCounter).toString(36)}_${Date.now().toString(36).slice(-4)}`
 }
 
 function createNodeData(type: MathNodeType): MathNodeData {
-  const defaults = nodeDefaults[type];
+  const defaults = nodeDefaults[type]
   return {
     ...JSON.parse(JSON.stringify(defaults)),
     dirty: true,
     status: "idle" as const,
-  };
+  }
 }
 
 // ─── Store Interface ──────────────────────────────────────
 
 interface FlowState {
   // Data
-  nodes: MathNode[];
-  edges: MathEdge[];
-  computedValues: Map<string, ComputedValue>;
+  nodes: MathNode[]
+  edges: MathEdge[]
+  computedValues: Map<string, ComputedValue>
 
   // UI State
-  executionMode: ExecutionMode;
-  selectedNodeId: string | null;
-  consoleLogs: LogEntry[];
-  isRunning: boolean;
-  computeMode: "numeric" | "symbolic";
-  consoleOpen: boolean;
-  inspectorOpen: boolean;
-  appStarted: boolean;
-  theme: "dark" | "light";
+  executionMode: ExecutionMode
+  selectedNodeId: string | null
+  consoleLogs: LogEntry[]
+  isRunning: boolean
+  computeMode: "numeric" | "symbolic"
+  consoleOpen: boolean
+  inspectorOpen: boolean
+  appStarted: boolean
+  theme: "dark" | "light"
+  graphModal: {
+    title: string
+    points: Array<{ x: number; y: number }>
+    domain: [number, number]
+  } | null
 
   // React Flow handlers
-  onNodesChange: (changes: NodeChange<MathNode>[]) => void;
-  onEdgesChange: (changes: EdgeChange<MathEdge>[]) => void;
-  onConnect: (connection: Connection) => void;
+  onNodesChange: (changes: NodeChange<MathNode>[]) => void
+  onEdgesChange: (changes: EdgeChange<MathEdge>[]) => void
+  onConnect: (connection: Connection) => void
 
   // Actions
-  addNode: (type: MathNodeType, position: { x: number; y: number }) => void;
-  removeNode: (nodeId: string) => void;
-  updateNodeParam: (nodeId: string, key: string, value: unknown) => void;
-  selectNode: (nodeId: string | null) => void;
-  setExecutionMode: (mode: ExecutionMode) => void;
-  setComputeMode: (mode: "numeric" | "symbolic") => void;
+  addNode: (type: MathNodeType, position: { x: number; y: number }) => void
+  removeNode: (nodeId: string) => void
+  removeEdge: (edgeId: string) => void
+  updateNodeParam: (nodeId: string, key: string, value: unknown) => void
+  selectNode: (nodeId: string | null) => void
+  setExecutionMode: (mode: ExecutionMode) => void
+  setComputeMode: (mode: "numeric" | "symbolic") => void
 
   // Execution
-  runPipeline: () => void;
-  stepExecute: () => void;
-  clearConsole: () => void;
-  setAppStarted: (started: boolean) => void;
-  toggleConsole: () => void;
-  toggleInspector: () => void;
-  toggleTheme: () => void;
-  showLanding: () => void;
+  runPipeline: () => void
+  stepExecute: () => void
+  clearConsole: () => void
+  setAppStarted: (started: boolean) => void
+  toggleConsole: () => void
+  toggleInspector: () => void
+  toggleTheme: () => void
+  showLanding: () => void
+  openGraphModal: (payload: {
+    title: string
+    points: Array<{ x: number; y: number }>
+    domain: [number, number]
+  }) => void
+  closeGraphModal: () => void
 }
 
 // ─── Default scene ────────────────────────────────────────
@@ -255,7 +267,7 @@ const defaultNodes: MathNode[] = [
     position: { x: 740, y: 500 },
     data: createNodeData("plot"),
   },
-];
+]
 
 const defaultEdges: MathEdge[] = [
   {
@@ -293,7 +305,7 @@ const defaultEdges: MathEdge[] = [
     sourceHandle: "result",
     targetHandle: "fn",
   },
-];
+]
 
 // ─── Create Store ─────────────────────────────────────────
 
@@ -315,23 +327,24 @@ export const useFlowStore = create<FlowState>()(
       inspectorOpen: true,
       appStarted: false,
       theme: "dark" as const,
+      graphModal: null,
 
       // ─── React Flow Handlers ────────────────────────────────
       onNodesChange: (changes) => {
         set({
           nodes: applyNodeChanges(changes, get().nodes),
-        });
+        })
       },
 
       onEdgesChange: (changes) => {
         set({
           edges: applyEdgeChanges(changes, get().edges),
-        });
+        })
       },
 
       onConnect: (connection) => {
-        const { nodes, edges, executionMode } = get();
-        const validation = validateConnection(connection, nodes, edges);
+        const { nodes, edges, executionMode } = get()
+        const validation = validateConnection(connection, nodes, edges)
 
         if (!validation.valid) {
           set({
@@ -344,8 +357,8 @@ export const useFlowStore = create<FlowState>()(
                 message: `Connection rejected: ${validation.reason}`,
               },
             ],
-          });
-          return;
+          })
+          return
         }
 
         const newEdge: MathEdge = {
@@ -354,20 +367,20 @@ export const useFlowStore = create<FlowState>()(
           target: connection.target!,
           sourceHandle: connection.sourceHandle,
           targetHandle: connection.targetHandle,
-        };
+        }
 
         // Mark target and downstream nodes as dirty
         const newNodes = nodes.map((n) =>
           n.id === connection.target
             ? { ...n, data: { ...n.data, dirty: true } }
             : n,
-        );
+        )
 
-        set({ edges: [...edges, newEdge], nodes: newNodes });
+        set({ edges: [...edges, newEdge], nodes: newNodes })
 
         // Auto-run if in auto mode
         if (executionMode === "auto") {
-          setTimeout(() => get().runPipeline(), 0);
+          setTimeout(() => get().runPipeline(), 0)
         }
       },
 
@@ -378,8 +391,8 @@ export const useFlowStore = create<FlowState>()(
           type,
           position,
           data: createNodeData(type),
-        };
-        set({ nodes: [...get().nodes, newNode] });
+        }
+        set({ nodes: [...get().nodes, newNode] })
       },
 
       removeNode: (nodeId) => {
@@ -390,11 +403,17 @@ export const useFlowStore = create<FlowState>()(
           ),
           selectedNodeId:
             get().selectedNodeId === nodeId ? null : get().selectedNodeId,
-        });
+        })
+      },
+
+      removeEdge: (edgeId) => {
+        set({
+          edges: get().edges.filter((e) => e.id !== edgeId),
+        })
       },
 
       updateNodeParam: (nodeId, key, value) => {
-        const { nodes, executionMode } = get();
+        const { nodes, executionMode } = get()
         const newNodes = nodes.map((n) =>
           n.id === nodeId
             ? {
@@ -406,46 +425,46 @@ export const useFlowStore = create<FlowState>()(
                 },
               }
             : n,
-        );
-        set({ nodes: newNodes });
+        )
+        set({ nodes: newNodes })
 
         // Auto-run if in auto mode
         if (executionMode === "auto") {
-          setTimeout(() => get().runPipeline(), 0);
+          setTimeout(() => get().runPipeline(), 0)
         }
       },
 
       selectNode: (nodeId) => {
-        set({ selectedNodeId: nodeId });
+        set({ selectedNodeId: nodeId })
       },
 
       setExecutionMode: (mode) => {
-        set({ executionMode: mode });
+        set({ executionMode: mode })
       },
 
       setComputeMode: (mode) => {
-        set({ computeMode: mode });
+        set({ computeMode: mode })
       },
 
       // ─── Execution ──────────────────────────────────────────
       runPipeline: () => {
-        const { nodes, edges } = get();
-        set({ isRunning: true });
+        const { nodes, edges } = get()
+        set({ isRunning: true })
 
         // Mark all nodes as running
         const runningNodes = nodes.map((n) => ({
           ...n,
           data: { ...n.data, status: "running" as const },
-        }));
-        set({ nodes: runningNodes });
+        }))
+        set({ nodes: runningNodes })
 
         // Execute (using requestAnimationFrame for visual feedback)
         requestAnimationFrame(() => {
-          const result = runPipeline(nodes, edges);
+          const result = runPipeline(nodes, edges)
 
           // Update node statuses and clear dirty flags
           const updatedNodes = get().nodes.map((n) => {
-            const computed = result.computedValues.get(n.id);
+            const computed = result.computedValues.get(n.id)
             return {
               ...n,
               data: {
@@ -456,23 +475,23 @@ export const useFlowStore = create<FlowState>()(
                   : ("success" as const),
                 computeTimeMs: result.totalTimeMs,
               },
-            };
-          });
+            }
+          })
 
           set({
             nodes: updatedNodes,
             computedValues: result.computedValues,
             consoleLogs: [...get().consoleLogs, ...result.logs],
             isRunning: false,
-          });
-        });
+          })
+        })
       },
 
       stepExecute: () => {
-        const { nodes, edges, computedValues } = get();
+        const { nodes, edges, computedValues } = get()
 
         // Find first dirty node in topo order
-        const dirtyNode = nodes.find((n) => n.data.dirty);
+        const dirtyNode = nodes.find((n) => n.data.dirty)
         if (!dirtyNode) {
           set({
             consoleLogs: [
@@ -484,20 +503,15 @@ export const useFlowStore = create<FlowState>()(
                 message: "All nodes are up to date.",
               },
             ],
-          });
-          return;
+          })
+          return
         }
 
-        const result = runSingleNode(
-          dirtyNode.id,
-          nodes,
-          edges,
-          computedValues,
-        );
+        const result = runSingleNode(dirtyNode.id, nodes, edges, computedValues)
 
         const updatedNodes = nodes.map((n) => {
           if (n.id === dirtyNode.id) {
-            const computed = result.computedValues.get(n.id);
+            const computed = result.computedValues.get(n.id)
             return {
               ...n,
               data: {
@@ -507,16 +521,16 @@ export const useFlowStore = create<FlowState>()(
                   ? ("error" as const)
                   : ("success" as const),
               },
-            };
+            }
           }
-          return n;
-        });
+          return n
+        })
 
         set({
           nodes: updatedNodes,
           computedValues: result.computedValues,
           consoleLogs: [...get().consoleLogs, ...result.logs],
-        });
+        })
       },
 
       clearConsole: () => set({ consoleLogs: [] }),
@@ -524,11 +538,13 @@ export const useFlowStore = create<FlowState>()(
       toggleConsole: () => set({ consoleOpen: !get().consoleOpen }),
       toggleInspector: () => set({ inspectorOpen: !get().inspectorOpen }),
       toggleTheme: () => {
-        const next = get().theme === "dark" ? "light" : "dark";
-        document.documentElement.setAttribute("data-theme", next);
-        set({ theme: next });
+        const next = get().theme === "dark" ? "light" : "dark"
+        document.documentElement.setAttribute("data-theme", next)
+        set({ theme: next })
       },
       showLanding: () => set({ appStarted: false }),
+      openGraphModal: (payload) => set({ graphModal: payload }),
+      closeGraphModal: () => set({ graphModal: null }),
     }),
     {
       name: "mathflow-prefs",
@@ -542,4 +558,4 @@ export const useFlowStore = create<FlowState>()(
       }),
     },
   ),
-);
+)

@@ -1,98 +1,128 @@
-import React, { useCallback, useState } from "react";
-import type { SidebarCategory, MathNodeType } from "../../types";
+import React, { useCallback, useState } from "react"
+import type { SidebarCategory, MathNodeType } from "../../types"
 
 const categories: SidebarCategory[] = [
   {
     name: "Input",
-    color: "#3b82f6",
+    color: "var(--category-input)",
     items: [
       {
         type: "numberInput",
         label: "Number",
         icon: "🔢",
-        iconColor: "#3b82f6",
+        iconColor: "var(--category-input)",
         description: "Numeric constant input",
       },
       {
         type: "variable",
         label: "Variable",
         icon: "𝑥",
-        iconColor: "#8b5cf6",
+        iconColor: "var(--category-input)",
         description: "Symbolic variable",
       },
       {
         type: "expression",
         label: "Expression",
         icon: "ƒ",
-        iconColor: "#8b5cf6",
+        iconColor: "var(--category-input)",
         description: "Mathematical expression",
       },
     ],
   },
   {
     name: "Arithmetic",
-    color: "#3b82f6",
+    color: "var(--category-arithmetic)",
     items: [
-      { type: "add", label: "Add", icon: "＋", iconColor: "#3b82f6" },
-      { type: "subtract", label: "Subtract", icon: "−", iconColor: "#3b82f6" },
-      { type: "multiply", label: "Multiply", icon: "×", iconColor: "#3b82f6" },
-      { type: "divide", label: "Divide", icon: "÷", iconColor: "#3b82f6" },
-      { type: "power", label: "Power", icon: "^", iconColor: "#3b82f6" },
-      { type: "sqrt", label: "Square Root", icon: "√", iconColor: "#3b82f6" },
+      {
+        type: "add",
+        label: "Add",
+        icon: "＋",
+        iconColor: "var(--category-arithmetic)",
+      },
+      {
+        type: "subtract",
+        label: "Subtract",
+        icon: "−",
+        iconColor: "var(--category-arithmetic)",
+      },
+      {
+        type: "multiply",
+        label: "Multiply",
+        icon: "×",
+        iconColor: "var(--category-arithmetic)",
+      },
+      {
+        type: "divide",
+        label: "Divide",
+        icon: "÷",
+        iconColor: "var(--category-arithmetic)",
+      },
+      {
+        type: "power",
+        label: "Power",
+        icon: "^",
+        iconColor: "var(--category-arithmetic)",
+      },
+      {
+        type: "sqrt",
+        label: "Square Root",
+        icon: "√",
+        iconColor: "var(--category-arithmetic)",
+      },
     ],
   },
   {
     name: "Calculus",
-    color: "#8b5cf6",
+    color: "var(--category-calculus)",
     items: [
       {
         type: "derivative",
         label: "Derivative",
         icon: "∂",
-        iconColor: "#8b5cf6",
+        iconColor: "var(--category-calculus)",
         description: "Symbolic differentiation",
       },
       {
         type: "integral",
         label: "Integral",
         icon: "∫",
-        iconColor: "#8b5cf6",
+        iconColor: "var(--category-calculus)",
         description: "Symbolic integration",
       },
     ],
   },
   {
     name: "Display",
-    color: "#10b981",
+    color: "var(--category-display)",
     items: [
       {
         type: "plot",
         label: "Plot Function",
         icon: "📈",
-        iconColor: "#10b981",
+        iconColor: "var(--category-display)",
         description: "Function visualization",
       },
       {
         type: "matrix",
         label: "Matrix",
         icon: "▦",
-        iconColor: "#f59e0b",
+        iconColor: "var(--category-display)",
         description: "Matrix editor",
       },
     ],
   },
-];
+]
 
 export const Sidebar: React.FC = React.memo(() => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("")
 
   const onDragStart = useCallback(
     (e: React.DragEvent, nodeType: MathNodeType) => {
-      e.dataTransfer.setData("application/mathflow-node", nodeType);
-      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("application/mathflow-node", nodeType)
+      e.dataTransfer.effectAllowed = "move"
     },
     [],
-  );
+  )
 
   const filteredCategories = searchQuery
     ? categories
@@ -103,15 +133,15 @@ export const Sidebar: React.FC = React.memo(() => {
           ),
         }))
         .filter((cat) => cat.items.length > 0)
-    : categories;
+    : categories
 
   return (
     <aside
       style={{
         width: 256,
-        background: "rgba(17, 19, 26, 0.95)",
+        background: "var(--bg-secondary)",
         backdropFilter: "blur(12px)",
-        borderRight: "1px solid #262830",
+        borderRight: "1px solid var(--border)",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
@@ -119,7 +149,7 @@ export const Sidebar: React.FC = React.memo(() => {
       }}
     >
       {/* Search */}
-      <div style={{ padding: 12, borderBottom: "1px solid #262830" }}>
+      <div style={{ padding: 12, borderBottom: "1px solid var(--border)" }}>
         <div style={{ position: "relative" }}>
           <span
             style={{
@@ -128,7 +158,7 @@ export const Sidebar: React.FC = React.memo(() => {
               top: "50%",
               transform: "translateY(-50%)",
               fontSize: 13,
-              color: "#6b7280",
+              color: "var(--text-muted)",
             }}
           >
             🔍
@@ -140,12 +170,12 @@ export const Sidebar: React.FC = React.memo(() => {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: "100%",
-              background: "#0f1117",
-              border: "1px solid #262830",
+              background: "var(--bg-input)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
               padding: "6px 12px 6px 32px",
               fontSize: 12,
-              color: "#e5e5e5",
+              color: "var(--text-primary)",
               outline: "none",
               fontFamily: "'Inter', sans-serif",
             }}
@@ -171,7 +201,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 fontSize: 10,
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
-                color: "#6b7280",
+                color: "var(--text-muted)",
                 fontWeight: 500,
                 marginBottom: 8,
                 paddingLeft: 4,
@@ -205,22 +235,22 @@ export const Sidebar: React.FC = React.memo(() => {
                     borderRadius: 8,
                     cursor: "grab",
                     fontSize: 12,
-                    color: "#d4d4d4",
+                    color: "var(--text-secondary)",
                     border: "1px solid transparent",
                     transition: "all 0.15s",
                     userSelect: "none",
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.background =
-                      "#1c1e26";
-                    (e.currentTarget as HTMLElement).style.borderColor =
-                      "#262830";
+                    ;(e.currentTarget as HTMLElement).style.background =
+                      "var(--bg-tertiary)"
+                    ;(e.currentTarget as HTMLElement).style.borderColor =
+                      "var(--border)"
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.background =
-                      "transparent";
-                    (e.currentTarget as HTMLElement).style.borderColor =
-                      "transparent";
+                    ;(e.currentTarget as HTMLElement).style.background =
+                      "transparent"
+                    ;(e.currentTarget as HTMLElement).style.borderColor =
+                      "transparent"
                   }}
                 >
                   <span
@@ -241,7 +271,7 @@ export const Sidebar: React.FC = React.memo(() => {
         ))}
       </div>
     </aside>
-  );
-});
+  )
+})
 
-Sidebar.displayName = "Sidebar";
+Sidebar.displayName = "Sidebar"

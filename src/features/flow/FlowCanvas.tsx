@@ -1,97 +1,104 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef } from "react"
 import {
   ReactFlow,
   MiniMap,
   Background,
   BackgroundVariant,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { nodeTypes } from "./nodeTypes";
-import { useFlowStore } from "./flowStore";
-import type { MathNodeType } from "../../types";
+} from "@xyflow/react"
+import "@xyflow/react/dist/style.css"
+import { nodeTypes } from "./nodeTypes"
+import { useFlowStore } from "./flowStore"
+import type { MathNodeType } from "../../types"
+import { RemovableEdge } from "./RemovableEdge"
+
+const edgeTypes = {
+  removable: RemovableEdge,
+}
 
 const minimapStyle = {
-  backgroundColor: "rgba(21, 23, 32, 0.8)",
+  backgroundColor: "var(--bg-secondary)",
   borderRadius: 8,
-  border: "1px solid #262830",
-};
+  border: "1px solid var(--border)",
+}
 
 const minimapNodeColor = (node: any) => {
-  const category = node.data?.category;
+  const category = node.data?.category
   switch (category) {
     case "input":
-      return "#3b82f6";
+      return "var(--category-input)"
     case "arithmetic":
-      return "#3b82f6";
+      return "var(--category-arithmetic)"
     case "calculus":
-      return "#8b5cf6";
+      return "var(--category-calculus)"
     case "display":
-      return "#10b981";
+      return "var(--category-display)"
+    case "advanced":
+      return "var(--category-advanced)"
     default:
-      return "#6b7280";
+      return "var(--text-muted)"
   }
-};
+}
 
 const edgeOptions = {
-  style: { stroke: "#8b5cf6", strokeWidth: 2 },
-  type: "default",
-};
+  style: { stroke: "var(--accent)", strokeWidth: 2 },
+  type: "removable",
+}
 
 const connectionLineStyle = {
-  stroke: "#8b5cf6",
+  stroke: "var(--accent)",
   strokeWidth: 2,
   strokeDasharray: "5 5",
-};
+}
 
 export const FlowCanvas: React.FC = React.memo(() => {
-  const nodes = useFlowStore((s) => s.nodes);
-  const edges = useFlowStore((s) => s.edges);
-  const onNodesChange = useFlowStore((s) => s.onNodesChange);
-  const onEdgesChange = useFlowStore((s) => s.onEdgesChange);
-  const onConnect = useFlowStore((s) => s.onConnect);
-  const selectNode = useFlowStore((s) => s.selectNode);
-  const addNode = useFlowStore((s) => s.addNode);
+  const nodes = useFlowStore((s) => s.nodes)
+  const edges = useFlowStore((s) => s.edges)
+  const onNodesChange = useFlowStore((s) => s.onNodesChange)
+  const onEdgesChange = useFlowStore((s) => s.onEdgesChange)
+  const onConnect = useFlowStore((s) => s.onConnect)
+  const selectNode = useFlowStore((s) => s.selectNode)
+  const addNode = useFlowStore((s) => s.addNode)
 
-  const reactFlowInstance = useRef<any>(null);
+  const reactFlowInstance = useRef<any>(null)
 
   const onInit = useCallback((instance: any) => {
-    reactFlowInstance.current = instance;
-  }, []);
+    reactFlowInstance.current = instance
+  }, [])
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: any) => {
-      selectNode(node.id);
+      selectNode(node.id)
     },
     [selectNode],
-  );
+  )
 
   const onPaneClick = useCallback(() => {
-    selectNode(null);
-  }, [selectNode]);
+    selectNode(null)
+  }, [selectNode])
 
   // Drag and drop from sidebar
   const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  }, []);
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+  }, [])
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
-      e.preventDefault();
+      e.preventDefault()
       const type = e.dataTransfer.getData(
         "application/mathflow-node",
-      ) as MathNodeType;
-      if (!type || !reactFlowInstance.current) return;
+      ) as MathNodeType
+      if (!type || !reactFlowInstance.current) return
 
       const position = reactFlowInstance.current.screenToFlowPosition({
         x: e.clientX,
         y: e.clientY,
-      });
+      })
 
-      addNode(type, position);
+      addNode(type, position)
     },
     [addNode],
-  );
+  )
 
   return (
     <div style={{ width: "100%", height: "100%" }}>
@@ -107,6 +114,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
         onDragOver={onDragOver}
         onDrop={onDrop}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         defaultEdgeOptions={edgeOptions}
         connectionLineStyle={connectionLineStyle}
         fitView
@@ -120,7 +128,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
           variant={BackgroundVariant.Dots}
           gap={24}
           size={1}
-          color="#262830"
+          color="var(--border)"
         />
         <MiniMap
           style={minimapStyle}
@@ -131,7 +139,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
         />
       </ReactFlow>
     </div>
-  );
-});
+  )
+})
 
-FlowCanvas.displayName = "FlowCanvas";
+FlowCanvas.displayName = "FlowCanvas"
