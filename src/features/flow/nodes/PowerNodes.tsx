@@ -18,21 +18,15 @@ export const PowerNode: React.FC<NodeProps> = React.memo(
           : String(computed.value)
         : "base ^ exp"
 
+    const valueClass = computed?.error
+      ? "text-[var(--status-error)]"
+      : computed?.value !== undefined
+        ? "text-[var(--text-primary)]"
+        : "text-[var(--text-muted)]"
+
     return (
       <NodeShell data={nodeData} selected={selected}>
-        <div
-          style={{
-            textAlign: "center",
-            fontSize: 13,
-            fontFamily: "'JetBrains Mono', monospace",
-            color: computed?.error
-              ? "var(--status-error)"
-              : computed?.value !== undefined
-                ? "var(--text-primary)"
-                : "var(--text-muted)",
-            padding: "8px 0",
-          }}
-        >
+        <div className={`py-2 text-center font-mono text-[13px] ${valueClass}`}>
           {computed?.error ? "⚠ Error" : displayValue}
         </div>
       </NodeShell>
@@ -54,21 +48,15 @@ export const SqrtNode: React.FC<NodeProps> = React.memo(
           : String(computed.value)
         : "√x"
 
+    const valueClass = computed?.error
+      ? "text-[var(--status-error)]"
+      : computed?.value !== undefined
+        ? "text-[var(--text-primary)]"
+        : "text-[var(--text-muted)]"
+
     return (
       <NodeShell data={nodeData} selected={selected}>
-        <div
-          style={{
-            textAlign: "center",
-            fontSize: 13,
-            fontFamily: "'JetBrains Mono', monospace",
-            color: computed?.error
-              ? "var(--status-error)"
-              : computed?.value !== undefined
-                ? "var(--text-primary)"
-                : "var(--text-muted)",
-            padding: "8px 0",
-          }}
-        >
+        <div className={`py-2 text-center font-mono text-[13px] ${valueClass}`}>
           {computed?.error ? "⚠ Error" : displayValue}
         </div>
       </NodeShell>

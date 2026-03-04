@@ -25,25 +25,16 @@ function createArithmeticNode(
           : operatorSymbol
 
       const hasError = computed?.error
+      const valueClass = hasError
+        ? "text-[var(--status-error)]"
+        : computed?.value !== undefined
+          ? "text-[var(--text-primary)]"
+          : "text-[var(--text-muted)]"
 
       return (
         <NodeShell data={nodeData} selected={selected}>
           <div
-            style={{
-              textAlign: "center",
-              fontSize: 13,
-              fontFamily: "'JetBrains Mono', monospace",
-              color: hasError
-                ? "var(--status-error)"
-                : computed?.value !== undefined
-                  ? "var(--text-primary)"
-                  : "var(--text-muted)",
-              padding: "8px 0",
-              minHeight: 32,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className={`flex min-h-8 items-center justify-center py-2 text-center font-mono text-[13px] ${valueClass}`}
           >
             {hasError ? "⚠ Error" : displayValue}
           </div>

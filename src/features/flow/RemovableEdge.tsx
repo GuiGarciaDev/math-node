@@ -1,10 +1,5 @@
 import React, { useMemo, useState } from "react"
-import {
-  BaseEdge,
-  EdgeLabelRenderer,
-  getBezierPath,
-  type EdgeProps,
-} from "@xyflow/react"
+import { getBezierPath, type EdgeProps } from "@xyflow/react"
 import { useFlowStore } from "./flowStore.ts"
 import { getHandleTypeConfig } from "./nodes/handleTypeConfig"
 
@@ -77,14 +72,12 @@ export const RemovableEdge: React.FC<EdgeProps> = React.memo(
           </mask>
         </defs>
 
-        <BaseEdge
-          id={id}
-          path={edgePath}
-          style={{
-            stroke,
-            strokeWidth: selected ? 2.8 : 2.2,
-            mask: `url(#${maskId})`,
-          }}
+        <path
+          d={edgePath}
+          fill="none"
+          stroke={stroke}
+          strokeWidth={selected ? 2.8 : 2.2}
+          mask={`url(#${maskId})`}
         />
 
         <path
@@ -95,48 +88,40 @@ export const RemovableEdge: React.FC<EdgeProps> = React.memo(
           data-edgeid={id}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          style={{ cursor: "pointer", pointerEvents: "stroke" }}
+          className="cursor-pointer [pointer-events:stroke]"
         />
 
-        <EdgeLabelRenderer>
-          <div
-            style={{
-              position: "absolute",
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-              pointerEvents: "all",
-              opacity: isButtonVisible ? 1 : 0,
-              transition: "opacity 0.14s ease",
-            }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+        <g
+          transform={`translate(${labelX} ${labelY})`}
+          opacity={isButtonVisible ? 1 : 0}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onClick={(event) => {
+            event.stopPropagation()
+            removeEdge(id)
+          }}
+          className="cursor-pointer"
+        >
+          <circle
+            cx={0}
+            cy={0}
+            r={11}
+            fill="var(--bg-secondary)"
+            stroke={edgeColor}
+            strokeWidth={1}
+          />
+          <text
+            x={0}
+            y={0}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={11}
+            fontWeight={600}
+            fill={edgeColor}
           >
-            <button
-              title="Remove connection"
-              onClick={(event) => {
-                event.stopPropagation()
-                removeEdge(id)
-              }}
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: "50%",
-                border: `1px solid ${edgeColor}`,
-                background: "var(--bg-secondary)",
-                color: edgeColor,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                fontSize: 11,
-                fontWeight: 600,
-                lineHeight: 1,
-                boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        </EdgeLabelRenderer>
+            ✕
+          </text>
+        </g>
       </>
     )
   },

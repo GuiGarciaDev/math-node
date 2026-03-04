@@ -27,73 +27,33 @@ export const DerivativeNode: React.FC<NodeProps> = React.memo(
         : computed?.error
           ? `Error: ${computed.error}`
           : "—"
+    const resultColorClass = computed?.error
+      ? "text-[var(--status-error)]"
+      : "text-[var(--text-primary)]"
 
     return (
       <NodeShell data={nodeData} selected={selected}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 10,
-                color: "var(--text-muted)",
-                fontWeight: 500,
-              }}
-            >
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-medium text-[var(--text-muted)]">
               Respect to
             </span>
             <input
               type="text"
               value={String(nodeData.params.variable ?? "x")}
               onChange={handleVarChange}
-              style={{
-                width: 40,
-                background: "var(--bg-input)",
-                border: "1px solid var(--border)",
-                borderRadius: 4,
-                padding: "2px 6px",
-                fontSize: 12,
-                color: "var(--category-calculus)",
-                fontFamily: "'JetBrains Mono', monospace",
-                outline: "none",
-                textAlign: "center",
-              }}
+              className="node-input w-10 rounded border border-[var(--border)] bg-[var(--bg-input)] px-1.5 py-0.5 text-center font-mono text-xs text-[var(--category-calculus)] outline-none"
             />
           </div>
 
-          <div
-            style={{ height: 1, background: "var(--border)", margin: "2px 0" }}
-          />
+          <div className="my-0.5 h-px bg-[var(--border)]" />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span
-              style={{
-                fontSize: 10,
-                color: "var(--text-muted)",
-                fontWeight: 500,
-              }}
-            >
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-medium text-[var(--text-muted)]">
               Result d/dx
             </span>
             <div
-              style={{
-                background: "var(--bg-input)",
-                border: "1px solid var(--border)",
-                borderRadius: 6,
-                padding: "6px 8px",
-                fontSize: 12,
-                color: computed?.error
-                  ? "var(--status-error)"
-                  : "var(--text-primary)",
-                fontFamily: "'JetBrains Mono', monospace",
-                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3)",
-                minWidth: 120,
-              }}
+              className={`min-w-[120px] rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] ${resultColorClass}`}
             >
               {resultStr}
             </div>
@@ -129,73 +89,33 @@ export const IntegralNode: React.FC<NodeProps> = React.memo(
         : computed?.error
           ? `Error: ${computed.error}`
           : "—"
+    const resultColorClass = computed?.error
+      ? "text-[var(--status-error)]"
+      : "text-[var(--text-primary)]"
 
     return (
       <NodeShell data={nodeData} selected={selected}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 10,
-                color: "var(--text-muted)",
-                fontWeight: 500,
-              }}
-            >
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-medium text-[var(--text-muted)]">
               Respect to
             </span>
             <input
               type="text"
               value={String(nodeData.params.variable ?? "x")}
               onChange={handleVarChange}
-              style={{
-                width: 40,
-                background: "var(--bg-input)",
-                border: "1px solid var(--border)",
-                borderRadius: 4,
-                padding: "2px 6px",
-                fontSize: 12,
-                color: "var(--category-calculus)",
-                fontFamily: "'JetBrains Mono', monospace",
-                outline: "none",
-                textAlign: "center",
-              }}
+              className="node-input w-10 rounded border border-[var(--border)] bg-[var(--bg-input)] px-1.5 py-0.5 text-center font-mono text-xs text-[var(--category-calculus)] outline-none"
             />
           </div>
 
-          <div
-            style={{ height: 1, background: "var(--border)", margin: "2px 0" }}
-          />
+          <div className="my-0.5 h-px bg-[var(--border)]" />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span
-              style={{
-                fontSize: 10,
-                color: "var(--text-muted)",
-                fontWeight: 500,
-              }}
-            >
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-medium text-[var(--text-muted)]">
               Result ∫dx
             </span>
             <div
-              style={{
-                background: "var(--bg-input)",
-                border: "1px solid var(--border)",
-                borderRadius: 6,
-                padding: "6px 8px",
-                fontSize: 12,
-                color: computed?.error
-                  ? "var(--status-error)"
-                  : "var(--text-primary)",
-                fontFamily: "'JetBrains Mono', monospace",
-                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3)",
-                minWidth: 120,
-              }}
+              className={`min-w-[120px] rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] ${resultColorClass}`}
             >
               {resultStr}
             </div>

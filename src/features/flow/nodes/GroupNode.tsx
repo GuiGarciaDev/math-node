@@ -3,39 +3,18 @@ import type { NodeProps } from "@xyflow/react"
 import type { MathNodeData } from "../../../types"
 
 export const GroupNode: React.FC<NodeProps> = React.memo(
-  ({ data, selected, width, height }) => {
+  ({ data, selected }) => {
     const nodeData = data as unknown as MathNodeData
-    const nodeWidth = Number(width ?? nodeData.params.width ?? 280)
-    const nodeHeight = Number(height ?? nodeData.params.height ?? 180)
 
     return (
       <div
-        style={{
-          width: nodeWidth,
-          height: nodeHeight,
-          borderRadius: 14,
-          border: `1px solid ${selected ? "var(--accent)" : "var(--border)"}`,
-          background:
-            "color-mix(in srgb, var(--bg-secondary) 85%, transparent)",
-          boxShadow: selected
-            ? "0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent)"
-            : "none",
-          pointerEvents: "all",
-          position: "relative",
-        }}
+        className={`pointer-events-auto relative h-full w-full rounded-[14px] bg-[color-mix(in_srgb,var(--bg-secondary)_85%,transparent)] ${
+          selected
+            ? "border border-[var(--accent)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_45%,transparent)]"
+            : "border border-[var(--border)]"
+        }`}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 8,
-            left: 10,
-            fontSize: 10,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "var(--text-muted)",
-            fontWeight: 600,
-          }}
-        >
+        <div className="absolute left-2.5 top-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
           {nodeData.label}
         </div>
       </div>

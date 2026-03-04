@@ -12,6 +12,18 @@ export const MatrixNode: React.FC<NodeProps> = React.memo(
     const matrix = (nodeData.params.matrix as number[][]) ?? [[0]]
     const rows = matrix.length
     const cols = matrix[0]?.length ?? 1
+    const colsClass =
+      cols === 1
+        ? "grid-cols-1"
+        : cols === 2
+          ? "grid-cols-2"
+          : cols === 3
+            ? "grid-cols-3"
+            : cols === 4
+              ? "grid-cols-4"
+              : cols === 5
+                ? "grid-cols-5"
+                : "grid-cols-6"
 
     const handleCellChange = useCallback(
       (row: number, col: number, value: string) => {
@@ -41,15 +53,9 @@ export const MatrixNode: React.FC<NodeProps> = React.memo(
 
     return (
       <NodeShell data={nodeData} selected={selected}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="flex flex-col gap-2">
           {/* Matrix Grid */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${cols}, 1fr)`,
-              gap: 2,
-            }}
-          >
+          <div className={`grid gap-0.5 ${colsClass}`}>
             {matrix.map((row, ri) =>
               row.map((cell, ci) => (
                 <input
@@ -57,69 +63,33 @@ export const MatrixNode: React.FC<NodeProps> = React.memo(
                   type="text"
                   value={cell}
                   onChange={(e) => handleCellChange(ri, ci, e.target.value)}
-                  style={{
-                    width: 36,
-                    background: "var(--bg-input)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 3,
-                    padding: "2px 4px",
-                    fontSize: 10,
-                    color: "var(--category-display)",
-                    fontFamily: "'JetBrains Mono', monospace",
-                    outline: "none",
-                    textAlign: "center",
-                  }}
+                  className="node-input w-9 rounded-[3px] border border-[var(--border)] bg-[var(--bg-input)] px-1 py-0.5 text-center font-mono text-[10px] text-[var(--category-display)] outline-none"
                 />
               )),
             )}
           </div>
 
           {/* Resize Controls */}
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              fontSize: 10,
-              color: "var(--text-muted)",
-            }}
-          >
+          <div className="flex gap-2 text-[10px] text-[var(--text-muted)]">
             <span>
               {rows}×{cols}
             </span>
             <button
               onClick={() => handleResize(rows + 1, cols)}
-              style={{
-                color: "var(--text-secondary)",
-                cursor: "pointer",
-                background: "none",
-                border: "none",
-                fontSize: 10,
-              }}
+              className="text-[10px] text-[var(--text-secondary)] transition-colors duration-150 hover:text-[var(--text-primary)]"
             >
               +row
             </button>
             <button
               onClick={() => handleResize(rows, cols + 1)}
-              style={{
-                color: "var(--text-secondary)",
-                cursor: "pointer",
-                background: "none",
-                border: "none",
-                fontSize: 10,
-              }}
+              className="text-[10px] text-[var(--text-secondary)] transition-colors duration-150 hover:text-[var(--text-primary)]"
             >
               +col
             </button>
             {rows > 1 && (
               <button
                 onClick={() => handleResize(rows - 1, cols)}
-                style={{
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  background: "none",
-                  border: "none",
-                  fontSize: 10,
-                }}
+                className="text-[10px] text-[var(--text-secondary)] transition-colors duration-150 hover:text-[var(--text-primary)]"
               >
                 -row
               </button>
@@ -127,13 +97,7 @@ export const MatrixNode: React.FC<NodeProps> = React.memo(
             {cols > 1 && (
               <button
                 onClick={() => handleResize(rows, cols - 1)}
-                style={{
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  background: "none",
-                  border: "none",
-                  fontSize: 10,
-                }}
+                className="text-[10px] text-[var(--text-secondary)] transition-colors duration-150 hover:text-[var(--text-primary)]"
               >
                 -col
               </button>

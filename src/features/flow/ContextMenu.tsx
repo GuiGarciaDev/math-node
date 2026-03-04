@@ -71,47 +71,22 @@ export const ContextMenu: React.FC = React.memo(() => {
   const x = Math.min(contextMenu.x, window.innerWidth - menuWidth - 8)
   const y = Math.min(contextMenu.y, window.innerHeight - menuHeight - 8)
 
+  useEffect(() => {
+    if (!menuRef.current) return
+    menuRef.current.style.left = `${x}px`
+    menuRef.current.style.top = `${y}px`
+  }, [x, y])
+
   return (
     <div
       ref={menuRef}
-      style={{
-        position: "fixed",
-        left: x,
-        top: y,
-        zIndex: 60,
-        width: menuWidth,
-        padding: 6,
-        borderRadius: 10,
-        background: "color-mix(in srgb, var(--bg-secondary) 92%, transparent)",
-        border: "1px solid var(--border)",
-        boxShadow: "0 14px 28px rgba(0, 0, 0, 0.28)",
-        backdropFilter: "blur(10px)",
-      }}
+      className="fixed z-[60] w-44 rounded-[10px] border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-1.5 shadow-[0_14px_28px_rgba(0,0,0,0.28)] backdrop-blur-md"
     >
       {items.map((item) => (
         <button
           key={item.id}
           onClick={() => dispatchContextAction(item.id, contextMenu.nodeId)}
-          style={{
-            width: "100%",
-            height: 30,
-            borderRadius: 8,
-            border: "none",
-            background: "transparent",
-            color: "var(--text-secondary)",
-            fontSize: 12,
-            textAlign: "left",
-            padding: "0 10px",
-            cursor: "pointer",
-          }}
-          onMouseEnter={(event) => {
-            event.currentTarget.style.background = "var(--bg-tertiary)"
-            event.currentTarget.style.color = "var(--text-primary)"
-          }}
-          onMouseLeave={(event) => {
-            event.currentTarget.style.background = "transparent"
-            event.currentTarget.style.color = "var(--text-secondary)"
-          }}
+          className="h-[30px] w-full rounded-lg px-2.5 text-left text-xs text-[var(--text-secondary)] transition-colors duration-100 hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
         >
           {item.label}
         </button>

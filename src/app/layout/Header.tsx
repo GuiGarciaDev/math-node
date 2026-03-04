@@ -20,286 +20,91 @@ export const Header: React.FC = React.memo(() => {
   const isDark = theme === "dark"
 
   return (
-    <header
-      style={{
-        height: 56,
-        background: isDark
-          ? "rgba(37, 37, 38, 0.86)"
-          : "rgba(255, 255, 255, 0.85)",
-        backdropFilter: "blur(16px)",
-        borderBottom: "1px solid var(--border)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 16px",
-        position: "relative",
-        flexShrink: 0,
-        zIndex: 50,
-        transition: "background 0.3s ease",
-      }}
-    >
-      {/* Top glow line */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: 1,
-          background:
-            "linear-gradient(90deg, transparent, var(--accent-glow), transparent)",
-        }}
-      />
+    <header className="relative z-50 flex h-14 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--bg-secondary)]/90 px-3 md:px-4 backdrop-blur-xl">
+      <div className="absolute left-0 top-0 h-px w-full bg-[linear-gradient(90deg,transparent,var(--accent-glow),transparent)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.06))]" />
 
-      {/* Left section */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        {/* Logo — clickable to return to landing */}
+      <div className="relative z-10 flex items-center gap-2 md:gap-4">
         <button
           onClick={showLanding}
           title="Return to landing page"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginRight: 16,
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-          }}
+          className="group flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-colors duration-150 hover:bg-[var(--bg-tertiary)]/70"
         >
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 6,
-              background:
-                "linear-gradient(135deg, var(--accent), var(--category-input))",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--text-primary)",
-              fontSize: 14,
-              boxShadow: "0 0 15px var(--accent-glow)",
-            }}
-          >
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[linear-gradient(135deg,var(--accent),var(--category-input))] text-sm text-[var(--text-primary)] shadow-[0_0_15px_var(--accent-glow)] transition-transform duration-150 group-hover:scale-105">
             Σ
           </div>
-          <span
-            style={{
-              fontWeight: 600,
-              fontSize: 13,
-              letterSpacing: "-0.02em",
-              color: "var(--text-primary)",
-            }}
-          >
+          <span className="hidden text-[13px] font-semibold tracking-[-0.02em] text-[var(--text-primary)] sm:inline">
             MATHFLOW
           </span>
         </button>
 
-        {/* Divider */}
-        <div style={{ width: 1, height: 16, background: "var(--border)" }} />
+        <div className="hidden h-4 w-px bg-[var(--border)] md:block" />
 
-        {/* Run Button */}
-        <button
-          onClick={runPipeline}
-          disabled={isRunning}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            background: isRunning
-              ? "rgba(162, 89, 255, 0.2)"
-              : "rgba(162, 89, 255, 0.12)",
-            color: "var(--accent)",
-            border: "1px solid rgba(162, 89, 255, 0.24)",
-            padding: "6px 12px",
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 500,
-            cursor: isRunning ? "wait" : "pointer",
-            transition: "all 0.2s",
-            boxShadow: "0 0 10px var(--accent-glow)",
-            fontFamily: "'Inter', sans-serif",
-          }}
-          onMouseEnter={(e) => {
-            if (!isRunning) {
-              ;(e.currentTarget as HTMLElement).style.background =
-                "var(--accent)"
-              ;(e.currentTarget as HTMLElement).style.color =
-                "var(--text-primary)"
-              ;(e.currentTarget as HTMLElement).style.boxShadow =
-                "0 0 20px var(--accent-glow)"
-            }
-          }}
-          onMouseLeave={(e) => {
-            ;(e.currentTarget as HTMLElement).style.background =
-              "rgba(162, 89, 255, 0.12)"
-            ;(e.currentTarget as HTMLElement).style.color = "var(--accent)"
-            ;(e.currentTarget as HTMLElement).style.boxShadow =
-              "0 0 10px var(--accent-glow)"
-          }}
-        >
-          ▶ {isRunning ? "Running..." : "Run Pipeline"}
-        </button>
+        <div className="flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--bg-tertiary)]/60 p-1">
+          <button
+            onClick={runPipeline}
+            disabled={isRunning}
+            className="flex items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--accent)_32%,transparent)] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] px-2.5 py-1.5 text-xs font-medium text-[var(--accent)] shadow-[0_0_10px_var(--accent-glow)] transition-all duration-200 hover:bg-[var(--accent)] hover:text-[var(--text-primary)] disabled:cursor-wait disabled:opacity-70"
+          >
+            <span>▶</span>
+            <span className="hidden md:inline">
+              {isRunning ? "Running..." : "Run"}
+            </span>
+          </button>
 
-        {/* Step Mode */}
-        <button
-          onClick={stepExecute}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            color: "var(--text-secondary)",
-            background: "none",
-            border: "none",
-            padding: "6px 8px",
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 500,
-            cursor: "pointer",
-            transition: "all 0.15s",
-            fontFamily: "'Inter', sans-serif",
-          }}
-          onMouseEnter={(e) => {
-            ;(e.currentTarget as HTMLElement).style.color =
-              "var(--text-primary)"
-            ;(e.currentTarget as HTMLElement).style.background =
-              "var(--bg-tertiary)"
-          }}
-          onMouseLeave={(e) => {
-            ;(e.currentTarget as HTMLElement).style.color =
-              "var(--text-secondary)"
-            ;(e.currentTarget as HTMLElement).style.background = "none"
-          }}
-        >
-          ⏭ Step
-        </button>
+          <button
+            onClick={stepExecute}
+            className="rounded-lg px-2 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors duration-150 hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
+            title="Step execution"
+          >
+            ⏭
+          </button>
 
-        {/* Auto Run */}
-        <button
-          onClick={toggleAutoRun}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            color:
+          <button
+            onClick={toggleAutoRun}
+            className={`flex items-center gap-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition-all duration-150 ${
               executionMode === "auto"
-                ? "var(--status-success)"
-                : "var(--text-muted)",
-            background:
-              executionMode === "auto" ? "rgba(20, 174, 92, 0.12)" : "none",
-            border:
-              executionMode === "auto"
-                ? "1px solid rgba(20, 174, 92, 0.25)"
-                : "none",
-            padding: "6px 8px",
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 500,
-            cursor: "pointer",
-            transition: "all 0.15s",
-            fontFamily: "'Inter', sans-serif",
-          }}
-        >
-          ⚡ Auto
-        </button>
+                ? "border-[color-mix(in_srgb,var(--status-success)_24%,transparent)] bg-[color-mix(in_srgb,var(--status-success)_14%,transparent)] text-[var(--status-success)]"
+                : "border-transparent text-[var(--text-muted)] hover:bg-[var(--bg-tertiary)]"
+            }`}
+          >
+            <span>⚡</span>
+            <span className="hidden md:inline">Auto</span>
+            {executionMode === "auto" && (
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--status-success)]" />
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Right section */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        {/* Compute Mode Toggle */}
-        <div
-          style={{
-            display: "flex",
-            background: "var(--bg-tertiary)",
-            borderRadius: 8,
-            padding: 2,
-            border: "1px solid var(--border)",
-          }}
-        >
+      <div className="relative z-10 flex items-center gap-2 md:gap-3">
+        <div className="flex rounded-lg border border-[var(--border)] bg-[var(--bg-tertiary)] p-0.5">
           <button
             onClick={() => setComputeMode("numeric")}
-            style={{
-              padding: "4px 10px",
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              border: "none",
-              fontFamily: "'Inter', sans-serif",
-              background:
-                computeMode === "numeric"
-                  ? isDark
-                    ? "var(--bg-input)"
-                    : "#ffffff"
-                  : "transparent",
-              color:
-                computeMode === "numeric"
-                  ? "var(--text-primary)"
-                  : "var(--text-muted)",
-              boxShadow:
-                computeMode === "numeric" ? "0 1px 2px var(--shadow)" : "none",
-              transition: "all 0.15s",
-            }}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-150 ${
+              computeMode === "numeric"
+                ? "bg-[var(--bg-input)] text-[var(--text-primary)] shadow-[0_1px_2px_var(--shadow)]"
+                : "text-[var(--text-muted)]"
+            }`}
           >
             Numeric
           </button>
           <button
             onClick={() => setComputeMode("symbolic")}
-            style={{
-              padding: "4px 10px",
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              border: "none",
-              fontFamily: "'Inter', sans-serif",
-              background:
-                computeMode === "symbolic"
-                  ? isDark
-                    ? "var(--bg-input)"
-                    : "#ffffff"
-                  : "transparent",
-              color:
-                computeMode === "symbolic"
-                  ? "var(--text-primary)"
-                  : "var(--text-muted)",
-              boxShadow:
-                computeMode === "symbolic" ? "0 1px 2px var(--shadow)" : "none",
-              transition: "all 0.15s",
-            }}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-150 ${
+              computeMode === "symbolic"
+                ? "bg-[var(--bg-input)] text-[var(--text-primary)] shadow-[0_1px_2px_var(--shadow)]"
+                : "text-[var(--text-muted)]"
+            }`}
           >
             Symbolic
           </button>
         </div>
 
-        {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
           title={isDark ? "Switch to light theme" : "Switch to dark theme"}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            background: "var(--bg-tertiary)",
-            border: "1px solid var(--border)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 16,
-            transition: "all 0.2s",
-            color: "var(--text-secondary)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--accent)"
-            e.currentTarget.style.boxShadow = "0 0 8px var(--accent-glow)"
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)"
-            e.currentTarget.style.boxShadow = "none"
-          }}
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-tertiary)] text-base text-[var(--text-secondary)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--text-primary)] hover:shadow-[0_0_8px_var(--accent-glow)]"
         >
           {isDark ? "☀" : "🌙"}
         </button>

@@ -33,28 +33,14 @@ export const NumberInputNode: React.FC<NodeProps> = React.memo(
           value={inputValue}
           onChange={handleChange}
           placeholder="e.g. 3.14 or 3,14"
-          className="node-input"
-          style={{
-            width: "100%",
-            background: "var(--bg-input)",
-            border: `1px solid ${showValidation ? "var(--status-error)" : "var(--border)"}`,
-            borderRadius: 6,
-            padding: "6px 8px",
-            fontSize: 12,
-            color: "var(--category-input)",
-            outline: "none",
-            fontFamily: "'JetBrains Mono', monospace",
-          }}
+          className={`node-input w-full rounded-md border bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--category-input)] outline-none ${
+            showValidation
+              ? "border-[var(--status-error)]"
+              : "border-[var(--border)]"
+          }`}
         />
         {showValidation && (
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 10,
-              color: "var(--status-error)",
-              lineHeight: 1.3,
-            }}
-          >
+          <div className="mt-1.5 text-[10px] leading-[1.3] text-[var(--status-error)]">
             {parsedValue.reason}
           </div>
         )}

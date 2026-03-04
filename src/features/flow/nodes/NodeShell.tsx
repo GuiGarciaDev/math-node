@@ -13,7 +13,7 @@ interface NodeShellProps {
 
 interface NodeContainerProps {
   width: number
-  borderColor: string
+  borderClassName: string
   children: React.ReactNode
 }
 
@@ -40,18 +40,35 @@ const categoryColors: Record<string, string> = {
   advanced: "var(--category-advanced)",
 }
 
+const widthClassMap: Record<number, string> = {
+  220: "w-[220px]",
+  280: "w-[280px]",
+}
+
+const borderClassMap: Record<string, string> = {
+  "var(--status-error)": "border-[var(--status-error)]",
+  "var(--status-success)": "border-[var(--status-success)]",
+  "var(--category-input)": "border-[var(--category-input)]",
+  "var(--category-arithmetic)": "border-[var(--category-arithmetic)]",
+  "var(--category-calculus)": "border-[var(--category-calculus)]",
+  "var(--category-display)": "border-[var(--category-display)]",
+  "var(--category-advanced)": "border-[var(--category-advanced)]",
+  "var(--border)": "border-[var(--border)]",
+}
+
+const handleColorClassMap: Record<string, string> = {
+  "var(--category-input)": "bg-[var(--category-input)]",
+  "var(--status-success)": "bg-[var(--status-success)]",
+  "var(--category-calculus)": "bg-[var(--category-calculus)]",
+  "var(--category-display)": "bg-[var(--category-display)]",
+  "var(--text-muted)": "bg-[var(--text-muted)]",
+}
+
 export const NodeContainer: React.FC<NodeContainerProps> = React.memo(
-  ({ width, borderColor, children }) => (
-    <div style={{ width }}>
+  ({ width, borderClassName, children }) => (
+    <div className={widthClassMap[width] ?? "w-[220px]"}>
       <div
-        style={{
-          background: "var(--bg-secondary)",
-          backdropFilter: "blur(12px)",
-          borderRadius: 12,
-          border: `1px solid ${borderColor}`,
-          transition: "border-color 0.2s ease",
-          overflow: "hidden",
-        }}
+        className={`overflow-hidden rounded-xl border bg-[var(--bg-secondary)] backdrop-blur-xl transition-colors duration-200 ${borderClassName}`}
       >
         {children}
       </div>
@@ -63,28 +80,11 @@ NodeContainer.displayName = "NodeContainer"
 
 export const NodeHeader: React.FC<NodeHeaderProps> = React.memo(
   ({ title, headerActions }) => (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "8px 12px",
-        borderBottom: "1px solid var(--border)",
-      }}
-    >
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: "var(--text-primary)",
-          letterSpacing: "0.01em",
-        }}
-      >
+    <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
+      <span className="text-[11px] font-semibold tracking-[0.01em] text-[var(--text-primary)]">
         {title}
       </span>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {headerActions}
-      </div>
+      <div className="flex items-center gap-2">{headerActions}</div>
     </div>
   ),
 )
@@ -95,17 +95,12 @@ export const TypedHandle: React.FC<TypedHandleProps> = React.memo(
   ({ port, side }) => {
     const isInput = side === "left"
     const config = getHandleTypeConfig(port.type)
+    const handleColorClass =
+      handleColorClassMap[config.color] ?? "bg-[var(--text-muted)]"
 
     return (
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: isInput ? "flex-start" : "flex-end",
-          gap: 2,
-          position: "relative",
-          minWidth: 0,
-        }}
+        className={`relative flex min-w-0 items-center gap-0.5 ${isInput ? "justify-start" : "justify-end"}`}
       >
         {isInput ? (
           <>
@@ -113,28 +108,10 @@ export const TypedHandle: React.FC<TypedHandleProps> = React.memo(
               type="target"
               position={Position.Left}
               id={port.name}
-              style={{
-                position: "relative",
-                left: -8,
-                top: "auto",
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: config.color,
-                border: "none",
-                boxShadow: "none",
-                transform: "none",
-              }}
+              className={`left-[-8px] h-2.5 w-2.5 rounded-full border-none shadow-none ${handleColorClass}`}
             />
             <span
-              style={{
-                fontSize: 10,
-                color: "var(--text-secondary)",
-                fontFamily: "'JetBrains Mono', monospace",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
+              className="truncate whitespace-nowrap font-mono text-[10px] text-[var(--text-secondary)]"
               title={`${port.label} • ${config.label}`}
             >
               {config.label}
@@ -143,14 +120,7 @@ export const TypedHandle: React.FC<TypedHandleProps> = React.memo(
         ) : (
           <>
             <span
-              style={{
-                fontSize: 10,
-                color: "var(--text-secondary)",
-                fontFamily: "'JetBrains Mono', monospace",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
+              className="truncate whitespace-nowrap font-mono text-[10px] text-[var(--text-secondary)]"
               title={`${port.label} • ${config.label}`}
             >
               {config.label}
@@ -159,18 +129,7 @@ export const TypedHandle: React.FC<TypedHandleProps> = React.memo(
               type="source"
               position={Position.Right}
               id={port.name}
-              style={{
-                position: "relative",
-                right: -8,
-                top: "auto",
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: config.color,
-                border: "none",
-                boxShadow: "none",
-                transform: "none",
-              }}
+              className={`right-[-8px] h-2.5 w-2.5 rounded-full border-none shadow-none ${handleColorClass}`}
             />
           </>
         )}
@@ -190,21 +149,14 @@ export const NodeHandlesSection: React.FC<NodeHandlesSectionProps> = React.memo(
     }
 
     return (
-      <div
-        style={{
-          padding: "8px 12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-        }}
-      >
+      <div className="flex flex-col gap-2 px-3 py-2">
         {outputs.map((output, index) => (
-          <div key={`output-${index}`} style={{ minWidth: 0 }}>
+          <div key={`output-${index}`} className="min-w-0">
             <TypedHandle port={output} side="right" />
           </div>
         ))}
         {inputs.map((input, index) => (
-          <div key={`input-${index}`} style={{ minWidth: 0 }}>
+          <div key={`input-${index}`} className="min-w-0">
             <TypedHandle port={input} side="left" />
           </div>
         ))}
@@ -227,11 +179,14 @@ export const NodeShell: React.FC<NodeShellProps> = React.memo(
             ? accentColor
             : "var(--border)"
 
+    const borderClassName =
+      borderClassMap[borderColor] ?? "border-[var(--border)]"
+
     return (
-      <NodeContainer width={width} borderColor={borderColor}>
+      <NodeContainer width={width} borderClassName={borderClassName}>
         <NodeHeader title={data.label} headerActions={headerActions} />
         <NodeHandlesSection inputs={data.inputs} outputs={data.outputs} />
-        <div style={{ padding: "8px 12px" }}>{children}</div>
+        <div className="px-3 py-2">{children}</div>
       </NodeContainer>
     )
   },

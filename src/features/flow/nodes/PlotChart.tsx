@@ -7,11 +7,11 @@ interface PlotPoint {
 
 interface PlotChartProps {
   points: PlotPoint[]
-  height: number
+  heightClassName?: string
 }
 
 export const PlotChart: React.FC<PlotChartProps> = React.memo(
-  ({ points, height }) => {
+  ({ points, heightClassName = "h-[120px]" }) => {
     const viewWidth = 100
     const viewHeight = 100
     const frame = {
@@ -96,22 +96,14 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
 
     return (
       <div
-        style={{
-          width: "100%",
-          height,
-          background: "var(--bg-input)",
-          border: "1px solid var(--border)",
-          borderRadius: 8,
-          position: "relative",
-          overflow: "hidden",
-        }}
+        className={`relative w-full overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-input)] ${heightClassName}`}
       >
         <svg
           width="100%"
           height="100%"
           viewBox={`0 0 ${viewWidth} ${viewHeight}`}
           preserveAspectRatio="none"
-          style={{ position: "absolute", top: 0, left: 0 }}
+          className="absolute left-0 top-0"
         >
           {[0.25, 0.5, 0.75].map((f) => (
             <React.Fragment key={f}>
@@ -167,9 +159,7 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
               stroke="var(--category-display)"
               strokeWidth="0.9"
               vectorEffect="non-scaling-stroke"
-              style={{
-                filter: "drop-shadow(0 0 4px rgba(20, 174, 92, 0.35))",
-              }}
+              filter="drop-shadow(0 0 4px rgba(20, 174, 92, 0.35))"
             />
           )}
 
@@ -191,7 +181,7 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
                     textAnchor="middle"
                     fontSize="3"
                     fill="var(--text-dim)"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    className="font-mono"
                   >
                     {tick.label}
                   </text>
@@ -214,7 +204,7 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
                     textAnchor="end"
                     fontSize="3"
                     fill="var(--text-dim)"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    className="font-mono"
                   >
                     {tick.label}
                   </text>
@@ -225,17 +215,7 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
         </svg>
 
         {points.length === 0 && (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 11,
-              color: "var(--text-dim)",
-            }}
-          >
+          <div className="absolute inset-0 flex items-center justify-center text-[11px] text-[var(--text-dim)]">
             No data
           </div>
         )}

@@ -27,24 +27,7 @@ export const InteractionToolbar: React.FC = React.memo(() => {
   const togglePresets = useFlowStore((s) => s.togglePresets)
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: 12,
-        top: "50%",
-        transform: "translateY(-50%)",
-        zIndex: 40,
-        borderRadius: 14,
-        border: "1px solid var(--border)",
-        background: "color-mix(in srgb, var(--bg-secondary) 92%, transparent)",
-        boxShadow: "0 10px 22px rgba(0,0,0,0.28)",
-        backdropFilter: "blur(10px)",
-        padding: 8,
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-      }}
-    >
+    <div className="absolute left-3 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-1.5 rounded-2xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-2 shadow-[0_10px_22px_rgba(0,0,0,0.28)] backdrop-blur-md">
       {items.map((item) => {
         const active = item.mode ? interactionMode === item.mode : false
 
@@ -59,21 +42,11 @@ export const InteractionToolbar: React.FC = React.memo(() => {
                 togglePresets()
               }
             }}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              border: "1px solid transparent",
-              background: active
-                ? "color-mix(in srgb, var(--accent) 22%, transparent)"
-                : "transparent",
-              color: active ? "var(--text-primary)" : "var(--text-secondary)",
-              cursor: "pointer",
-              fontSize: 14,
-              transform: active ? "scale(1.03)" : "scale(1)",
-              transition:
-                "transform 0.12s ease, background 0.12s ease, color 0.12s ease",
-            }}
+            className={`flex h-8 w-8 items-center justify-center rounded-[10px] border border-transparent text-sm transition-all duration-150 ${
+              active
+                ? "scale-[1.03] bg-[color-mix(in_srgb,var(--accent)_22%,transparent)] text-[var(--text-primary)]"
+                : "text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
+            }`}
           >
             <item.icon />
           </button>

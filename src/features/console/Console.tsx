@@ -1,12 +1,12 @@
 import React, { useRef, useEffect } from "react"
 import { useFlowStore } from "../flow/flowStore"
 
-const levelColors: Record<string, string> = {
-  info: "var(--category-input)",
-  eval: "var(--category-calculus)",
-  success: "var(--status-success)",
-  error: "var(--status-error)",
-  warn: "var(--status-warn)",
+const levelClassName: Record<string, string> = {
+  info: "text-[var(--category-input)]",
+  eval: "text-[var(--category-calculus)]",
+  success: "text-[var(--status-success)]",
+  error: "text-[var(--status-error)]",
+  warn: "text-[var(--status-warn)]",
 }
 
 const levelLabels: Record<string, string> = {
@@ -25,7 +25,6 @@ export const Console: React.FC = React.memo(() => {
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (scrollRef.current && consoleOpen) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -34,95 +33,44 @@ export const Console: React.FC = React.memo(() => {
 
   return (
     <div
-      style={{
-        height: consoleOpen ? 180 : 32,
-        minHeight: 32,
-        background: "var(--bg-secondary)",
-        backdropFilter: "blur(16px)",
-        borderTop: "1px solid var(--border)",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        transition: "height 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        willChange: "height",
-      }}
+      className={`flex min-h-8 flex-col overflow-hidden border-t border-[var(--border)] bg-[var(--bg-secondary)] backdrop-blur-xl transition-[height] duration-300 ${
+        consoleOpen ? "h-[180px]" : "h-8"
+      }`}
     >
-      {/* Tab Bar */}
       <div
-        style={{
-          height: 32,
-          minHeight: 32,
-          borderBottom: consoleOpen ? "1px solid var(--border)" : "none",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 12px",
-          background: consoleOpen ? "var(--bg-tertiary)" : "transparent",
-          transition: "background 0.3s ease",
-        }}
+        className={`flex h-8 min-h-8 items-center justify-between px-3 transition-colors duration-300 ${
+          consoleOpen
+            ? "border-b border-[var(--border)] bg-[var(--bg-tertiary)]"
+            : "bg-transparent"
+        }`}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div className="flex items-center gap-4">
           <button
             onClick={toggleConsole}
-            style={{
-              fontSize: 12,
-              fontWeight: 500,
-              color: "var(--text-primary)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              borderBottom: "2px solid var(--accent)",
-              height: 32,
-              padding: "0 4px",
-            }}
+            className="h-8 border-b-2 border-[var(--accent)] px-1 text-xs font-medium text-[var(--text-primary)]"
           >
             Console
           </button>
           {consoleOpen && (
-            <button
-              style={{
-                fontSize: 12,
-                fontWeight: 500,
-                color: "var(--text-muted)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                height: 32,
-                padding: "0 4px",
-              }}
-            >
-              Errors{" "}
-              <span
-                style={{
-                  background: "rgba(239, 68, 68, 0.2)",
-                  color: "var(--status-error)",
-                  padding: "1px 6px",
-                  borderRadius: 10,
-                  fontSize: 10,
-                  marginLeft: 4,
-                }}
-              >
+            <button className="h-8 px-1 text-xs font-medium text-[var(--text-muted)]">
+              Errors
+              <span className="ml-1 rounded-full bg-red-500/20 px-1.5 py-[1px] text-[10px] text-[var(--status-error)]">
                 {consoleLogs.filter((l) => l.level === "error").length}
               </span>
             </button>
           )}
           {!consoleOpen && (
-            <span style={{ fontSize: 11, color: "var(--text-dim)" }}>
+            <span className="text-[11px] text-[var(--text-dim)]">
               {consoleLogs.length} entries
             </span>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+
+        <div className="flex items-center gap-2">
           {consoleOpen && (
             <button
               onClick={clearConsole}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--text-muted)",
-                cursor: "pointer",
-                fontSize: 14,
-              }}
+              className="text-sm text-[var(--text-muted)] transition-colors duration-150 hover:text-[var(--text-primary)]"
               title="Clear console"
             >
               🗑
@@ -130,60 +78,43 @@ export const Console: React.FC = React.memo(() => {
           )}
           <button
             onClick={toggleConsole}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--text-muted)",
-              cursor: "pointer",
-              fontSize: 14,
-              transition: "transform 0.3s ease",
-              transform: consoleOpen ? "rotate(0deg)" : "rotate(180deg)",
-            }}
+            className={`text-sm text-[var(--text-muted)] transition-transform duration-300 ${
+              consoleOpen ? "rotate-0" : "rotate-180"
+            }`}
           >
             ▼
           </button>
         </div>
       </div>
 
-      {/* Log Entries — always rendered, visibility controlled by parent height */}
       <div
         ref={scrollRef}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: 12,
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 12,
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
-          opacity: consoleOpen ? 1 : 0,
-          transition: "opacity 0.2s ease",
-        }}
+        className={`flex flex-1 flex-col gap-1 overflow-y-auto p-3 font-mono text-xs transition-opacity duration-200 ${
+          consoleOpen ? "opacity-100" : "opacity-0"
+        }`}
       >
         {consoleLogs.length === 0 && (
-          <span style={{ color: "var(--text-dim)" }}>
+          <span className="text-[var(--text-dim)]">
             No logs yet. Run the pipeline to see execution output.
           </span>
         )}
-        {consoleLogs.map((log) => (
-          <div
-            key={log.id}
-            style={{
-              color:
-                log.level === "error"
-                  ? "var(--status-error)"
-                  : log.level === "success"
-                    ? "var(--status-success)"
-                    : "var(--text-secondary)",
-            }}
-          >
-            <span style={{ color: levelColors[log.level], fontWeight: 500 }}>
-              [{levelLabels[log.level]}]
-            </span>{" "}
-            {log.message}
-          </div>
-        ))}
+        {consoleLogs.map((log) => {
+          const messageClassName =
+            log.level === "error"
+              ? "text-[var(--status-error)]"
+              : log.level === "success"
+                ? "text-[var(--status-success)]"
+                : "text-[var(--text-secondary)]"
+
+          return (
+            <div key={log.id} className={messageClassName}>
+              <span className={`font-medium ${levelClassName[log.level]}`}>
+                [{levelLabels[log.level]}]
+              </span>{" "}
+              {log.message}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

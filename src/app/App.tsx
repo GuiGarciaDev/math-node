@@ -8,6 +8,7 @@ import { GraphModal } from "../features/flow/GraphModal"
 import { FlowShortcuts } from "../features/flow/FlowShortcuts"
 import { Inspector } from "../features/inspector/Inspector"
 import { Console } from "../features/console/Console"
+import { DesignSystemPreview } from "./layout/DesignSystemPreview"
 import { useFlowStore } from "../features/flow/flowStore"
 
 const App: React.FC = () => {
@@ -20,7 +21,6 @@ const App: React.FC = () => {
   const togglePresets = useFlowStore((s) => s.togglePresets)
   const theme = useFlowStore((s) => s.theme)
 
-  // Sync theme attribute on mount and changes
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme)
   }, [theme])
@@ -30,39 +30,19 @@ const App: React.FC = () => {
       {!appStarted && <LandingPage />}
 
       <div
-        style={{
-          width: "100%",
-          height: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          opacity: appStarted ? 1 : 0,
-          pointerEvents: appStarted ? "auto" : "none",
-          transition: "opacity 0.5s ease-out",
-          fontFamily: "'Inter', sans-serif",
-        }}
+        className={`flex h-screen w-full flex-col transition-opacity duration-500 ${
+          appStarted
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
       >
         <Header />
 
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
+        <div className="relative flex flex-1 overflow-hidden">
           <Sidebar collapsed={!sidebarOpen} />
 
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              position: "relative",
-            }}
-          >
-            <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+          <div className="relative flex flex-1 flex-col overflow-hidden">
+            <div className="relative flex-1 overflow-hidden">
               <ReactFlowProvider>
                 <FlowCanvas />
                 <FlowShortcuts />
@@ -71,59 +51,19 @@ const App: React.FC = () => {
               <button
                 onClick={toggleSidebar}
                 title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-                style={{
-                  position: "absolute",
-                  left: 6,
-                  top: 12,
-                  zIndex: 40,
-                  width: 24,
-                  height: 32,
-                  borderRadius: 8,
-                  border: "1px solid var(--border)",
-                  background: "var(--bg-secondary)",
-                  color: "var(--text-muted)",
-                  cursor: "pointer",
-                }}
+                className="absolute left-1.5 top-3 z-40 h-8 w-6 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-xs text-[var(--text-muted)] transition-colors duration-150 hover:text-[var(--text-primary)]"
               >
                 {sidebarOpen ? "◁" : "▷"}
               </button>
 
-              {/* Inspector Toggle Button — synced transition with panel */}
               <button
                 onClick={toggleInspector}
                 title={inspectorOpen ? "Hide Inspector" : "Show Inspector"}
-                style={{
-                  position: "absolute",
-                  right: inspectorOpen ? 0 : 0,
-                  top: 12,
-                  zIndex: 10,
-                  width: 24,
-                  height: 40,
-                  background: "var(--bg-secondary)",
-                  backdropFilter: "blur(12px)",
-                  border: "1px solid var(--border)",
-                  borderRight: inspectorOpen
-                    ? "none"
-                    : "1px solid var(--border)",
-                  borderTopLeftRadius: 6,
-                  borderBottomLeftRadius: 6,
-                  borderTopRightRadius: inspectorOpen ? 0 : 6,
-                  borderBottomRightRadius: inspectorOpen ? 0 : 6,
-                  color: "var(--text-muted)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  padding: 0,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "var(--text-primary)"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "var(--text-muted)"
-                }}
+                className={`absolute right-0 top-3 z-10 flex h-10 w-6 items-center justify-center border border-[var(--border)] bg-[var(--bg-secondary)] text-xs text-[var(--text-muted)] transition-all duration-300 hover:text-[var(--text-primary)] ${
+                  inspectorOpen
+                    ? "rounded-bl-md rounded-tl-md border-r-0"
+                    : "rounded-md"
+                }`}
               >
                 {inspectorOpen ? "▶" : "◀"}
               </button>
@@ -131,23 +71,12 @@ const App: React.FC = () => {
             <Console />
           </div>
 
-          {/* Inspector Panel — single transition on width, no inner transform */}
           <div
-            style={{
-              width: inspectorOpen ? 288 : 0,
-              minHeight: "100%",
-              overflow: "hidden",
-              transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              flexShrink: 0,
-            }}
+            className={`min-h-full shrink-0 overflow-hidden transition-[width] duration-300 ${
+              inspectorOpen ? "w-72" : "w-0"
+            }`}
           >
-            <div
-              style={{
-                width: 288,
-                height: "100%",
-                minHeight: "100%",
-              }}
-            >
+            <div className="h-full min-h-full w-72">
               <Inspector />
             </div>
           </div>
@@ -157,33 +86,16 @@ const App: React.FC = () => {
       {presetsOpen && (
         <div
           onClick={togglePresets}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 80,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0,0,0,0.45)",
-          }}
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45"
         >
           <div
             onClick={(event) => event.stopPropagation()}
-            style={{
-              width: "min(420px, 92vw)",
-              borderRadius: 12,
-              border: "1px solid var(--border)",
-              background: "var(--bg-secondary)",
-              padding: 16,
-              color: "var(--text-primary)",
-            }}
+            className="w-[min(760px,92vw)] max-h-[88vh] overflow-auto rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4 text-[var(--text-primary)]"
           >
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-              Presets
+            <div className="mb-3 text-sm font-semibold">
+              Design System Preview
             </div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-              Presets panel placeholder. Ready for reusable template flows.
-            </div>
+            <DesignSystemPreview />
           </div>
         </div>
       )}

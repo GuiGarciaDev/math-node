@@ -18,26 +18,13 @@ export const ExpressionNode: React.FC<NodeProps> = React.memo(
 
     return (
       <NodeShell data={nodeData} selected={selected}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
-            f(x) =
-          </span>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] text-[var(--text-muted)]">f(x) =</span>
           <input
             type="text"
             value={String(nodeData.params.expression ?? "")}
             onChange={handleChange}
-            className="node-input"
-            style={{
-              width: "100%",
-              background: "var(--bg-input)",
-              border: "1px solid var(--border)",
-              borderRadius: 6,
-              padding: "6px 8px",
-              fontSize: 12,
-              color: "var(--text-primary)",
-              outline: "none",
-              fontFamily: "'JetBrains Mono', monospace",
-            }}
+            className="node-input w-full rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] outline-none"
           />
         </div>
       </NodeShell>

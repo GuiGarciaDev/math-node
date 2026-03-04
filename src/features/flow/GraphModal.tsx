@@ -24,91 +24,32 @@ export const GraphModal: React.FC = React.memo(() => {
   return (
     <div
       onClick={closeGraphModal}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0, 0, 0, 0.62)",
-        backdropFilter: "blur(4px)",
-        zIndex: 100,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-      }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-5 backdrop-blur-[4px]"
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        style={{
-          width: "min(980px, 94vw)",
-          maxHeight: "88vh",
-          background: "var(--bg-secondary)",
-          border: "1px solid var(--border)",
-          borderRadius: 14,
-          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.45)",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        className="flex max-h-[88vh] w-[min(980px,94vw)] flex-col overflow-hidden rounded-[14px] border border-[var(--border)] bg-[var(--bg-secondary)] shadow-[0_24px_64px_rgba(0,0,0,0.45)]"
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "12px 16px",
-            borderBottom: "1px solid var(--border)",
-            background: "var(--bg-tertiary)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: "var(--category-display)",
-                boxShadow: "0 0 10px rgba(20, 174, 92, 0.4)",
-              }}
-            />
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "var(--text-primary)",
-              }}
-            >
+        <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-tertiary)] px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <span className="h-2 w-2 rounded-full bg-[var(--category-display)] shadow-[0_0_10px_rgba(20,174,92,0.4)]" />
+            <span className="text-[13px] font-semibold text-[var(--text-primary)]">
               {graphModal.title}
             </span>
           </div>
 
           <button
             onClick={closeGraphModal}
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              border: "1px solid var(--border)",
-              background: "var(--bg-input)",
-              color: "var(--text-secondary)",
-              cursor: "pointer",
-              fontSize: 13,
-            }}
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-input)] text-[13px] text-[var(--text-secondary)] transition-colors duration-150 hover:text-[var(--text-primary)]"
             title="Close"
           >
             ✕
           </button>
         </div>
 
-        <div
-          style={{
-            padding: 16,
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-          }}
-        >
-          <PlotChart points={graphModal.points} height={460} />
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+        <div className="flex flex-col gap-2.5 p-4">
+          <PlotChart points={graphModal.points} heightClassName="h-[460px]" />
+          <div className="text-[11px] text-[var(--text-muted)]">
             Domain: [{graphModal.domain[0].toFixed(2)},{" "}
             {graphModal.domain[1].toFixed(2)}]
           </div>

@@ -62,77 +62,30 @@ export const PlotNode: React.FC<NodeProps> = React.memo(
           <button
             onClick={handleExpand}
             title="Expand graph"
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 6,
-              border: "1px solid var(--border)",
-              background: "var(--bg-input)",
-              color: "var(--text-secondary)",
-              cursor: "pointer",
-              fontSize: 12,
-              lineHeight: 1,
-            }}
+            className="flex h-5 w-5 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--bg-input)] text-xs leading-none text-[var(--text-secondary)] transition-colors duration-150 hover:text-[var(--text-primary)]"
           >
             ⤢
           </button>
         }
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            width: "100%",
-          }}
-        >
-          <PlotChart points={points} height={120} />
+        <div className="flex w-full flex-col gap-2">
+          <PlotChart points={points} heightClassName="h-[120px]" />
 
           {/* Controls */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-[var(--text-muted)]">
               Domain: [{domain[0].toFixed(0)}, {domain[1].toFixed(0)}]
             </span>
-            <div style={{ display: "flex", gap: 4 }}>
+            <div className="flex gap-1">
               <button
                 onClick={handleZoomOut}
-                style={{
-                  width: 20,
-                  height: 20,
-                  background: "var(--bg-tertiary)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 4,
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
-                }}
+                className="flex h-5 w-5 items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-tertiary)] text-xs text-[var(--text-secondary)] transition-colors duration-150 hover:text-[var(--text-primary)]"
               >
                 −
               </button>
               <button
                 onClick={handleZoomIn}
-                style={{
-                  width: 20,
-                  height: 20,
-                  background: "var(--bg-tertiary)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 4,
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
-                }}
+                className="flex h-5 w-5 items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-tertiary)] text-xs text-[var(--text-secondary)] transition-colors duration-150 hover:text-[var(--text-primary)]"
               >
                 +
               </button>

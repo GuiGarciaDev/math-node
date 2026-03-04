@@ -1,6 +1,7 @@
 /* ─── MathFlow Global Styles ──────────────────────────────── */
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
 
 /* ─── Theme Variables ──────────────────────────────────────── */
 :root {
@@ -58,12 +59,8 @@
 }
 
 /* ─── Reset & Base ─────────────────────────────────────────── */
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html,
@@ -208,6 +205,22 @@ body,
   to {
     transform: translateY(0);
   }
+}
+
+@keyframes buttonPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.button-pop:active {
+  animation: buttonPop 0.18s ease;
 }
 
 /* ─── Node Input Focus ─────────────────────────────────────── */

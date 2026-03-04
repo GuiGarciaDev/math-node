@@ -1,6 +1,46 @@
 import React, { useMemo } from "react"
 import { useFlowStore } from "../flow/flowStore"
 
+const categoryIconClass: Record<string, string> = {
+  input:
+    "bg-[color-mix(in_srgb,var(--category-input)_14%,transparent)] border-[color-mix(in_srgb,var(--category-input)_28%,transparent)]",
+  arithmetic:
+    "bg-[color-mix(in_srgb,var(--category-arithmetic)_14%,transparent)] border-[color-mix(in_srgb,var(--category-arithmetic)_28%,transparent)]",
+  calculus:
+    "bg-[color-mix(in_srgb,var(--category-calculus)_14%,transparent)] border-[color-mix(in_srgb,var(--category-calculus)_28%,transparent)]",
+  display:
+    "bg-[color-mix(in_srgb,var(--category-display)_14%,transparent)] border-[color-mix(in_srgb,var(--category-display)_28%,transparent)]",
+  advanced:
+    "bg-[color-mix(in_srgb,var(--category-advanced)_14%,transparent)] border-[color-mix(in_srgb,var(--category-advanced)_28%,transparent)]",
+}
+
+const statusClass: Record<string, string> = {
+  idle: "text-[var(--text-muted)]",
+  success: "text-[var(--status-success)]",
+  error: "text-[var(--status-error)]",
+  running: "text-[var(--status-warn)]",
+}
+
+const statusDotClass: Record<string, string> = {
+  idle: "bg-[var(--text-dim)]",
+  success: "bg-[var(--status-success)]",
+  error: "bg-[var(--status-error)]",
+  running: "bg-[var(--status-warn)]",
+}
+
+const statusLabel: Record<string, string> = {
+  idle: "Idle",
+  success: "Success",
+  error: "Error",
+  running: "Running",
+}
+
+const sectionTitleClass =
+  "text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-dim)]"
+
+const shellClass =
+  "h-full w-full shrink-0 border-l border-[var(--border)] bg-[var(--bg-secondary)] shadow-[-10px_0_30px_var(--shadow)] backdrop-blur-xl"
+
 export const Inspector: React.FC = React.memo(() => {
   const selectedNodeId = useFlowStore((s) => s.selectedNodeId)
   const selectedNodeIds = useFlowStore((s) => s.selectedNodeIds)
@@ -18,53 +58,30 @@ export const Inspector: React.FC = React.memo(() => {
     [computedValues, selectedNodeId],
   )
 
+  const formatValue = (val: unknown): string => {
+    if (val === undefined || val === null) return "—"
+    if (typeof val === "number") return val.toFixed(4)
+    if (typeof val === "string") return val
+    if (typeof val === "object" && "raw" in (val as Record<string, unknown>))
+      return (val as { raw: string }).raw
+    if (Array.isArray(val)) return `[${val.length} items]`
+    return JSON.stringify(val)
+  }
+
   if (selectedNodeIds.length > 1) {
     return (
-      <aside
-        style={{
-          width: 288,
-          height: "100%",
-          background: "var(--bg-secondary)",
-          backdropFilter: "blur(12px)",
-          borderLeft: "1px solid var(--border)",
-          display: "flex",
-          flexDirection: "column",
-          flexShrink: 0,
-          boxShadow: "-10px 0 30px var(--shadow)",
-        }}
-      >
-        <div
-          style={{
-            padding: 12,
-            borderBottom: "1px solid #262830",
-            background: "rgba(28, 30, 38, 0.3)",
-          }}
-        >
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#e5e5e5" }}>
+      <aside className={shellClass}>
+        <div className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-tertiary)_68%,transparent)] px-3 py-3">
+          <span className="text-xs font-semibold text-[var(--text-primary)]">
             Properties
           </span>
         </div>
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 24,
-          }}
-        >
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 14, color: "var(--text-primary)" }}>
+        <div className="flex h-[calc(100%-44px)] items-center justify-center p-6">
+          <div className="text-center">
+            <div className="text-sm text-[var(--text-primary)]">
               {selectedNodeIds.length} nodes selected
             </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 11,
-                color: "var(--text-muted)",
-                lineHeight: 1.5,
-              }}
-            >
+            <div className="mt-2 text-[11px] leading-relaxed text-[var(--text-muted)]">
               Use context menu or shortcuts for bulk actions:
               <br />
               Delete, Copy, Duplicate, Group.
@@ -77,40 +94,14 @@ export const Inspector: React.FC = React.memo(() => {
 
   if (!selectedNode) {
     return (
-      <aside
-        style={{
-          width: 288,
-          height: "100%",
-          background: "var(--bg-secondary)",
-          backdropFilter: "blur(12px)",
-          borderLeft: "1px solid var(--border)",
-          display: "flex",
-          flexDirection: "column",
-          flexShrink: 0,
-          boxShadow: "-10px 0 30px var(--shadow)",
-        }}
-      >
-        <div
-          style={{
-            padding: 12,
-            borderBottom: "1px solid #262830",
-            background: "rgba(28, 30, 38, 0.3)",
-          }}
-        >
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#e5e5e5" }}>
+      <aside className={shellClass}>
+        <div className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-tertiary)_68%,transparent)] px-3 py-3">
+          <span className="text-xs font-semibold text-[var(--text-primary)]">
             Properties
           </span>
         </div>
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 24,
-          }}
-        >
-          <p style={{ fontSize: 12, color: "#525252", textAlign: "center" }}>
+        <div className="flex h-[calc(100%-44px)] items-center justify-center p-6">
+          <p className="text-center text-xs text-[var(--text-dim)]">
             Select a node to view its properties
           </p>
         </div>
@@ -120,85 +111,21 @@ export const Inspector: React.FC = React.memo(() => {
 
   const { data } = selectedNode
 
-  const categoryColors: Record<string, string> = {
-    input: "#3b82f6",
-    arithmetic: "#3b82f6",
-    calculus: "#8b5cf6",
-    display: "#10b981",
-    advanced: "#f59e0b",
-  }
-
-  const accentColor = categoryColors[data.category] ?? "#6b7280"
-
-  const formatValue = (val: unknown): string => {
-    if (val === undefined || val === null) return "—"
-    if (typeof val === "number") return val.toFixed(4)
-    if (typeof val === "string") return val
-    if (typeof val === "object" && "raw" in (val as Record<string, unknown>))
-      return (val as { raw: string }).raw
-    if (Array.isArray(val)) return `[${val.length} items]`
-    return JSON.stringify(val)
-  }
-
   return (
-    <aside
-      style={{
-        width: 288,
-        height: "100%",
-        background: "var(--bg-secondary)",
-        backdropFilter: "blur(12px)",
-        borderLeft: "1px solid var(--border)",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0,
-        boxShadow: "-10px 0 30px var(--shadow)",
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          padding: 12,
-          borderBottom: "1px solid #262830",
-          background: "rgba(28, 30, 38, 0.3)",
-        }}
-      >
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#e5e5e5" }}>
+    <aside className={shellClass}>
+      <div className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-tertiary)_68%,transparent)] px-3 py-3">
+        <span className="text-xs font-semibold text-[var(--text-primary)]">
           Properties
         </span>
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: 16,
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-        }}
-      >
-        {/* Node Info */}
+      <div className="flex h-[calc(100%-44px)] flex-col gap-5 overflow-y-auto p-4">
         <div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              marginBottom: 4,
-            }}
-          >
+          <div className="mb-1 flex items-center gap-3">
             <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 6,
-                background: `${accentColor}15`,
-                border: `1px solid ${accentColor}30`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 16,
-              }}
+              className={`flex h-8 w-8 items-center justify-center rounded-md border text-base ${
+                categoryIconClass[data.category] ?? categoryIconClass.input
+              }`}
             >
               {data.category === "calculus"
                 ? "∂"
@@ -207,69 +134,33 @@ export const Inspector: React.FC = React.memo(() => {
                   : "🔢"}
             </div>
             <div>
-              <h2
-                style={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: "#fff",
-                  margin: 0,
-                }}
-              >
+              <h2 className="text-sm font-medium text-[var(--text-primary)]">
                 {data.label}
               </h2>
-              <p
-                style={{
-                  fontSize: 10,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  color: "#6b7280",
-                  margin: 0,
-                }}
-              >
+              <p className="font-mono text-[10px] text-[var(--text-dim)]">
                 ID: {selectedNode.id}
               </p>
             </div>
           </div>
         </div>
 
-        <div style={{ height: 1, background: "#262830" }} />
+        <div className="h-px bg-[var(--border)]" />
 
-        {/* Parameters */}
         {Object.keys(data.params).length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <h3
-              style={{
-                fontSize: 10,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                color: "#6b7280",
-                fontWeight: 500,
-                margin: 0,
-              }}
-            >
-              Parameters
-            </h3>
+          <div className="flex flex-col gap-3">
+            <h3 className={sectionTitleClass}>Parameters</h3>
             {Object.entries(data.params).map(([key, value]) => {
-              // Skip complex params from display editing
               if (
                 typeof value === "object" &&
                 value !== null &&
                 !Array.isArray(value)
               )
                 return null
-              if (Array.isArray(value) && Array.isArray(value[0])) return null // matrix
+              if (Array.isArray(value) && Array.isArray(value[0])) return null
 
               return (
-                <div
-                  key={key}
-                  style={{ display: "flex", flexDirection: "column", gap: 4 }}
-                >
-                  <label
-                    style={{
-                      fontSize: 11,
-                      color: "#9ca3af",
-                      textTransform: "capitalize",
-                    }}
-                  >
+                <div key={key} className="flex flex-col gap-1">
+                  <label className="text-[11px] capitalize text-[var(--text-secondary)]">
                     {key}
                   </label>
                   <input
@@ -288,7 +179,6 @@ export const Inspector: React.FC = React.memo(() => {
                         updateNodeParam(selectedNode.id, key, raw)
                         return
                       }
-                      // Try to parse as number
                       const asNum = Number(raw)
                       updateNodeParam(
                         selectedNode.id,
@@ -296,17 +186,7 @@ export const Inspector: React.FC = React.memo(() => {
                         isNaN(asNum) ? raw : asNum,
                       )
                     }}
-                    style={{
-                      width: "100%",
-                      background: "#0f1117",
-                      border: "1px solid #262830",
-                      borderRadius: 6,
-                      padding: "6px 8px",
-                      fontSize: 12,
-                      color: "#e5e5e5",
-                      fontFamily: "'JetBrains Mono', monospace",
-                      outline: "none",
-                    }}
+                    className="node-input w-full rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] outline-none"
                   />
                 </div>
               )
@@ -314,78 +194,44 @@ export const Inspector: React.FC = React.memo(() => {
           </div>
         )}
 
-        <div style={{ height: 1, background: "#262830" }} />
+        <div className="h-px bg-[var(--border)]" />
 
-        {/* Ports */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <h3
-            style={{
-              fontSize: 10,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              color: "#6b7280",
-              fontWeight: 500,
-              margin: 0,
-            }}
-          >
-            Ports
-          </h3>
+        <div className="flex flex-col gap-2">
+          <h3 className={sectionTitleClass}>Ports</h3>
+
           {data.inputs.length > 0 && (
             <div>
-              <span style={{ fontSize: 10, color: "#525252" }}>Inputs</span>
+              <span className="text-[10px] text-[var(--text-dim)]">Inputs</span>
               {data.inputs.map((port) => (
                 <div
                   key={port.name}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontSize: 11,
-                    padding: "4px 0",
-                  }}
+                  className="flex items-center justify-between py-1 text-[11px]"
                 >
-                  <span style={{ color: "#9ca3af" }}>{port.label}</span>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      color: "#6b7280",
-                      background: "#1c1e26",
-                      padding: "1px 6px",
-                      borderRadius: 4,
-                      fontFamily: "'JetBrains Mono', monospace",
-                    }}
-                  >
+                  <span className="text-[var(--text-secondary)]">
+                    {port.label}
+                  </span>
+                  <span className="rounded bg-[var(--bg-tertiary)] px-1.5 py-[1px] font-mono text-[10px] text-[var(--text-dim)]">
                     {port.type}
                   </span>
                 </div>
               ))}
             </div>
           )}
+
           {data.outputs.length > 0 && (
             <div>
-              <span style={{ fontSize: 10, color: "#525252" }}>Outputs</span>
+              <span className="text-[10px] text-[var(--text-dim)]">
+                Outputs
+              </span>
               {data.outputs.map((port) => (
                 <div
                   key={port.name}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontSize: 11,
-                    padding: "4px 0",
-                  }}
+                  className="flex items-center justify-between py-1 text-[11px]"
                 >
-                  <span style={{ color: "#9ca3af" }}>{port.label}</span>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      color: "#6b7280",
-                      background: "#1c1e26",
-                      padding: "1px 6px",
-                      borderRadius: 4,
-                      fontFamily: "'JetBrains Mono', monospace",
-                    }}
-                  >
+                  <span className="text-[var(--text-secondary)]">
+                    {port.label}
+                  </span>
+                  <span className="rounded bg-[var(--bg-tertiary)] px-1.5 py-[1px] font-mono text-[10px] text-[var(--text-dim)]">
                     {port.type}
                   </span>
                 </div>
@@ -394,101 +240,33 @@ export const Inspector: React.FC = React.memo(() => {
           )}
         </div>
 
-        <div style={{ height: 1, background: "#262830" }} />
+        <div className="h-px bg-[var(--border)]" />
 
-        {/* Computed Result */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <h3
-            style={{
-              fontSize: 10,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              color: "#6b7280",
-              fontWeight: 500,
-              margin: 0,
-            }}
-          >
-            Execution
-          </h3>
-          <div
-            style={{
-              background: "#0f1117",
-              border: "1px solid #262830",
-              borderRadius: 8,
-              padding: 12,
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                fontSize: 11,
-              }}
-            >
-              <span style={{ color: "#6b7280" }}>Status</span>
+        <div className="flex flex-col gap-2">
+          <h3 className={sectionTitleClass}>Execution</h3>
+
+          <div className="flex flex-col gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] p-3">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-[var(--text-dim)]">Status</span>
               <span
-                style={{
-                  color:
-                    data.status === "success"
-                      ? "#10b981"
-                      : data.status === "error"
-                        ? "#ef4444"
-                        : data.status === "running"
-                          ? "#f59e0b"
-                          : "#6b7280",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
+                className={`flex items-center gap-1 ${statusClass[data.status] ?? statusClass.idle}`}
               >
-                <div
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background:
-                      data.status === "success"
-                        ? "#10b981"
-                        : data.status === "error"
-                          ? "#ef4444"
-                          : data.status === "running"
-                            ? "#f59e0b"
-                            : "#525252",
-                  }}
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${statusDotClass[data.status] ?? statusDotClass.idle}`}
                 />
-                {data.status === "idle"
-                  ? "Idle"
-                  : data.status === "success"
-                    ? "Success"
-                    : data.status === "error"
-                      ? "Error"
-                      : "Running"}
+                {statusLabel[data.status] ?? "Idle"}
               </span>
             </div>
+
             {computed && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  fontSize: 11,
-                }}
-              >
-                <span style={{ color: "#6b7280" }}>Value</span>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-[var(--text-dim)]">Value</span>
                 <span
-                  style={{
-                    color: computed.error ? "#ef4444" : "#e5e5e5",
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 11,
-                    maxWidth: 150,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
+                  className={`max-w-[150px] truncate whitespace-nowrap font-mono text-[11px] ${
+                    computed.error
+                      ? "text-[var(--status-error)]"
+                      : "text-[var(--text-primary)]"
+                  }`}
                 >
                   {computed.error ?? formatValue(computed.value)}
                 </span>

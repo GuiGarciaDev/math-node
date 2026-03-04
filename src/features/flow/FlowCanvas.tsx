@@ -20,12 +20,6 @@ const edgeTypes = {
   removable: RemovableEdge,
 }
 
-const minimapStyle = {
-  backgroundColor: "var(--bg-secondary)",
-  borderRadius: 8,
-  border: "1px solid var(--border)",
-}
-
 const minimapNodeColor = (node: any) => {
   const category = node.data?.category
   switch (category) {
@@ -129,6 +123,10 @@ export const FlowCanvas: React.FC = React.memo(() => {
   const closeContextMenu = useFlowStore((s) => s.closeContextMenu)
   const removeEdgesByIds = useFlowStore((s) => s.removeEdgesByIds)
   const addNode = useFlowStore((s) => s.addNode)
+  const undo = useFlowStore((s) => s.undo)
+  const redo = useFlowStore((s) => s.redo)
+  const canUndo = useFlowStore((s) => s.historyPast.length > 0)
+  const canRedo = useFlowStore((s) => s.historyFuture.length > 0)
 
   const reactFlowInstance = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -348,12 +346,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
   return (
     <div
       ref={containerRef}
-      style={{
-        width: "100%",
-        height: "100%",
-        cursor: interactionMode === "cut" ? "crosshair" : "default",
-        position: "relative",
-      }}
+      className={`relative h-full w-full ${interactionMode === "cut" ? "cursor-crosshair" : "cursor-default"}`}
     >
       <ReactFlow
         nodes={nodes}
@@ -399,7 +392,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
         </Panel>
         <Panel position="bottom-right">
           <MiniMap
-            style={minimapStyle}
+            className="rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]"
             nodeColor={minimapNodeColor}
             maskColor="rgba(0, 0, 0, 0.5)"
             pannable
@@ -407,37 +400,30 @@ export const FlowCanvas: React.FC = React.memo(() => {
           />
         </Panel>
         <Panel position="bottom-left">
-          <button
-            style={{
-              background:
-                "color-mix(in srgb, var(--bg-secondary) 92%, transparent)",
-            }}
-          >
-            <MdUndo />
-          </button>
+          <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-md">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              title="Undo (Ctrl+Z)"
+              className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              <MdUndo />
+            </button>
 
-          <button
-            style={{
-              background:
-                "color-mix(in srgb, var(--bg-secondary) 92%, transparent)",
-            }}
-          >
-            <MdRedo />
-          </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              title="Redo (Ctrl+Y)"
+              className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              <MdRedo />
+            </button>
+          </div>
         </Panel>
       </ReactFlow>
 
       {cutLine && (
-        <svg
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-            zIndex: 30,
-          }}
-        >
+        <svg className="pointer-events-none absolute inset-0 z-30 h-full w-full">
           <line
             x1={cutLine.x1}
             y1={cutLine.y1}

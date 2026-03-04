@@ -1,6 +1,7 @@
 features:
 [] Add precision properties in the operation nodes like ADD to control how many cases we want.
 [] Improve design of graphs.
+[] Add tailwind in the project and refactor the components to use it. Also create a file with all types of typography and colors to be easy to check it.
 
 [] Add more types of nodes in the app:
 superior power root
@@ -14,6 +15,7 @@ matrix
 fixes:
 [] Fix the design of undo and redo buttons.
 [] Graph labels are not aligned with the XY axis.
+[] Improve the design of the left sidebar when it is short mode.
 
 Completed:
 [x] Number node dont accept number with decimal case and the execution causes error. The sidebar value input of the node accepts "." or "," but it throw "invalid number" error after execution.
