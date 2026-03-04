@@ -1,5 +1,5 @@
 import React, { useEffect } from "react"
-import { useFlowStore } from "./flowStore"
+import { useFlowStore } from "./flowStore.ts"
 import { PlotChart } from "./nodes/PlotChart"
 
 export const GraphModal: React.FC = React.memo(() => {
@@ -107,7 +107,7 @@ export const GraphModal: React.FC = React.memo(() => {
             gap: 10,
           }}
         >
-          <PlotChart points={graphModal.points} width={940} height={460} />
+          <PlotChart points={graphModal.points} height={460} />
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
             Domain: [{graphModal.domain[0].toFixed(2)},{" "}
             {graphModal.domain[1].toFixed(2)}]
