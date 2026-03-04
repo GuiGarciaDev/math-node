@@ -1,12 +1,35 @@
 import React from "react"
 import { Handle, Position } from "@xyflow/react"
-import type { MathNodeData } from "../../../types"
+import type { MathNodeData, PortDefinition } from "../../../types"
+import { getHandleTypeConfig } from "./handleTypeConfig"
 
 interface NodeShellProps {
   data: MathNodeData
   selected?: boolean
   children?: React.ReactNode
   headerActions?: React.ReactNode
+  width?: number
+}
+
+interface NodeContainerProps {
+  width: number
+  borderColor: string
+  children: React.ReactNode
+}
+
+interface NodeHeaderProps {
+  title: string
+  headerActions?: React.ReactNode
+}
+
+interface TypedHandleProps {
+  port: PortDefinition
+  side: "left" | "right"
+}
+
+interface NodeHandlesSectionProps {
+  inputs: PortDefinition[]
+  outputs: PortDefinition[]
 }
 
 const categoryColors: Record<string, string> = {
@@ -17,21 +40,183 @@ const categoryColors: Record<string, string> = {
   advanced: "var(--category-advanced)",
 }
 
-const handleStyle = (index: number, total: number, accentColor: string) => {
-  const topPercent = total === 1 ? 50 : 20 + (index * 60) / (total - 1)
-  return {
-    top: `${topPercent}%`,
-    width: 11,
-    height: 11,
-    borderRadius: "50%",
-    background: accentColor,
-    border: "2px solid var(--bg-secondary)",
-    boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.25)",
-  } as React.CSSProperties
-}
+export const NodeContainer: React.FC<NodeContainerProps> = React.memo(
+  ({ width, borderColor, children }) => (
+    <div style={{ width }}>
+      <div
+        style={{
+          background: "var(--bg-secondary)",
+          backdropFilter: "blur(12px)",
+          borderRadius: 12,
+          border: `1px solid ${borderColor}`,
+          transition: "border-color 0.2s ease",
+          overflow: "hidden",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  ),
+)
+
+NodeContainer.displayName = "NodeContainer"
+
+export const NodeHeader: React.FC<NodeHeaderProps> = React.memo(
+  ({ title, headerActions }) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "8px 12px",
+        borderBottom: "1px solid var(--border)",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          color: "var(--text-primary)",
+          letterSpacing: "0.01em",
+        }}
+      >
+        {title}
+      </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {headerActions}
+      </div>
+    </div>
+  ),
+)
+
+NodeHeader.displayName = "NodeHeader"
+
+export const TypedHandle: React.FC<TypedHandleProps> = React.memo(
+  ({ port, side }) => {
+    const isInput = side === "left"
+    const config = getHandleTypeConfig(port.type)
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: isInput ? "flex-start" : "flex-end",
+          gap: 2,
+          position: "relative",
+          minWidth: 0,
+        }}
+      >
+        {isInput ? (
+          <>
+            <Handle
+              type="target"
+              position={Position.Left}
+              id={port.name}
+              style={{
+                position: "relative",
+                left: -8,
+                top: "auto",
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: config.color,
+                border: "none",
+                boxShadow: "none",
+                transform: "none",
+              }}
+            />
+            <span
+              style={{
+                fontSize: 10,
+                color: "var(--text-secondary)",
+                fontFamily: "'JetBrains Mono', monospace",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+              title={`${port.label} • ${config.label}`}
+            >
+              {config.label}
+            </span>
+          </>
+        ) : (
+          <>
+            <span
+              style={{
+                fontSize: 10,
+                color: "var(--text-secondary)",
+                fontFamily: "'JetBrains Mono', monospace",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+              title={`${port.label} • ${config.label}`}
+            >
+              {config.label}
+            </span>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id={port.name}
+              style={{
+                position: "relative",
+                right: -8,
+                top: "auto",
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: config.color,
+                border: "none",
+                boxShadow: "none",
+                transform: "none",
+              }}
+            />
+          </>
+        )}
+      </div>
+    )
+  },
+)
+
+TypedHandle.displayName = "TypedHandle"
+
+export const NodeHandlesSection: React.FC<NodeHandlesSectionProps> = React.memo(
+  ({ inputs, outputs }) => {
+    const rows = Math.max(inputs.length, outputs.length)
+
+    if (rows === 0) {
+      return null
+    }
+
+    return (
+      <div
+        style={{
+          padding: "8px 12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
+        {outputs.map((output, index) => (
+          <div key={`output-${index}`} style={{ minWidth: 0 }}>
+            <TypedHandle port={output} side="right" />
+          </div>
+        ))}
+        {inputs.map((input, index) => (
+          <div key={`input-${index}`} style={{ minWidth: 0 }}>
+            <TypedHandle port={input} side="left" />
+          </div>
+        ))}
+      </div>
+    )
+  },
+)
+
+NodeHandlesSection.displayName = "NodeHandlesSection"
 
 export const NodeShell: React.FC<NodeShellProps> = React.memo(
-  ({ data, selected, children, headerActions }) => {
+  ({ data, selected, children, headerActions, width = 220 }) => {
     const accentColor = categoryColors[data.category] ?? "#6b7280"
     const borderColor =
       data.status === "error"
@@ -43,109 +228,11 @@ export const NodeShell: React.FC<NodeShellProps> = React.memo(
             : "var(--border)"
 
     return (
-      <div style={{ position: "relative", width: 220 }}>
-        {/* Inner body — clipped for rounded corners */}
-        <div
-          style={{
-            background: "var(--bg-secondary)",
-            backdropFilter: "blur(16px)",
-            borderRadius: 12,
-            border: `1px solid ${borderColor}`,
-            boxShadow: `0 4px 20px rgba(0,0,0,0.3)`,
-            transition: "border-color 0.2s, box-shadow 0.2s",
-            overflow: "hidden",
-          }}
-        >
-          {/* Top glow accent line */}
-          <div
-            style={{
-              height: 1,
-              background: `linear-gradient(90deg, transparent, ${accentColor ?? "transparent"}, transparent)`,
-              opacity: 0.4,
-            }}
-          />
-
-          {/* Header */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "8px 12px",
-              borderBottom: "1px solid var(--border)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: accentColor,
-                  boxShadow: `0 0 6px ${accentColor}`,
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 500,
-                  color: "var(--text-primary)",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {data.label}
-              </span>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {headerActions}
-              {data.status !== "idle" && (
-                <div
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background:
-                      data.status === "success"
-                        ? "var(--status-success)"
-                        : data.status === "error"
-                          ? "var(--status-error)"
-                          : "var(--status-warn)",
-                    animation:
-                      data.status === "running"
-                        ? "pulse 1s ease infinite"
-                        : undefined,
-                  }}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Body */}
-          <div style={{ padding: "8px 12px" }}>{children}</div>
-        </div>
-
-        {/* Handles — rendered OUTSIDE overflow:hidden container */}
-        {data.inputs.map((port, i) => (
-          <Handle
-            key={`in-${port.name}`}
-            type="target"
-            position={Position.Left}
-            id={port.name}
-            style={handleStyle(i, data.inputs.length, accentColor)}
-          />
-        ))}
-
-        {data.outputs.map((port, i) => (
-          <Handle
-            key={`out-${port.name}`}
-            type="source"
-            position={Position.Right}
-            id={port.name}
-            style={handleStyle(i, data.outputs.length, accentColor)}
-          />
-        ))}
-      </div>
+      <NodeContainer width={width} borderColor={borderColor}>
+        <NodeHeader title={data.label} headerActions={headerActions} />
+        <NodeHandlesSection inputs={data.inputs} outputs={data.outputs} />
+        <div style={{ padding: "8px 12px" }}>{children}</div>
+      </NodeContainer>
     )
   },
 )

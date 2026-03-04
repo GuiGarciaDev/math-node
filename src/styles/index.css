@@ -124,14 +124,17 @@ body,
   box-shadow: none !important;
 }
 
+.react-flow__node-group {
+  background: transparent !important;
+  border: none !important;
+}
+
 .react-flow__edge-path {
-  stroke: color-mix(in srgb, var(--accent) 55%, transparent) !important;
   stroke-width: 2 !important;
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: var(--accent) !important;
-  stroke-width: 2.5 !important;
+  stroke-width: 2.8 !important;
 }
 
 .react-flow__connection-line {
@@ -141,11 +144,14 @@ body,
 
 .react-flow__handle {
   cursor: crosshair !important;
-  transition: transform 0.15s ease !important;
+  transition: opacity 0.12s ease !important;
+  transform: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .react-flow__handle:hover {
-  transform: scale(1.05) !important;
+  opacity: 0.92 !important;
 }
 
 .react-flow__minimap {

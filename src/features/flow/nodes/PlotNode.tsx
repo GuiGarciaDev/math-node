@@ -57,6 +57,7 @@ export const PlotNode: React.FC<NodeProps> = React.memo(
       <NodeShell
         data={nodeData}
         selected={selected}
+        width={280}
         headerActions={
           <button
             onClick={handleExpand}
@@ -82,10 +83,10 @@ export const PlotNode: React.FC<NodeProps> = React.memo(
             display: "flex",
             flexDirection: "column",
             gap: 8,
-            minWidth: 240,
+            width: "100%",
           }}
         >
-          <PlotChart points={points} width={240} height={120} />
+          <PlotChart points={points} height={120} />
 
           {/* Controls */}
           <div

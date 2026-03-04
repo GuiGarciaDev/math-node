@@ -19,6 +19,9 @@ import type {
   LogEntry,
   MathNodeType,
   MathNodeData,
+  InteractionMode,
+  ContextMenuState,
+  ClipboardData,
 } from "../../types"
 import { runPipeline, runSingleNode } from "./executionEngine"
 import { validateConnection } from "./edgeValidation"
@@ -33,8 +36,8 @@ const nodeDefaults: Record<
     label: "Number",
     category: "input",
     inputs: [],
-    outputs: [{ name: "value", type: "number", label: "Value" }],
-    params: { value: 0 },
+    outputs: [{ name: "value", type: "number", label: "number" }],
+    params: { value: "0" },
   },
   variable: {
     label: "Variable",
@@ -51,13 +54,13 @@ const nodeDefaults: Record<
     params: { expression: "x^2" },
   },
   add: {
-    label: "Add",
+    label: "Addition",
     category: "arithmetic",
     inputs: [
-      { name: "a", type: "number", label: "A" },
-      { name: "b", type: "number", label: "B" },
+      { name: "a", type: "number", label: "Input A" },
+      { name: "b", type: "number", label: "Input B" },
     ],
-    outputs: [{ name: "result", type: "number", label: "Result" }],
+    outputs: [{ name: "result", type: "number", label: "number" }],
     params: {},
   },
   subtract: {
@@ -148,11 +151,21 @@ const nodeDefaults: Record<
       cols: 2,
     },
   },
+  group: {
+    label: "Group",
+    category: "advanced",
+    inputs: [],
+    outputs: [],
+    params: {
+      width: 280,
+      height: 180,
+    },
+  },
 }
 
 let nodeIdCounter = 0
-function generateNodeId(): string {
-  return `node_${(++nodeIdCounter).toString(36)}_${Date.now().toString(36).slice(-4)}`
+function generateNodeId(prefix = "node"): string {
+  return `${prefix}_${(++nodeIdCounter).toString(36)}_${Date.now().toString(36).slice(-4)}`
 }
 
 function createNodeData(type: MathNodeType): MathNodeData {
@@ -162,6 +175,53 @@ function createNodeData(type: MathNodeType): MathNodeData {
     dirty: true,
     status: "idle" as const,
   }
+}
+
+function normalizeSelection(nodeIds: string[]): string[] {
+  return Array.from(new Set(nodeIds))
+}
+
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value))
+}
+
+function collectExpandedSelection(
+  nodes: MathNode[],
+  selectedIds: string[],
+): string[] {
+  const selected = new Set(selectedIds)
+  const queue = [...selected]
+
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    for (const node of nodes) {
+      if (node.parentId === current && !selected.has(node.id)) {
+        selected.add(node.id)
+        queue.push(node.id)
+      }
+    }
+  }
+
+  return Array.from(selected)
+}
+
+function getAbsoluteNodePosition(
+  node: MathNode,
+  byId: Map<string, MathNode>,
+): { x: number; y: number } {
+  let x = node.position.x
+  let y = node.position.y
+  let parentId = node.parentId
+
+  while (parentId) {
+    const parent = byId.get(parentId)
+    if (!parent) break
+    x += parent.position.x
+    y += parent.position.y
+    parentId = parent.parentId
+  }
+
+  return { x, y }
 }
 
 // ─── Store Interface ──────────────────────────────────────
@@ -175,6 +235,12 @@ interface FlowState {
   // UI State
   executionMode: ExecutionMode
   selectedNodeId: string | null
+  selectedNodeIds: string[]
+  interactionMode: InteractionMode
+  contextMenu: ContextMenuState
+  clipboard: ClipboardData | null
+  sidebarOpen: boolean
+  presetsOpen: boolean
   consoleLogs: LogEntry[]
   isRunning: boolean
   computeMode: "numeric" | "symbolic"
@@ -197,10 +263,29 @@ interface FlowState {
   addNode: (type: MathNodeType, position: { x: number; y: number }) => void
   removeNode: (nodeId: string) => void
   removeEdge: (edgeId: string) => void
+  removeEdgesByIds: (edgeIds: string[]) => void
   updateNodeParam: (nodeId: string, key: string, value: unknown) => void
   selectNode: (nodeId: string | null) => void
+  setSelectedNodeIds: (nodeIds: string[]) => void
+  toggleNodeSelection: (nodeId: string) => void
+  clearSelection: () => void
   setExecutionMode: (mode: ExecutionMode) => void
   setComputeMode: (mode: "numeric" | "symbolic") => void
+  setInteractionMode: (mode: InteractionMode) => void
+  toggleSidebar: () => void
+  togglePresets: () => void
+
+  openContextMenu: (payload: Omit<ContextMenuState, "visible">) => void
+  closeContextMenu: () => void
+  dispatchContextAction: (action: string, nodeId?: string) => void
+
+  // Selection actions
+  deleteSelectedNodes: () => void
+  copySelection: () => void
+  pasteClipboard: () => void
+  duplicateSelection: () => void
+  groupSelectedNodes: () => void
+  ungroupNode: (groupId: string) => void
 
   // Execution
   runPipeline: () => void
@@ -226,13 +311,13 @@ const defaultNodes: MathNode[] = [
     id: "num_1",
     type: "numberInput",
     position: { x: 60, y: 200 },
-    data: { ...createNodeData("numberInput"), params: { value: 42 } },
+    data: { ...createNodeData("numberInput"), params: { value: "42" } },
   },
   {
     id: "num_2",
     type: "numberInput",
     position: { x: 60, y: 340 },
-    data: { ...createNodeData("numberInput"), params: { value: 3.14 } },
+    data: { ...createNodeData("numberInput"), params: { value: "3.14" } },
   },
   {
     id: "add_1",
@@ -320,6 +405,12 @@ export const useFlowStore = create<FlowState>()(
       // UI State
       executionMode: "manual",
       selectedNodeId: null,
+      selectedNodeIds: [],
+      interactionMode: "select",
+      contextMenu: { visible: false, x: 0, y: 0, target: "canvas" },
+      clipboard: null,
+      sidebarOpen: true,
+      presetsOpen: false,
       consoleLogs: [],
       isRunning: false,
       computeMode: "numeric",
@@ -331,8 +422,16 @@ export const useFlowStore = create<FlowState>()(
 
       // ─── React Flow Handlers ────────────────────────────────
       onNodesChange: (changes) => {
+        const nextNodes = applyNodeChanges(changes, get().nodes)
+        const selectedNodeIds = normalizeSelection(
+          nextNodes.filter((node) => node.selected).map((node) => node.id),
+        )
+
         set({
-          nodes: applyNodeChanges(changes, get().nodes),
+          nodes: nextNodes,
+          selectedNodeIds,
+          selectedNodeId:
+            selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
         })
       },
 
@@ -367,18 +466,17 @@ export const useFlowStore = create<FlowState>()(
           target: connection.target!,
           sourceHandle: connection.sourceHandle,
           targetHandle: connection.targetHandle,
+          type: "removable",
         }
 
-        // Mark target and downstream nodes as dirty
-        const newNodes = nodes.map((n) =>
-          n.id === connection.target
-            ? { ...n, data: { ...n.data, dirty: true } }
-            : n,
+        const newNodes = nodes.map((node) =>
+          node.id === connection.target
+            ? { ...node, data: { ...node.data, dirty: true } }
+            : node,
         )
 
         set({ edges: [...edges, newEdge], nodes: newNodes })
 
-        // Auto-run if in auto mode
         if (executionMode === "auto") {
           setTimeout(() => get().runPipeline(), 0)
         }
@@ -387,55 +485,114 @@ export const useFlowStore = create<FlowState>()(
       // ─── Actions ────────────────────────────────────────────
       addNode: (type, position) => {
         const newNode: MathNode = {
-          id: generateNodeId(),
+          id: generateNodeId(type),
           type,
           position,
           data: createNodeData(type),
+          selected: false,
         }
         set({ nodes: [...get().nodes, newNode] })
       },
 
       removeNode: (nodeId) => {
+        const expandedNodeIds = collectExpandedSelection(get().nodes, [nodeId])
+        const removeSet = new Set(expandedNodeIds)
+        const selectedNodeId = get().selectedNodeId
         set({
-          nodes: get().nodes.filter((n) => n.id !== nodeId),
+          nodes: get().nodes.filter((n) => !removeSet.has(n.id)),
           edges: get().edges.filter(
-            (e) => e.source !== nodeId && e.target !== nodeId,
+            (edge) =>
+              !removeSet.has(edge.source) && !removeSet.has(edge.target),
+          ),
+          selectedNodeIds: get().selectedNodeIds.filter(
+            (id) => !removeSet.has(id),
           ),
           selectedNodeId:
-            get().selectedNodeId === nodeId ? null : get().selectedNodeId,
+            selectedNodeId !== null && removeSet.has(selectedNodeId)
+              ? null
+              : selectedNodeId,
         })
       },
 
       removeEdge: (edgeId) => {
         set({
-          edges: get().edges.filter((e) => e.id !== edgeId),
+          edges: get().edges.filter((edge) => edge.id !== edgeId),
+        })
+      },
+
+      removeEdgesByIds: (edgeIds) => {
+        const edgeSet = new Set(edgeIds)
+        set({
+          edges: get().edges.filter((edge) => !edgeSet.has(edge.id)),
         })
       },
 
       updateNodeParam: (nodeId, key, value) => {
         const { nodes, executionMode } = get()
-        const newNodes = nodes.map((n) =>
-          n.id === nodeId
+        const newNodes = nodes.map((node) =>
+          node.id === nodeId
             ? {
-                ...n,
+                ...node,
                 data: {
-                  ...n.data,
-                  params: { ...n.data.params, [key]: value },
+                  ...node.data,
+                  params: { ...node.data.params, [key]: value },
                   dirty: true,
                 },
               }
-            : n,
+            : node,
         )
         set({ nodes: newNodes })
 
-        // Auto-run if in auto mode
         if (executionMode === "auto") {
           setTimeout(() => get().runPipeline(), 0)
         }
       },
 
       selectNode: (nodeId) => {
-        set({ selectedNodeId: nodeId })
+        if (!nodeId) {
+          const nodes = get().nodes.map((node) => ({
+            ...node,
+            selected: false,
+          }))
+          set({ nodes, selectedNodeId: null, selectedNodeIds: [] })
+          return
+        }
+
+        const nodes = get().nodes.map((node) => ({
+          ...node,
+          selected: node.id === nodeId,
+        }))
+        set({ nodes, selectedNodeId: nodeId, selectedNodeIds: [nodeId] })
+      },
+
+      setSelectedNodeIds: (nodeIds) => {
+        const selectedNodeIds = normalizeSelection(nodeIds)
+        const selectedSet = new Set(selectedNodeIds)
+        const nodes = get().nodes.map((node) => ({
+          ...node,
+          selected: selectedSet.has(node.id),
+        }))
+
+        set({
+          nodes,
+          selectedNodeIds,
+          selectedNodeId:
+            selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
+        })
+      },
+
+      toggleNodeSelection: (nodeId) => {
+        const existing = new Set(get().selectedNodeIds)
+        if (existing.has(nodeId)) {
+          existing.delete(nodeId)
+        } else {
+          existing.add(nodeId)
+        }
+        get().setSelectedNodeIds(Array.from(existing))
+      },
+
+      clearSelection: () => {
+        get().setSelectedNodeIds([])
       },
 
       setExecutionMode: (mode) => {
@@ -446,29 +603,374 @@ export const useFlowStore = create<FlowState>()(
         set({ computeMode: mode })
       },
 
+      setInteractionMode: (mode) => {
+        set({ interactionMode: mode })
+      },
+
+      toggleSidebar: () => {
+        set({ sidebarOpen: !get().sidebarOpen })
+      },
+
+      togglePresets: () => {
+        set({ presetsOpen: !get().presetsOpen })
+      },
+
+      openContextMenu: (payload) => {
+        set({ contextMenu: { ...payload, visible: true } })
+      },
+
+      closeContextMenu: () => {
+        set({ contextMenu: { visible: false, x: 0, y: 0, target: "canvas" } })
+      },
+
+      dispatchContextAction: (action, nodeId) => {
+        const state = get()
+
+        if (action === "copy") {
+          if (nodeId) {
+            state.setSelectedNodeIds([nodeId])
+          }
+          state.copySelection()
+        } else if (action === "duplicate") {
+          if (nodeId) {
+            state.setSelectedNodeIds([nodeId])
+          }
+          state.duplicateSelection()
+        } else if (action === "delete") {
+          if (nodeId) {
+            state.setSelectedNodeIds([nodeId])
+          }
+          state.deleteSelectedNodes()
+        } else if (action === "group") {
+          state.groupSelectedNodes()
+        } else if (action === "ungroup") {
+          if (nodeId) {
+            state.ungroupNode(nodeId)
+          }
+        } else if (action === "copy_all") {
+          state.copySelection()
+        } else if (action === "duplicate_all") {
+          state.duplicateSelection()
+        } else if (action === "delete_all") {
+          state.deleteSelectedNodes()
+        } else if (action === "copy_group") {
+          if (nodeId) {
+            state.setSelectedNodeIds([nodeId])
+          }
+          state.copySelection()
+        } else if (action === "delete_group") {
+          if (nodeId) {
+            state.setSelectedNodeIds([nodeId])
+            state.deleteSelectedNodes()
+          }
+        }
+
+        state.closeContextMenu()
+      },
+
+      deleteSelectedNodes: () => {
+        const state = get()
+        const expandedNodeIds = collectExpandedSelection(
+          state.nodes,
+          state.selectedNodeIds,
+        )
+        if (expandedNodeIds.length === 0) return
+
+        const removeSet = new Set(expandedNodeIds)
+        set({
+          nodes: state.nodes.filter((node) => !removeSet.has(node.id)),
+          edges: state.edges.filter(
+            (edge) =>
+              !removeSet.has(edge.source) && !removeSet.has(edge.target),
+          ),
+          selectedNodeId: null,
+          selectedNodeIds: [],
+        })
+      },
+
+      copySelection: () => {
+        const state = get()
+        const selectedNodeIds =
+          state.selectedNodeIds.length > 0
+            ? state.selectedNodeIds
+            : state.selectedNodeId
+              ? [state.selectedNodeId]
+              : []
+
+        const expandedNodeIds = collectExpandedSelection(
+          state.nodes,
+          selectedNodeIds,
+        )
+        if (expandedNodeIds.length === 0) return
+
+        const selectedSet = new Set(expandedNodeIds)
+        const nodes = clone(
+          state.nodes.filter((node) => selectedSet.has(node.id)),
+        )
+        const edges = clone(
+          state.edges.filter(
+            (edge) =>
+              selectedSet.has(edge.source) && selectedSet.has(edge.target),
+          ),
+        )
+
+        set({ clipboard: { nodes, edges } })
+      },
+
+      pasteClipboard: () => {
+        const state = get()
+        if (!state.clipboard || state.clipboard.nodes.length === 0) return
+
+        const idMap = new Map<string, string>()
+        for (const node of state.clipboard.nodes) {
+          idMap.set(node.id, generateNodeId(String(node.type ?? "node")))
+        }
+
+        const offset = 40
+        const pastedNodes: MathNode[] = state.clipboard.nodes.map((node) => {
+          const nextId = idMap.get(node.id)!
+          const remappedParentId = node.parentId
+            ? idMap.get(node.parentId)
+            : undefined
+
+          return {
+            ...clone(node),
+            id: nextId,
+            parentId: remappedParentId,
+            position: {
+              x: node.position.x + offset,
+              y: node.position.y + offset,
+            },
+            selected: true,
+          }
+        })
+
+        const pastedEdges: MathEdge[] = state.clipboard.edges
+          .map((edge) => {
+            const source = idMap.get(edge.source)
+            const target = idMap.get(edge.target)
+            if (!source || !target) return null
+            return {
+              ...clone(edge),
+              id: generateNodeId("edge"),
+              source,
+              target,
+              type: "removable",
+            } as MathEdge
+          })
+          .filter((edge): edge is MathEdge => edge !== null)
+
+        const selectedNodeIds = pastedNodes.map((node) => node.id)
+        const selectedSet = new Set(selectedNodeIds)
+
+        set({
+          nodes: [
+            ...state.nodes.map((node) => ({ ...node, selected: false })),
+            ...pastedNodes,
+          ],
+          edges: [...state.edges, ...pastedEdges],
+          selectedNodeIds,
+          selectedNodeId:
+            selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
+        })
+
+        void selectedSet
+      },
+
+      duplicateSelection: () => {
+        get().copySelection()
+        get().pasteClipboard()
+      },
+
+      groupSelectedNodes: () => {
+        const state = get()
+        const selectedNodeIds = state.selectedNodeIds.filter((nodeId) => {
+          const node = state.nodes.find((n) => n.id === nodeId)
+          return node && node.type !== "group"
+        })
+
+        const byId = new Map(state.nodes.map((node) => [node.id, node]))
+        const selectedSet = new Set(selectedNodeIds)
+        const topLevelSelectedNodeIds = selectedNodeIds.filter((nodeId) => {
+          let parentId = byId.get(nodeId)?.parentId
+          while (parentId) {
+            if (selectedSet.has(parentId)) {
+              return false
+            }
+            parentId = byId.get(parentId)?.parentId
+          }
+          return true
+        })
+
+        if (topLevelSelectedNodeIds.length < 2) return
+
+        const selectedNodes = state.nodes.filter((node) =>
+          topLevelSelectedNodeIds.includes(node.id),
+        )
+        if (selectedNodes.length < 2) return
+
+        const selectedAbs = selectedNodes.map((node) => {
+          const abs = getAbsoluteNodePosition(node, byId)
+          return {
+            id: node.id,
+            x: abs.x,
+            y: abs.y,
+            width: node.width ?? 220,
+            height: node.height ?? 120,
+          }
+        })
+
+        const minX = Math.min(...selectedAbs.map((node) => node.x))
+        const minY = Math.min(...selectedAbs.map((node) => node.y))
+        const maxX = Math.max(...selectedAbs.map((node) => node.x + node.width))
+        const maxY = Math.max(
+          ...selectedAbs.map((node) => node.y + node.height),
+        )
+
+        const padding = 24
+        const groupId = generateNodeId("group")
+        const groupPosition = { x: minX - padding, y: minY - padding }
+        const groupWidth = Math.max(220, maxX - minX + padding * 2)
+        const groupHeight = Math.max(140, maxY - minY + padding * 2)
+
+        const groupNode: MathNode = {
+          id: groupId,
+          type: "group",
+          position: groupPosition,
+          style: {
+            width: groupWidth,
+            height: groupHeight,
+            background: "transparent",
+            border: "none",
+            padding: 0,
+          },
+          data: {
+            ...createNodeData("group"),
+            params: {
+              width: groupWidth,
+              height: groupHeight,
+            },
+          },
+          selected: true,
+          draggable: true,
+        }
+
+        const topLevelSelectedSet = new Set(topLevelSelectedNodeIds)
+        const selectedAbsById = new Map(
+          selectedAbs.map((node) => [node.id, node]),
+        )
+        const nodes = state.nodes.map((node) => {
+          if (!topLevelSelectedSet.has(node.id)) {
+            return { ...node, selected: false }
+          }
+
+          const abs = selectedAbsById.get(node.id)
+          if (!abs) {
+            return { ...node, selected: false }
+          }
+
+          return {
+            ...node,
+            parentId: groupId,
+            extent: "parent" as const,
+            position: {
+              x: abs.x - groupPosition.x,
+              y: abs.y - groupPosition.y,
+            },
+            selected: false,
+          }
+        })
+
+        set({
+          nodes: [groupNode, ...nodes],
+          selectedNodeIds: [groupId],
+          selectedNodeId: groupId,
+        })
+      },
+
+      ungroupNode: (groupId) => {
+        const state = get()
+        const groupNode = state.nodes.find((node) => node.id === groupId)
+        if (!groupNode) return
+
+        const children = state.nodes.filter((node) => node.parentId === groupId)
+        if (children.length === 0) {
+          set({ nodes: state.nodes.filter((node) => node.id !== groupId) })
+          return
+        }
+
+        const childIds = children.map((node) => node.id)
+
+        const nodes = state.nodes
+          .filter((node) => node.id !== groupId)
+          .map((node) => {
+            if (node.parentId !== groupId) {
+              return { ...node, selected: false }
+            }
+
+            return {
+              ...node,
+              parentId: undefined,
+              extent: undefined,
+              position: {
+                x: groupNode.position.x + node.position.x,
+                y: groupNode.position.y + node.position.y,
+              },
+              selected: true,
+            }
+          })
+
+        set({
+          nodes,
+          selectedNodeIds: childIds,
+          selectedNodeId: childIds.length === 1 ? childIds[0] : null,
+        })
+      },
+
       // ─── Execution ──────────────────────────────────────────
       runPipeline: () => {
-        const { nodes, edges } = get()
+        const { nodes } = get()
         set({ isRunning: true })
 
-        // Mark all nodes as running
-        const runningNodes = nodes.map((n) => ({
-          ...n,
-          data: { ...n.data, status: "running" as const },
+        const runningNodes = nodes.map((node) => ({
+          ...node,
+          data: { ...node.data, status: "running" as const },
         }))
         set({ nodes: runningNodes })
 
-        // Execute (using requestAnimationFrame for visual feedback)
         requestAnimationFrame(() => {
-          const result = runPipeline(nodes, edges)
+          const executableNodes = get().nodes.filter(
+            (node) => node.type !== "group",
+          )
+          const executableNodeIds = new Set(
+            executableNodes.map((node) => node.id),
+          )
+          const executableEdges = get().edges.filter(
+            (edge) =>
+              executableNodeIds.has(edge.source) &&
+              executableNodeIds.has(edge.target),
+          )
 
-          // Update node statuses and clear dirty flags
-          const updatedNodes = get().nodes.map((n) => {
-            const computed = result.computedValues.get(n.id)
+          const result = runPipeline(executableNodes, executableEdges)
+
+          const updatedNodes = get().nodes.map((node) => {
+            if (node.type === "group") {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  dirty: false,
+                  status: "success" as const,
+                  computeTimeMs: result.totalTimeMs,
+                },
+              }
+            }
+
+            const computed = result.computedValues.get(node.id)
             return {
-              ...n,
+              ...node,
               data: {
-                ...n.data,
+                ...node.data,
                 dirty: false,
                 status: computed?.error
                   ? ("error" as const)
@@ -490,8 +992,17 @@ export const useFlowStore = create<FlowState>()(
       stepExecute: () => {
         const { nodes, edges, computedValues } = get()
 
-        // Find first dirty node in topo order
-        const dirtyNode = nodes.find((n) => n.data.dirty)
+        const executableNodes = nodes.filter((node) => node.type !== "group")
+        const executableNodeIds = new Set(
+          executableNodes.map((node) => node.id),
+        )
+        const executableEdges = edges.filter(
+          (edge) =>
+            executableNodeIds.has(edge.source) &&
+            executableNodeIds.has(edge.target),
+        )
+
+        const dirtyNode = executableNodes.find((node) => node.data.dirty)
         if (!dirtyNode) {
           set({
             consoleLogs: [
@@ -507,15 +1018,20 @@ export const useFlowStore = create<FlowState>()(
           return
         }
 
-        const result = runSingleNode(dirtyNode.id, nodes, edges, computedValues)
+        const result = runSingleNode(
+          dirtyNode.id,
+          executableNodes,
+          executableEdges,
+          computedValues,
+        )
 
-        const updatedNodes = nodes.map((n) => {
-          if (n.id === dirtyNode.id) {
-            const computed = result.computedValues.get(n.id)
+        const updatedNodes = nodes.map((node) => {
+          if (node.id === dirtyNode.id) {
+            const computed = result.computedValues.get(node.id)
             return {
-              ...n,
+              ...node,
               data: {
-                ...n.data,
+                ...node.data,
                 dirty: false,
                 status: computed?.error
                   ? ("error" as const)
@@ -523,7 +1039,7 @@ export const useFlowStore = create<FlowState>()(
               },
             }
           }
-          return n
+          return node
         })
 
         set({
@@ -555,6 +1071,7 @@ export const useFlowStore = create<FlowState>()(
         theme: state.theme,
         computeMode: state.computeMode,
         executionMode: state.executionMode,
+        sidebarOpen: state.sidebarOpen,
       }),
     },
   ),

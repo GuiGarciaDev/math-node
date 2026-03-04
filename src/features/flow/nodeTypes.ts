@@ -1,17 +1,18 @@
-import type { NodeTypes } from "@xyflow/react";
-import { NumberInputNode } from "./nodes/NumberInputNode";
-import { VariableNode } from "./nodes/VariableNode";
-import { ExpressionNode } from "./nodes/ExpressionNode";
+import type { NodeTypes } from "@xyflow/react"
+import { NumberInputNode } from "./nodes/NumberInputNode"
+import { VariableNode } from "./nodes/VariableNode"
+import { ExpressionNode } from "./nodes/ExpressionNode"
 import {
   AddNode,
   SubtractNode,
   MultiplyNode,
   DivideNode,
-} from "./nodes/ArithmeticNodes";
-import { PowerNode, SqrtNode } from "./nodes/PowerNodes";
-import { DerivativeNode, IntegralNode } from "./nodes/CalculusNodes";
-import { PlotNode } from "./nodes/PlotNode";
-import { MatrixNode } from "./nodes/MatrixNode";
+} from "./nodes/ArithmeticNodes"
+import { PowerNode, SqrtNode } from "./nodes/PowerNodes"
+import { DerivativeNode, IntegralNode } from "./nodes/CalculusNodes"
+import { PlotNode } from "./nodes/PlotNode"
+import { MatrixNode } from "./nodes/MatrixNode"
+import { GroupNode } from "./nodes/GroupNode"
 
 export const nodeTypes: NodeTypes = {
   numberInput: NumberInputNode,
@@ -27,4 +28,5 @@ export const nodeTypes: NodeTypes = {
   integral: IntegralNode,
   plot: PlotNode,
   matrix: MatrixNode,
-};
+  group: GroupNode,
+}

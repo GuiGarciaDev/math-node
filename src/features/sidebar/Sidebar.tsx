@@ -1,6 +1,10 @@
 import React, { useCallback, useState } from "react"
 import type { SidebarCategory, MathNodeType } from "../../types"
 
+interface SidebarProps {
+  collapsed?: boolean
+}
+
 const categories: SidebarCategory[] = [
   {
     name: "Input",
@@ -113,7 +117,7 @@ const categories: SidebarCategory[] = [
   },
 ]
 
-export const Sidebar: React.FC = React.memo(() => {
+export const Sidebar: React.FC<SidebarProps> = React.memo(({ collapsed }) => {
   const [searchQuery, setSearchQuery] = useState("")
 
   const onDragStart = useCallback(
@@ -138,7 +142,7 @@ export const Sidebar: React.FC = React.memo(() => {
   return (
     <aside
       style={{
-        width: 256,
+        width: collapsed ? 44 : 256,
         background: "var(--bg-secondary)",
         backdropFilter: "blur(12px)",
         borderRight: "1px solid var(--border)",
@@ -146,130 +150,168 @@ export const Sidebar: React.FC = React.memo(() => {
         flexDirection: "column",
         flexShrink: 0,
         boxShadow: "10px 0 30px rgba(0,0,0,0.5)",
+        transition: "width 0.24s ease",
+        overflow: "hidden",
+        position: "relative",
       }}
     >
-      {/* Search */}
-      <div style={{ padding: 12, borderBottom: "1px solid var(--border)" }}>
-        <div style={{ position: "relative" }}>
-          <span
-            style={{
-              position: "absolute",
-              left: 10,
-              top: "50%",
-              transform: "translateY(-50%)",
-              fontSize: 13,
-              color: "var(--text-muted)",
-            }}
-          >
-            🔍
-          </span>
-          <input
-            type="text"
-            placeholder="Search nodes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: "100%",
-              background: "var(--bg-input)",
-              border: "1px solid var(--border)",
-              borderRadius: 8,
-              padding: "6px 12px 6px 32px",
-              fontSize: 12,
-              color: "var(--text-primary)",
-              outline: "none",
-              fontFamily: "'Inter', sans-serif",
-            }}
-          />
+      <div
+        style={{
+          width: 256,
+          minWidth: 256,
+          opacity: collapsed ? 0 : 1,
+          transition: "opacity 0.18s ease",
+          pointerEvents: collapsed ? "none" : "all",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        {/* Search */}
+        <div style={{ padding: 12, borderBottom: "1px solid var(--border)" }}>
+          <div style={{ position: "relative" }}>
+            <span
+              style={{
+                position: "absolute",
+                left: 10,
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: 13,
+                color: "var(--text-muted)",
+              }}
+            >
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Search nodes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%",
+                background: "var(--bg-input)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                padding: "6px 12px 6px 32px",
+                fontSize: 12,
+                color: "var(--text-primary)",
+                outline: "none",
+                fontFamily: "'Inter', sans-serif",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Node Library */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: 12,
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+          }}
+        >
+          {filteredCategories.map((category) => (
+            <div key={category.name}>
+              <h3
+                style={{
+                  fontSize: 10,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "var(--text-muted)",
+                  fontWeight: 500,
+                  marginBottom: 8,
+                  paddingLeft: 4,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    width: 4,
+                    height: 4,
+                    borderRadius: "50%",
+                    background: category.color,
+                  }}
+                />
+                {category.name}
+              </h3>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {category.items.map((item) => (
+                  <div
+                    key={item.type}
+                    draggable
+                    onDragStart={(e) => onDragStart(e, item.type)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "6px 8px",
+                      borderRadius: 8,
+                      cursor: "grab",
+                      fontSize: 12,
+                      color: "var(--text-secondary)",
+                      border: "1px solid transparent",
+                      transition: "all 0.15s",
+                      userSelect: "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      ;(e.currentTarget as HTMLElement).style.background =
+                        "var(--bg-tertiary)"
+                      ;(e.currentTarget as HTMLElement).style.borderColor =
+                        "var(--border)"
+                    }}
+                    onMouseLeave={(e) => {
+                      ;(e.currentTarget as HTMLElement).style.background =
+                        "transparent"
+                      ;(e.currentTarget as HTMLElement).style.borderColor =
+                        "transparent"
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: item.iconColor,
+                        fontSize: 14,
+                        width: 18,
+                        textAlign: "center",
+                      }}
+                    >
+                      {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Node Library */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: 12,
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-        }}
-      >
-        {filteredCategories.map((category) => (
-          <div key={category.name}>
-            <h3
-              style={{
-                fontSize: 10,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                color: "var(--text-muted)",
-                fontWeight: 500,
-                marginBottom: 8,
-                paddingLeft: 4,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <div
-                style={{
-                  width: 4,
-                  height: 4,
-                  borderRadius: "50%",
-                  background: category.color,
-                }}
-              />
-              {category.name}
-            </h3>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {category.items.map((item) => (
-                <div
-                  key={item.type}
-                  draggable
-                  onDragStart={(e) => onDragStart(e, item.type)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "6px 8px",
-                    borderRadius: 8,
-                    cursor: "grab",
-                    fontSize: 12,
-                    color: "var(--text-secondary)",
-                    border: "1px solid transparent",
-                    transition: "all 0.15s",
-                    userSelect: "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    ;(e.currentTarget as HTMLElement).style.background =
-                      "var(--bg-tertiary)"
-                    ;(e.currentTarget as HTMLElement).style.borderColor =
-                      "var(--border)"
-                  }}
-                  onMouseLeave={(e) => {
-                    ;(e.currentTarget as HTMLElement).style.background =
-                      "transparent"
-                    ;(e.currentTarget as HTMLElement).style.borderColor =
-                      "transparent"
-                  }}
-                >
-                  <span
-                    style={{
-                      color: item.iconColor,
-                      fontSize: 14,
-                      width: 18,
-                      textAlign: "center",
-                    }}
-                  >
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      {collapsed && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            paddingTop: 52,
+            gap: 12,
+            pointerEvents: "none",
+            color: "var(--text-muted)",
+            fontSize: 13,
+          }}
+        >
+          <span>🔢</span>
+          <span>＋</span>
+          <span>∂</span>
+          <span>📈</span>
+        </div>
+      )}
     </aside>
   )
 })

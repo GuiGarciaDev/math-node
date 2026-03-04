@@ -7,15 +7,24 @@ interface PlotPoint {
 
 interface PlotChartProps {
   points: PlotPoint[]
-  width: number
   height: number
 }
 
 export const PlotChart: React.FC<PlotChartProps> = React.memo(
-  ({ points, width, height }) => {
-    const padding = 8
+  ({ points, height }) => {
+    const viewWidth = 100
+    const viewHeight = 100
+    const frame = {
+      left: 10,
+      right: 4,
+      top: 6,
+      bottom: 12,
+    }
 
     const metrics = useMemo(() => {
+      const plotWidth = viewWidth - frame.left - frame.right
+      const plotHeight = viewHeight - frame.top - frame.bottom
+
       if (points.length === 0) {
         return {
           path: "",
@@ -25,6 +34,8 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
           maxX: 0,
           minY: 0,
           maxY: 0,
+          xTicks: [] as Array<{ x: number; label: string }>,
+          yTicks: [] as Array<{ y: number; label: string }>,
         }
       }
 
@@ -38,9 +49,9 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
       const rangeY = maxY - minY || 1
 
       const scaleX = (x: number) =>
-        padding + ((x - minX) / rangeX) * (width - padding * 2)
+        frame.left + ((x - minX) / rangeX) * plotWidth
       const scaleY = (y: number) =>
-        height - padding - ((y - minY) / rangeY) * (height - padding * 2)
+        frame.top + ((maxY - y) / rangeY) * plotHeight
 
       let path = `M ${scaleX(points[0].x)} ${scaleY(points[0].y)}`
       for (let i = 1; i < points.length; i++) {
@@ -50,12 +61,25 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
       const zeroLineY =
         minY > 0 || maxY < 0
           ? null
-          : height - padding - ((0 - minY) / rangeY) * (height - padding * 2)
+          : frame.top + ((maxY - 0) / rangeY) * plotHeight
 
       const zeroLineX =
         minX > 0 || maxX < 0
           ? null
-          : padding + ((0 - minX) / rangeX) * (width - padding * 2)
+          : frame.left + ((0 - minX) / rangeX) * plotWidth
+
+      const tickFractions = [0, 0.5, 1]
+      const xTicks = tickFractions.map((fraction) => {
+        const x = frame.left + fraction * plotWidth
+        const value = minX + fraction * rangeX
+        return { x, label: value.toFixed(1) }
+      })
+
+      const yTicks = tickFractions.map((fraction) => {
+        const y = frame.top + fraction * plotHeight
+        const value = maxY - fraction * rangeY
+        return { y, label: value.toFixed(1) }
+      })
 
       return {
         path,
@@ -65,11 +89,10 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
         maxX,
         minY,
         maxY,
+        xTicks,
+        yTicks,
       }
-    }, [height, points, width])
-
-    const xMid = (metrics.minX + metrics.maxX) / 2
-    const yMid = (metrics.minY + metrics.maxY) / 2
+    }, [frame.bottom, frame.left, frame.right, frame.top, points])
 
     return (
       <div
@@ -86,75 +109,120 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
         <svg
           width="100%"
           height="100%"
-          style={{ position: "absolute", top: 0, left: 0, opacity: 0.2 }}
+          viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+          preserveAspectRatio="none"
+          style={{ position: "absolute", top: 0, left: 0 }}
         >
           {[0.25, 0.5, 0.75].map((f) => (
             <React.Fragment key={f}>
               <line
-                x1="0"
-                y1={`${f * 100}%`}
-                x2="100%"
-                y2={`${f * 100}%`}
+                x1={frame.left}
+                y1={frame.top + f * (viewHeight - frame.top - frame.bottom)}
+                x2={viewWidth - frame.right}
+                y2={frame.top + f * (viewHeight - frame.top - frame.bottom)}
                 stroke="var(--text-dim)"
-                strokeWidth="0.5"
+                strokeWidth="0.25"
+                opacity="0.3"
               />
               <line
-                x1={`${f * 100}%`}
-                y1="0"
-                x2={`${f * 100}%`}
-                y2="100%"
+                x1={frame.left + f * (viewWidth - frame.left - frame.right)}
+                y1={frame.top}
+                x2={frame.left + f * (viewWidth - frame.left - frame.right)}
+                y2={viewHeight - frame.bottom}
                 stroke="var(--text-dim)"
-                strokeWidth="0.5"
+                strokeWidth="0.25"
+                opacity="0.3"
               />
             </React.Fragment>
           ))}
-        </svg>
 
-        {metrics.zeroLineY !== null && (
-          <div
-            style={{
-              position: "absolute",
-              top: metrics.zeroLineY,
-              left: 0,
-              width: "100%",
-              height: 1,
-              background: "var(--text-dim)",
-            }}
-          />
-        )}
+          {metrics.zeroLineY !== null && (
+            <line
+              x1={frame.left}
+              y1={metrics.zeroLineY}
+              x2={viewWidth - frame.right}
+              y2={metrics.zeroLineY}
+              stroke="var(--text-dim)"
+              strokeWidth="0.35"
+              opacity="0.7"
+            />
+          )}
 
-        {metrics.zeroLineX !== null && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: metrics.zeroLineX,
-              width: 1,
-              height: "100%",
-              background: "var(--text-dim)",
-            }}
-          />
-        )}
+          {metrics.zeroLineX !== null && (
+            <line
+              x1={metrics.zeroLineX}
+              y1={frame.top}
+              x2={metrics.zeroLineX}
+              y2={viewHeight - frame.bottom}
+              stroke="var(--text-dim)"
+              strokeWidth="0.35"
+              opacity="0.7"
+            />
+          )}
 
-        {metrics.path && (
-          <svg
-            width="100%"
-            height="100%"
-            viewBox={`0 0 ${width} ${height}`}
-            style={{ position: "absolute", top: 0, left: 0 }}
-            preserveAspectRatio="none"
-          >
+          {metrics.path && (
             <path
               d={metrics.path}
               fill="none"
               stroke="var(--category-display)"
-              strokeWidth="2"
+              strokeWidth="0.9"
+              vectorEffect="non-scaling-stroke"
               style={{
                 filter: "drop-shadow(0 0 4px rgba(20, 174, 92, 0.35))",
               }}
             />
-          </svg>
-        )}
+          )}
+
+          {points.length > 0 && (
+            <>
+              {metrics.xTicks.map((tick, idx) => (
+                <React.Fragment key={`x-tick-${idx}`}>
+                  <line
+                    x1={tick.x}
+                    y1={viewHeight - frame.bottom}
+                    x2={tick.x}
+                    y2={viewHeight - frame.bottom + 2.2}
+                    stroke="var(--text-dim)"
+                    strokeWidth="0.35"
+                  />
+                  <text
+                    x={tick.x}
+                    y={viewHeight - 2}
+                    textAnchor="middle"
+                    fontSize="3"
+                    fill="var(--text-dim)"
+                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  >
+                    {tick.label}
+                  </text>
+                </React.Fragment>
+              ))}
+
+              {metrics.yTicks.map((tick, idx) => (
+                <React.Fragment key={`y-tick-${idx}`}>
+                  <line
+                    x1={frame.left - 2.2}
+                    y1={tick.y}
+                    x2={frame.left}
+                    y2={tick.y}
+                    stroke="var(--text-dim)"
+                    strokeWidth="0.35"
+                  />
+                  <text
+                    x={frame.left - 2.8}
+                    y={tick.y + 1}
+                    textAnchor="end"
+                    fontSize="3"
+                    fill="var(--text-dim)"
+                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  >
+                    {tick.label}
+                  </text>
+                </React.Fragment>
+              ))}
+            </>
+          )}
+        </svg>
 
         {points.length === 0 && (
           <div
@@ -170,80 +238,6 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
           >
             No data
           </div>
-        )}
-
-        {points.length > 0 && (
-          <>
-            <div
-              style={{
-                position: "absolute",
-                left: 8,
-                right: 8,
-                bottom: 4,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                pointerEvents: "none",
-                color: "var(--text-dim)",
-                fontSize: 9,
-                fontFamily: "'JetBrains Mono', monospace",
-              }}
-            >
-              <span>{metrics.minX.toFixed(1)}</span>
-              <span>{xMid.toFixed(1)}</span>
-              <span>{metrics.maxX.toFixed(1)}</span>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: 4,
-                top: 8,
-                bottom: 14,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                pointerEvents: "none",
-                color: "var(--text-dim)",
-                fontSize: 9,
-                fontFamily: "'JetBrains Mono', monospace",
-              }}
-            >
-              <span>{metrics.maxY.toFixed(1)}</span>
-              <span>{yMid.toFixed(1)}</span>
-              <span>{metrics.minY.toFixed(1)}</span>
-            </div>
-
-            <svg
-              width="100%"
-              height="100%"
-              style={{ position: "absolute", top: 0, left: 0, opacity: 0.5 }}
-            >
-              {[0, 0.5, 1].map((f) => (
-                <line
-                  key={`x-tick-${f}`}
-                  x1={8 + f * (width - 16)}
-                  y1={height - 10}
-                  x2={8 + f * (width - 16)}
-                  y2={height - 6}
-                  stroke="var(--text-dim)"
-                  strokeWidth="0.8"
-                />
-              ))}
-              {[0, 0.5, 1].map((f) => (
-                <line
-                  key={`y-tick-${f}`}
-                  x1={4}
-                  y1={8 + f * (height - 22)}
-                  x2={8}
-                  y2={8 + f * (height - 22)}
-                  stroke="var(--text-dim)"
-                  strokeWidth="0.8"
-                />
-              ))}
-            </svg>
-          </>
         )}
       </div>
     )

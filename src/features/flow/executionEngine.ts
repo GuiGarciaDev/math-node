@@ -12,6 +12,7 @@ import {
   formatExpression,
 } from "../../lib/math/symbolic"
 import { evaluateRange } from "../../lib/math/evaluator"
+import { parseLocalizedNumberInput } from "../../lib/math/numberInput"
 
 type ComputedMap = Map<string, ComputedValue>
 
@@ -139,9 +140,15 @@ function evaluateSingleNode(
   try {
     switch (nodeType) {
       case "numberInput": {
-        const value = Number(params.value ?? 0)
-        if (isNaN(value)) throw new Error("Invalid number")
-        return { value, type: "number" }
+        const parsed = parseLocalizedNumberInput(params.value)
+        if (!parsed.isValid) {
+          return {
+            value: undefined,
+            type: "number",
+            error: parsed.reason ?? "Invalid number",
+          }
+        }
+        return { value: parsed.value ?? 0, type: "number" }
       }
 
       case "variable": {

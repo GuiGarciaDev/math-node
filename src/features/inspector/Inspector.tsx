@@ -1,21 +1,79 @@
-import React, { useMemo } from "react";
-import { useFlowStore } from "../flow/flowStore";
+import React, { useMemo } from "react"
+import { useFlowStore } from "../flow/flowStore"
 
 export const Inspector: React.FC = React.memo(() => {
-  const selectedNodeId = useFlowStore((s) => s.selectedNodeId);
-  const nodes = useFlowStore((s) => s.nodes);
-  const computedValues = useFlowStore((s) => s.computedValues);
-  const updateNodeParam = useFlowStore((s) => s.updateNodeParam);
+  const selectedNodeId = useFlowStore((s) => s.selectedNodeId)
+  const selectedNodeIds = useFlowStore((s) => s.selectedNodeIds)
+  const nodes = useFlowStore((s) => s.nodes)
+  const computedValues = useFlowStore((s) => s.computedValues)
+  const updateNodeParam = useFlowStore((s) => s.updateNodeParam)
 
   const selectedNode = useMemo(
     () => nodes.find((n) => n.id === selectedNodeId),
     [nodes, selectedNodeId],
-  );
+  )
 
   const computed = useMemo(
     () => (selectedNodeId ? computedValues.get(selectedNodeId) : undefined),
     [computedValues, selectedNodeId],
-  );
+  )
+
+  if (selectedNodeIds.length > 1) {
+    return (
+      <aside
+        style={{
+          width: 288,
+          height: "100%",
+          background: "var(--bg-secondary)",
+          backdropFilter: "blur(12px)",
+          borderLeft: "1px solid var(--border)",
+          display: "flex",
+          flexDirection: "column",
+          flexShrink: 0,
+          boxShadow: "-10px 0 30px var(--shadow)",
+        }}
+      >
+        <div
+          style={{
+            padding: 12,
+            borderBottom: "1px solid #262830",
+            background: "rgba(28, 30, 38, 0.3)",
+          }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#e5e5e5" }}>
+            Properties
+          </span>
+        </div>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 14, color: "var(--text-primary)" }}>
+              {selectedNodeIds.length} nodes selected
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 11,
+                color: "var(--text-muted)",
+                lineHeight: 1.5,
+              }}
+            >
+              Use context menu or shortcuts for bulk actions:
+              <br />
+              Delete, Copy, Duplicate, Group.
+            </div>
+          </div>
+        </div>
+      </aside>
+    )
+  }
 
   if (!selectedNode) {
     return (
@@ -57,10 +115,10 @@ export const Inspector: React.FC = React.memo(() => {
           </p>
         </div>
       </aside>
-    );
+    )
   }
 
-  const { data } = selectedNode;
+  const { data } = selectedNode
 
   const categoryColors: Record<string, string> = {
     input: "#3b82f6",
@@ -68,19 +126,19 @@ export const Inspector: React.FC = React.memo(() => {
     calculus: "#8b5cf6",
     display: "#10b981",
     advanced: "#f59e0b",
-  };
+  }
 
-  const accentColor = categoryColors[data.category] ?? "#6b7280";
+  const accentColor = categoryColors[data.category] ?? "#6b7280"
 
   const formatValue = (val: unknown): string => {
-    if (val === undefined || val === null) return "—";
-    if (typeof val === "number") return val.toFixed(4);
-    if (typeof val === "string") return val;
+    if (val === undefined || val === null) return "—"
+    if (typeof val === "number") return val.toFixed(4)
+    if (typeof val === "string") return val
     if (typeof val === "object" && "raw" in (val as Record<string, unknown>))
-      return (val as { raw: string }).raw;
-    if (Array.isArray(val)) return `[${val.length} items]`;
-    return JSON.stringify(val);
-  };
+      return (val as { raw: string }).raw
+    if (Array.isArray(val)) return `[${val.length} items]`
+    return JSON.stringify(val)
+  }
 
   return (
     <aside
@@ -197,8 +255,8 @@ export const Inspector: React.FC = React.memo(() => {
                 value !== null &&
                 !Array.isArray(value)
               )
-                return null;
-              if (Array.isArray(value) && Array.isArray(value[0])) return null; // matrix
+                return null
+              if (Array.isArray(value) && Array.isArray(value[0])) return null // matrix
 
               return (
                 <div
@@ -222,14 +280,21 @@ export const Inspector: React.FC = React.memo(() => {
                         : String(value ?? "")
                     }
                     onChange={(e) => {
-                      const raw = e.target.value;
+                      const raw = e.target.value
+                      if (
+                        selectedNode.type === "numberInput" &&
+                        key === "value"
+                      ) {
+                        updateNodeParam(selectedNode.id, key, raw)
+                        return
+                      }
                       // Try to parse as number
-                      const asNum = Number(raw);
+                      const asNum = Number(raw)
                       updateNodeParam(
                         selectedNode.id,
                         key,
                         isNaN(asNum) ? raw : asNum,
-                      );
+                      )
                     }}
                     style={{
                       width: "100%",
@@ -244,7 +309,7 @@ export const Inspector: React.FC = React.memo(() => {
                     }}
                   />
                 </div>
-              );
+              )
             })}
           </div>
         )}
@@ -433,7 +498,7 @@ export const Inspector: React.FC = React.memo(() => {
         </div>
       </div>
     </aside>
-  );
-});
+  )
+})
 
-Inspector.displayName = "Inspector";
+Inspector.displayName = "Inspector"
