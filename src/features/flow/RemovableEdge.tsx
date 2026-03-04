@@ -92,9 +92,10 @@ export const RemovableEdge: React.FC<EdgeProps> = React.memo(
           fill="none"
           stroke={stroke}
           strokeWidth={STROKE_WIDTH}
+          data-edgeid={id}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", pointerEvents: "stroke" }}
         />
 
         <EdgeLabelRenderer>

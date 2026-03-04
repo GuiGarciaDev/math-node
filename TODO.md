@@ -1,7 +1,7 @@
 features:
 [] Add precision properties in the operation nodes like ADD to control how many cases we want.
 [] Improve design of graphs.
-[] Add undo and redo
+
 [] Add more types of nodes in the app:
 superior power root
 log ln
@@ -12,9 +12,8 @@ matrix
 []
 
 fixes:
-[] Scissors feature isnt cutting the node conenctions. We must change it to drag a line instead of an area.
+[] Fix the design of undo and redo buttons.
 [] Graph labels are not aligned with the XY axis.
-[] Each edge color must match the handle color based in its type.
 
 Completed:
 [x] Number node dont accept number with decimal case and the execution causes error. The sidebar value input of the node accepts "." or "," but it throw "invalid number" error after execution.
@@ -30,3 +29,5 @@ Completed:
 [x] Node edges must have the handle color.
 [x] Multiple selection with holding shift key and clicking in other nodes arent working.
 [x] Context menu isnt opening when multiple nodes are selected.
+[x] Scissors feature isnt cutting the node conenctions. We must change it to drag a line instead of an area.
+[x] Add undo and redo

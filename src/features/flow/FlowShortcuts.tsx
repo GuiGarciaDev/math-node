@@ -16,6 +16,8 @@ export const FlowShortcuts: React.FC = React.memo(() => {
   const groupSelectedNodes = useFlowStore((s) => s.groupSelectedNodes)
   const selectedNodeIds = useFlowStore((s) => s.selectedNodeIds)
   const ungroupNode = useFlowStore((s) => s.ungroupNode)
+  const undo = useFlowStore((s) => s.undo)
+  const redo = useFlowStore((s) => s.redo)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -35,7 +37,13 @@ export const FlowShortcuts: React.FC = React.memo(() => {
 
       const key = event.key.toLowerCase()
 
-      if (key === "c") {
+      if (key === "z") {
+        event.preventDefault()
+        undo()
+      } else if (key === "y") {
+        event.preventDefault()
+        redo()
+      } else if (key === "c") {
         if (!hasSelection) return
         event.preventDefault()
         copySelection()
@@ -60,7 +68,9 @@ export const FlowShortcuts: React.FC = React.memo(() => {
     deleteSelectedNodes,
     groupSelectedNodes,
     pasteClipboard,
+    redo,
     selectedNodeIds,
+    undo,
     ungroupNode,
   ])
 

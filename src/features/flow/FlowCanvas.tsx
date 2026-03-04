@@ -5,6 +5,7 @@ import {
   Background,
   BackgroundVariant,
   type Node,
+  Panel,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { nodeTypes } from "./nodeTypes"
@@ -12,6 +13,8 @@ import { useFlowStore } from "./flowStore"
 import type { MathNodeType } from "../../types"
 import { RemovableEdge } from "./RemovableEdge"
 import { ContextMenu } from "./ContextMenu"
+import { InteractionToolbar } from "./InteractionToolbar"
+import { MdUndo, MdRedo } from "react-icons/md"
 
 const edgeTypes = {
   removable: RemovableEdge,
@@ -52,58 +55,64 @@ const connectionLineStyle = {
   strokeDasharray: "5 5",
 }
 
-function getOrientation(
-  ax: number,
-  ay: number,
-  bx: number,
-  by: number,
-  cx: number,
-  cy: number,
-) {
-  const value = (by - ay) * (cx - bx) - (bx - ax) * (cy - by)
-  if (Math.abs(value) < 1e-9) return 0
-  return value > 0 ? 1 : 2
+function normalizeDomEdgeId(rawId: string): string {
+  return rawId.startsWith("xy-edge__") ? rawId.slice(9) : rawId
 }
 
-function isPointOnSegment(
-  ax: number,
-  ay: number,
-  bx: number,
-  by: number,
-  px: number,
-  py: number,
-) {
-  return (
-    px <= Math.max(ax, bx) + 1e-9 &&
-    px >= Math.min(ax, bx) - 1e-9 &&
-    py <= Math.max(ay, by) + 1e-9 &&
-    py >= Math.min(ay, by) - 1e-9
-  )
+function isPaneEventTarget(target: EventTarget | null): boolean {
+  const element = target as HTMLElement | null
+  if (!element) return false
+  return Boolean(element.closest(".react-flow__pane"))
 }
 
-function segmentsIntersect(
-  a1: { x: number; y: number },
-  a2: { x: number; y: number },
-  b1: { x: number; y: number },
-  b2: { x: number; y: number },
-) {
-  const o1 = getOrientation(a1.x, a1.y, a2.x, a2.y, b1.x, b1.y)
-  const o2 = getOrientation(a1.x, a1.y, a2.x, a2.y, b2.x, b2.y)
-  const o3 = getOrientation(b1.x, b1.y, b2.x, b2.y, a1.x, a1.y)
-  const o4 = getOrientation(b1.x, b1.y, b2.x, b2.y, a2.x, a2.y)
+function collectEdgeIdsAlongCutLine(
+  cutLine: { x1: number; y1: number; x2: number; y2: number },
+  bounds: DOMRect,
+): string[] {
+  const ids = new Set<string>()
+  const dx = cutLine.x2 - cutLine.x1
+  const dy = cutLine.y2 - cutLine.y1
+  const length = Math.hypot(dx, dy)
+  const steps = Math.max(8, Math.ceil(length / 6))
 
-  if (o1 !== o2 && o3 !== o4) return true
+  const offsets = [
+    { x: 0, y: 0 },
+    { x: 3, y: 0 },
+    { x: -3, y: 0 },
+    { x: 0, y: 3 },
+    { x: 0, y: -3 },
+  ]
 
-  if (o1 === 0 && isPointOnSegment(a1.x, a1.y, a2.x, a2.y, b1.x, b1.y))
-    return true
-  if (o2 === 0 && isPointOnSegment(a1.x, a1.y, a2.x, a2.y, b2.x, b2.y))
-    return true
-  if (o3 === 0 && isPointOnSegment(b1.x, b1.y, b2.x, b2.y, a1.x, a1.y))
-    return true
-  if (o4 === 0 && isPointOnSegment(b1.x, b1.y, b2.x, b2.y, a2.x, a2.y))
-    return true
+  for (let index = 0; index <= steps; index += 1) {
+    const t = index / steps
+    const sampleX = bounds.left + cutLine.x1 + dx * t
+    const sampleY = bounds.top + cutLine.y1 + dy * t
 
-  return false
+    for (const offset of offsets) {
+      const hitElements = document.elementsFromPoint(
+        sampleX + offset.x,
+        sampleY + offset.y,
+      )
+
+      for (const element of hitElements) {
+        const directEdgeId = (element as HTMLElement).dataset.edgeid
+        if (directEdgeId) {
+          ids.add(directEdgeId)
+          continue
+        }
+
+        const edgeElement = (element as HTMLElement).closest(
+          ".react-flow__edge",
+        ) as HTMLElement | null
+        const rawEdgeId = edgeElement?.dataset.id
+        if (rawEdgeId) {
+          ids.add(normalizeDomEdgeId(rawEdgeId))
+        }
+      }
+    }
+  }
+
+  return Array.from(ids)
 }
 
 export const FlowCanvas: React.FC = React.memo(() => {
@@ -224,32 +233,6 @@ export const FlowCanvas: React.FC = React.memo(() => {
     [closeContextMenu, nodes, openContextMenu, selectedNodeIds],
   )
 
-  const resolveAbsoluteCenter = useCallback(
-    (nodeId: string): { x: number; y: number } | null => {
-      const byId = new Map(nodes.map((n) => [n.id, n]))
-      const node = byId.get(nodeId)
-      if (!node) return null
-
-      let x = node.position.x
-      let y = node.position.y
-      let parentId = node.parentId
-
-      while (parentId) {
-        const parent = byId.get(parentId)
-        if (!parent) break
-        x += parent.position.x
-        y += parent.position.y
-        parentId = parent.parentId
-      }
-
-      const width = node.width ?? 0
-      const height = node.height ?? 0
-
-      return { x: x + width / 2, y: y + height / 2 }
-    },
-    [nodes],
-  )
-
   const cutLine = useMemo(() => {
     if (!cutStart || !cutCurrent) return null
     return {
@@ -262,8 +245,10 @@ export const FlowCanvas: React.FC = React.memo(() => {
 
   const onPaneMouseDown = useCallback(
     (event: React.MouseEvent) => {
+      if (!isPaneEventTarget(event.target)) return
       if (interactionMode !== "cut") return
       if (event.button !== 0) return
+      event.preventDefault()
       const bounds = containerRef.current?.getBoundingClientRect()
       if (!bounds) return
       closeContextMenu()
@@ -281,7 +266,9 @@ export const FlowCanvas: React.FC = React.memo(() => {
 
   const onPaneMouseMove = useCallback(
     (event: React.MouseEvent) => {
+      if (!isPaneEventTarget(event.target)) return
       if (interactionMode !== "cut" || !cutStart) return
+      event.preventDefault()
       const bounds = containerRef.current?.getBoundingClientRect()
       if (!bounds) return
       setCutCurrent({
@@ -292,60 +279,47 @@ export const FlowCanvas: React.FC = React.memo(() => {
     [cutStart, interactionMode],
   )
 
-  const onPaneMouseUp = useCallback(() => {
-    if (interactionMode !== "cut" || !cutLine) {
+  const onPaneMouseUp = useCallback(
+    (event: React.MouseEvent) => {
+      if (!isPaneEventTarget(event.target)) return
+      if (interactionMode === "cut") {
+        event.preventDefault()
+      }
+
+      if (interactionMode !== "cut" || !cutLine) {
+        setCutStart(null)
+        setCutCurrent(null)
+        return
+      }
+
+      const bounds = containerRef.current?.getBoundingClientRect()
+      if (!bounds) {
+        setCutStart(null)
+        setCutCurrent(null)
+        return
+      }
+
+      const cutLength = Math.hypot(
+        cutLine.x2 - cutLine.x1,
+        cutLine.y2 - cutLine.y1,
+      )
+      if (cutLength < 4) {
+        setCutStart(null)
+        setCutCurrent(null)
+        return
+      }
+
+      const edgeIdsToRemove = collectEdgeIdsAlongCutLine(cutLine, bounds)
+
+      if (edgeIdsToRemove.length > 0) {
+        removeEdgesByIds(edgeIdsToRemove)
+      }
+
       setCutStart(null)
       setCutCurrent(null)
-      return
-    }
-
-    const bounds = containerRef.current?.getBoundingClientRect()
-    const instance = reactFlowInstance.current
-    if (!bounds || !instance) {
-      setCutStart(null)
-      setCutCurrent(null)
-      return
-    }
-
-    const cutLength = Math.hypot(
-      cutLine.x2 - cutLine.x1,
-      cutLine.y2 - cutLine.y1,
-    )
-    if (cutLength < 4) {
-      setCutStart(null)
-      setCutCurrent(null)
-      return
-    }
-
-    const cutStartFlow = instance.screenToFlowPosition({
-      x: cutLine.x1 + bounds.left,
-      y: cutLine.y1 + bounds.top,
-    })
-    const cutEndFlow = instance.screenToFlowPosition({
-      x: cutLine.x2 + bounds.left,
-      y: cutLine.y2 + bounds.top,
-    })
-
-    const edgeIdsToRemove = edges
-      .map((edge) => {
-        const sourcePos = resolveAbsoluteCenter(edge.source)
-        const targetPos = resolveAbsoluteCenter(edge.target)
-        if (!sourcePos || !targetPos) return null
-
-        if (segmentsIntersect(cutStartFlow, cutEndFlow, sourcePos, targetPos)) {
-          return edge.id
-        }
-        return null
-      })
-      .filter((edgeId): edgeId is string => Boolean(edgeId))
-
-    if (edgeIdsToRemove.length > 0) {
-      removeEdgesByIds(edgeIdsToRemove)
-    }
-
-    setCutStart(null)
-    setCutCurrent(null)
-  }, [cutLine, edges, interactionMode, removeEdgesByIds, resolveAbsoluteCenter])
+    },
+    [cutLine, interactionMode, removeEdgesByIds],
+  )
 
   // Drag and drop from sidebar
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -374,9 +348,6 @@ export const FlowCanvas: React.FC = React.memo(() => {
   return (
     <div
       ref={containerRef}
-      onMouseDown={onPaneMouseDown}
-      onMouseMove={onPaneMouseMove}
-      onMouseUp={onPaneMouseUp}
       style={{
         width: "100%",
         height: "100%",
@@ -397,6 +368,9 @@ export const FlowCanvas: React.FC = React.memo(() => {
         onNodeContextMenu={onNodeContextMenu}
         onPaneClick={onPaneClick}
         onPaneContextMenu={onPaneContextMenu}
+        onMouseDown={onPaneMouseDown}
+        onMouseMove={onPaneMouseMove}
+        onMouseUp={onPaneMouseUp}
         onDragOver={onDragOver}
         onDrop={onDrop}
         nodeTypes={nodeTypes}
@@ -413,8 +387,6 @@ export const FlowCanvas: React.FC = React.memo(() => {
         fitViewOptions={{ padding: 0.2 }}
         proOptions={{ hideAttribution: true }}
         deleteKeyCode={null}
-        snapToGrid
-        snapGrid={[12, 12]}
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -422,13 +394,37 @@ export const FlowCanvas: React.FC = React.memo(() => {
           size={1}
           color="var(--border)"
         />
-        <MiniMap
-          style={minimapStyle}
-          nodeColor={minimapNodeColor}
-          maskColor="rgba(0, 0, 0, 0.5)"
-          pannable
-          zoomable
-        />
+        <Panel position="center-left">
+          <InteractionToolbar />
+        </Panel>
+        <Panel position="bottom-right">
+          <MiniMap
+            style={minimapStyle}
+            nodeColor={minimapNodeColor}
+            maskColor="rgba(0, 0, 0, 0.5)"
+            pannable
+            zoomable
+          />
+        </Panel>
+        <Panel position="bottom-left">
+          <button
+            style={{
+              background:
+                "color-mix(in srgb, var(--bg-secondary) 92%, transparent)",
+            }}
+          >
+            <MdUndo />
+          </button>
+
+          <button
+            style={{
+              background:
+                "color-mix(in srgb, var(--bg-secondary) 92%, transparent)",
+            }}
+          >
+            <MdRedo />
+          </button>
+        </Panel>
       </ReactFlow>
 
       {cutLine && (
@@ -436,6 +432,8 @@ export const FlowCanvas: React.FC = React.memo(() => {
           style={{
             position: "absolute",
             inset: 0,
+            width: "100%",
+            height: "100%",
             pointerEvents: "none",
             zIndex: 30,
           }}

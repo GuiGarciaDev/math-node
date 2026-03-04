@@ -224,6 +224,44 @@ function getAbsoluteNodePosition(
   return { x, y }
 }
 
+const MAX_HISTORY_ENTRIES = 100
+
+interface FlowHistorySnapshot {
+  nodes: MathNode[]
+  edges: MathEdge[]
+  selectedNodeId: string | null
+  selectedNodeIds: string[]
+}
+
+function createHistorySnapshot(state: {
+  nodes: MathNode[]
+  edges: MathEdge[]
+  selectedNodeId: string | null
+  selectedNodeIds: string[]
+}): FlowHistorySnapshot {
+  return {
+    nodes: clone(state.nodes),
+    edges: clone(state.edges),
+    selectedNodeId: state.selectedNodeId,
+    selectedNodeIds: [...state.selectedNodeIds],
+  }
+}
+
+function withRecordedHistory(state: {
+  historyPast: FlowHistorySnapshot[]
+  nodes: MathNode[]
+  edges: MathEdge[]
+  selectedNodeId: string | null
+  selectedNodeIds: string[]
+}) {
+  return {
+    historyPast: [...state.historyPast, createHistorySnapshot(state)].slice(
+      -MAX_HISTORY_ENTRIES,
+    ),
+    historyFuture: [] as FlowHistorySnapshot[],
+  }
+}
+
 // ─── Store Interface ──────────────────────────────────────
 
 interface FlowState {
@@ -238,6 +276,8 @@ interface FlowState {
   selectedNodeIds: string[]
   interactionMode: InteractionMode
   contextMenu: ContextMenuState
+  historyPast: FlowHistorySnapshot[]
+  historyFuture: FlowHistorySnapshot[]
   clipboard: ClipboardData | null
   sidebarOpen: boolean
   presetsOpen: boolean
@@ -286,6 +326,8 @@ interface FlowState {
   duplicateSelection: () => void
   groupSelectedNodes: () => void
   ungroupNode: (groupId: string) => void
+  undo: () => void
+  redo: () => void
 
   // Execution
   runPipeline: () => void
@@ -408,6 +450,8 @@ export const useFlowStore = create<FlowState>()(
       selectedNodeIds: [],
       interactionMode: "select",
       contextMenu: { visible: false, x: 0, y: 0, target: "canvas" },
+      historyPast: [],
+      historyFuture: [],
       clipboard: null,
       sidebarOpen: true,
       presetsOpen: false,
@@ -422,9 +466,18 @@ export const useFlowStore = create<FlowState>()(
 
       // ─── React Flow Handlers ────────────────────────────────
       onNodesChange: (changes) => {
+        const state = get()
         const nextNodes = applyNodeChanges(changes, get().nodes)
         const selectedNodeIds = normalizeSelection(
           nextNodes.filter((node) => node.selected).map((node) => node.id),
+        )
+
+        const shouldRecordHistory = changes.some(
+          (change) =>
+            change.type === "position" ||
+            change.type === "remove" ||
+            change.type === "add" ||
+            change.type === "replace",
         )
 
         set({
@@ -432,12 +485,19 @@ export const useFlowStore = create<FlowState>()(
           selectedNodeIds,
           selectedNodeId:
             selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
+          ...(shouldRecordHistory ? withRecordedHistory(state) : {}),
         })
       },
 
       onEdgesChange: (changes) => {
+        const state = get()
+        const shouldRecordHistory = changes.some(
+          (change) => change.type !== "select",
+        )
+
         set({
-          edges: applyEdgeChanges(changes, get().edges),
+          edges: applyEdgeChanges(changes, state.edges),
+          ...(shouldRecordHistory ? withRecordedHistory(state) : {}),
         })
       },
 
@@ -475,7 +535,11 @@ export const useFlowStore = create<FlowState>()(
             : node,
         )
 
-        set({ edges: [...edges, newEdge], nodes: newNodes })
+        set({
+          edges: [...edges, newEdge],
+          nodes: newNodes,
+          ...withRecordedHistory(get()),
+        })
 
         if (executionMode === "auto") {
           setTimeout(() => get().runPipeline(), 0)
@@ -484,6 +548,7 @@ export const useFlowStore = create<FlowState>()(
 
       // ─── Actions ────────────────────────────────────────────
       addNode: (type, position) => {
+        const state = get()
         const newNode: MathNode = {
           id: generateNodeId(type),
           type,
@@ -491,44 +556,52 @@ export const useFlowStore = create<FlowState>()(
           data: createNodeData(type),
           selected: false,
         }
-        set({ nodes: [...get().nodes, newNode] })
+        set({ nodes: [...state.nodes, newNode], ...withRecordedHistory(state) })
       },
 
       removeNode: (nodeId) => {
-        const expandedNodeIds = collectExpandedSelection(get().nodes, [nodeId])
+        const state = get()
+        const expandedNodeIds = collectExpandedSelection(state.nodes, [nodeId])
         const removeSet = new Set(expandedNodeIds)
-        const selectedNodeId = get().selectedNodeId
+        const selectedNodeId = state.selectedNodeId
         set({
-          nodes: get().nodes.filter((n) => !removeSet.has(n.id)),
-          edges: get().edges.filter(
+          nodes: state.nodes.filter((n) => !removeSet.has(n.id)),
+          edges: state.edges.filter(
             (edge) =>
               !removeSet.has(edge.source) && !removeSet.has(edge.target),
           ),
-          selectedNodeIds: get().selectedNodeIds.filter(
+          selectedNodeIds: state.selectedNodeIds.filter(
             (id) => !removeSet.has(id),
           ),
           selectedNodeId:
             selectedNodeId !== null && removeSet.has(selectedNodeId)
               ? null
               : selectedNodeId,
+          ...withRecordedHistory(state),
         })
       },
 
       removeEdge: (edgeId) => {
+        const state = get()
         set({
-          edges: get().edges.filter((edge) => edge.id !== edgeId),
+          edges: state.edges.filter((edge) => edge.id !== edgeId),
+          ...withRecordedHistory(state),
         })
       },
 
       removeEdgesByIds: (edgeIds) => {
+        if (edgeIds.length === 0) return
+        const state = get()
         const edgeSet = new Set(edgeIds)
         set({
-          edges: get().edges.filter((edge) => !edgeSet.has(edge.id)),
+          edges: state.edges.filter((edge) => !edgeSet.has(edge.id)),
+          ...withRecordedHistory(state),
         })
       },
 
       updateNodeParam: (nodeId, key, value) => {
-        const { nodes, executionMode } = get()
+        const state = get()
+        const { nodes, executionMode } = state
         const newNodes = nodes.map((node) =>
           node.id === nodeId
             ? {
@@ -541,7 +614,7 @@ export const useFlowStore = create<FlowState>()(
               }
             : node,
         )
-        set({ nodes: newNodes })
+        set({ nodes: newNodes, ...withRecordedHistory(state) })
 
         if (executionMode === "auto") {
           setTimeout(() => get().runPipeline(), 0)
@@ -685,6 +758,7 @@ export const useFlowStore = create<FlowState>()(
           ),
           selectedNodeId: null,
           selectedNodeIds: [],
+          ...withRecordedHistory(state),
         })
       },
 
@@ -772,6 +846,7 @@ export const useFlowStore = create<FlowState>()(
           selectedNodeIds,
           selectedNodeId:
             selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
+          ...withRecordedHistory(state),
         })
 
         void selectedSet
@@ -885,6 +960,7 @@ export const useFlowStore = create<FlowState>()(
           nodes: [groupNode, ...nodes],
           selectedNodeIds: [groupId],
           selectedNodeId: groupId,
+          ...withRecordedHistory(state),
         })
       },
 
@@ -895,7 +971,10 @@ export const useFlowStore = create<FlowState>()(
 
         const children = state.nodes.filter((node) => node.parentId === groupId)
         if (children.length === 0) {
-          set({ nodes: state.nodes.filter((node) => node.id !== groupId) })
+          set({
+            nodes: state.nodes.filter((node) => node.id !== groupId),
+            ...withRecordedHistory(state),
+          })
           return
         }
 
@@ -924,6 +1003,46 @@ export const useFlowStore = create<FlowState>()(
           nodes,
           selectedNodeIds: childIds,
           selectedNodeId: childIds.length === 1 ? childIds[0] : null,
+          ...withRecordedHistory(state),
+        })
+      },
+
+      undo: () => {
+        const state = get()
+        if (state.historyPast.length === 0) return
+
+        const previous = state.historyPast[state.historyPast.length - 1]
+        const current = createHistorySnapshot(state)
+
+        set({
+          nodes: clone(previous.nodes),
+          edges: clone(previous.edges),
+          selectedNodeId: previous.selectedNodeId,
+          selectedNodeIds: [...previous.selectedNodeIds],
+          historyPast: state.historyPast.slice(0, -1),
+          historyFuture: [current, ...state.historyFuture].slice(
+            0,
+            MAX_HISTORY_ENTRIES,
+          ),
+        })
+      },
+
+      redo: () => {
+        const state = get()
+        if (state.historyFuture.length === 0) return
+
+        const [next, ...futureTail] = state.historyFuture
+        const current = createHistorySnapshot(state)
+
+        set({
+          nodes: clone(next.nodes),
+          edges: clone(next.edges),
+          selectedNodeId: next.selectedNodeId,
+          selectedNodeIds: [...next.selectedNodeIds],
+          historyPast: [...state.historyPast, current].slice(
+            -MAX_HISTORY_ENTRIES,
+          ),
+          historyFuture: futureTail,
         })
       },
 

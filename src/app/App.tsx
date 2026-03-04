@@ -5,7 +5,6 @@ import { LandingPage } from "./layout/LandingPage"
 import { Sidebar } from "../features/sidebar/Sidebar"
 import { FlowCanvas } from "../features/flow/FlowCanvas"
 import { GraphModal } from "../features/flow/GraphModal"
-import { InteractionToolbar } from "../features/flow/InteractionToolbar"
 import { FlowShortcuts } from "../features/flow/FlowShortcuts"
 import { Inspector } from "../features/inspector/Inspector"
 import { Console } from "../features/console/Console"
@@ -66,7 +65,6 @@ const App: React.FC = () => {
             <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
               <ReactFlowProvider>
                 <FlowCanvas />
-                <InteractionToolbar />
                 <FlowShortcuts />
               </ReactFlowProvider>
 
