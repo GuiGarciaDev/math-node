@@ -7,29 +7,33 @@ interface SidebarProps {
 
 const categories: SidebarCategory[] = [
   {
-    name: "Input",
+    name: "Inputs",
     color: "var(--category-input)",
     items: [
       {
         type: "numberInput",
         label: "Number",
-        icon: "🔢",
+        icon: "#",
         iconColor: "var(--category-input)",
-        description: "Numeric constant input",
+      },
+      {
+        type: "constant",
+        label: "Constant",
+        icon: "π",
+        iconColor: "var(--category-input)",
+        description: "pi, e",
       },
       {
         type: "variable",
         label: "Variable",
         icon: "𝑥",
         iconColor: "var(--category-input)",
-        description: "Symbolic variable",
       },
       {
         type: "expression",
         label: "Expression",
         icon: "ƒ",
         iconColor: "var(--category-input)",
-        description: "Mathematical expression",
       },
     ],
   },
@@ -68,10 +72,54 @@ const categories: SidebarCategory[] = [
         iconColor: "var(--category-arithmetic)",
       },
       {
-        type: "sqrt",
-        label: "Square Root",
+        type: "root",
+        label: "Root",
         icon: "√",
         iconColor: "var(--category-arithmetic)",
+      },
+    ],
+  },
+  {
+    name: "Trigonometry",
+    color: "var(--category-trigonometry)",
+    items: [
+      {
+        type: "trigonometric",
+        label: "Trigonometric Function",
+        icon: "∿",
+        iconColor: "var(--category-trigonometry)",
+        description: "sin, cos, tan, asin, acos, atan",
+      },
+    ],
+  },
+  {
+    name: "Logarithmic",
+    color: "var(--category-logarithmic)",
+    items: [
+      {
+        type: "ln",
+        label: "ln",
+        icon: "ln",
+        iconColor: "var(--category-logarithmic)",
+      },
+      {
+        type: "log",
+        label: "log",
+        icon: "log",
+        iconColor: "var(--category-logarithmic)",
+      },
+    ],
+  },
+  {
+    name: "Logic",
+    color: "var(--category-logic)",
+    items: [
+      {
+        type: "comparator",
+        label: "Comparator",
+        icon: "⊨",
+        iconColor: "var(--category-logic)",
+        description: "< > <= >= ===",
       },
     ],
   },
@@ -84,14 +132,12 @@ const categories: SidebarCategory[] = [
         label: "Derivative",
         icon: "∂",
         iconColor: "var(--category-calculus)",
-        description: "Symbolic differentiation",
       },
       {
         type: "integral",
         label: "Integral",
         icon: "∫",
         iconColor: "var(--category-calculus)",
-        description: "Symbolic integration",
       },
     ],
   },
@@ -104,14 +150,12 @@ const categories: SidebarCategory[] = [
         label: "Plot Function",
         icon: "📈",
         iconColor: "var(--category-display)",
-        description: "Function visualization",
       },
       {
         type: "matrix",
         label: "Matrix",
         icon: "▦",
         iconColor: "var(--category-display)",
-        description: "Matrix editor",
       },
     ],
   },
@@ -120,6 +164,9 @@ const categories: SidebarCategory[] = [
 const tokenToTextClass: Record<string, string> = {
   "var(--category-input)": "text-[var(--category-input)]",
   "var(--category-arithmetic)": "text-[var(--category-arithmetic)]",
+  "var(--category-trigonometry)": "text-[var(--category-trigonometry)]",
+  "var(--category-logarithmic)": "text-[var(--category-logarithmic)]",
+  "var(--category-logic)": "text-[var(--category-logic)]",
   "var(--category-calculus)": "text-[var(--category-calculus)]",
   "var(--category-display)": "text-[var(--category-display)]",
   "var(--category-advanced)": "text-[var(--category-advanced)]",
@@ -128,6 +175,9 @@ const tokenToTextClass: Record<string, string> = {
 const tokenToBgClass: Record<string, string> = {
   "var(--category-input)": "bg-[var(--category-input)]",
   "var(--category-arithmetic)": "bg-[var(--category-arithmetic)]",
+  "var(--category-trigonometry)": "bg-[var(--category-trigonometry)]",
+  "var(--category-logarithmic)": "bg-[var(--category-logarithmic)]",
+  "var(--category-logic)": "bg-[var(--category-logic)]",
   "var(--category-calculus)": "bg-[var(--category-calculus)]",
   "var(--category-display)": "bg-[var(--category-display)]",
   "var(--category-advanced)": "bg-[var(--category-advanced)]",
@@ -135,6 +185,11 @@ const tokenToBgClass: Record<string, string> = {
 
 export const Sidebar: React.FC<SidebarProps> = React.memo(({ collapsed }) => {
   const [searchQuery, setSearchQuery] = useState("")
+  const [expandedCategories, setExpandedCategories] = useState<
+    Record<string, boolean>
+  >(() =>
+    Object.fromEntries(categories.map((category) => [category.name, true])),
+  )
 
   const onDragStart = useCallback(
     (e: React.DragEvent, nodeType: MathNodeType) => {
@@ -154,6 +209,13 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({ collapsed }) => {
         }))
         .filter((cat) => cat.items.length > 0)
     : categories
+
+  const toggleCategory = useCallback((categoryName: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [categoryName]: !prev[categoryName],
+    }))
+  }, [])
 
   const collapsedItems = filteredCategories.flatMap((category) =>
     category.items.slice(0, 2),
@@ -189,31 +251,42 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({ collapsed }) => {
         <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-3">
           {filteredCategories.map((category) => (
             <div key={category.name}>
-              <h3 className="mb-2 flex items-center gap-2 pl-1 text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                <div
-                  className={`h-1 w-1 rounded-full ${tokenToBgClass[category.color] ?? "bg-[var(--text-muted)]"}`}
-                />
-                {category.name}
-              </h3>
+              <button
+                type="button"
+                onClick={() => toggleCategory(category.name)}
+                className="mb-2 flex w-full items-center justify-between pl-1 text-left text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-muted)]"
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    className={`h-1 w-1 rounded-full ${tokenToBgClass[category.color] ?? "bg-[var(--text-muted)]"}`}
+                  />
+                  {category.name}
+                </span>
+                <span className="text-[9px] text-[var(--text-dim)]">
+                  {expandedCategories[category.name] ? "−" : "+"}
+                </span>
+              </button>
 
-              <div className="flex flex-col gap-1">
-                {category.items.map((item) => (
-                  <div
-                    key={item.type}
-                    draggable
-                    onDragStart={(e) => onDragStart(e, item.type)}
-                    className="group flex cursor-grab select-none items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-xs text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] active:cursor-grabbing"
-                    title={item.description ?? item.label}
-                  >
-                    <span
-                      className={`w-[18px] text-center text-sm ${tokenToTextClass[item.iconColor] ?? "text-[var(--text-muted)]"}`}
+              {expandedCategories[category.name] && (
+                <div className="flex flex-col gap-1">
+                  {category.items.map((item) => (
+                    <div
+                      key={item.type}
+                      draggable
+                      onDragStart={(e) => onDragStart(e, item.type)}
+                      className="group flex cursor-grab select-none items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-xs text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] active:cursor-grabbing"
+                      title={item.description ?? item.label}
                     >
-                      {item.icon}
-                    </span>
-                    <span className="truncate">{item.label}</span>
-                  </div>
-                ))}
-              </div>
+                      <span
+                        className={`w-[18px] text-center text-sm ${tokenToTextClass[item.iconColor] ?? "text-[var(--text-muted)]"}`}
+                      >
+                        {item.icon}
+                      </span>
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

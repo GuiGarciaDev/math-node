@@ -3,7 +3,6 @@
 // Pure, deterministic, side-effect free.
 
 import type { MathNode, MathEdge, ComputedValue, LogEntry } from "../../types"
-import { operatorRegistry } from "../../lib/math/operators"
 import {
   parseExpression,
   differentiate,
@@ -12,7 +11,17 @@ import {
   formatExpression,
 } from "../../lib/math/symbolic"
 import { evaluateRange } from "../../lib/math/evaluator"
-import { parseLocalizedNumberInput } from "../../lib/math/numberInput"
+import {
+  evaluateNumberInput,
+  evaluateConstant,
+  evaluateArithmetic,
+  evaluatePower,
+  evaluateRoot,
+  evaluateTrigonometric,
+  evaluateLn,
+  evaluateLog,
+  evaluateComparator,
+} from "../../lib/math/nodeEvaluation"
 
 type ComputedMap = Map<string, ComputedValue>
 
@@ -140,15 +149,24 @@ function evaluateSingleNode(
   try {
     switch (nodeType) {
       case "numberInput": {
-        const parsed = parseLocalizedNumberInput(params.value)
-        if (!parsed.isValid) {
+        try {
+          return { value: evaluateNumberInput(params.value), type: "number" }
+        } catch (error) {
           return {
             value: undefined,
             type: "number",
-            error: parsed.reason ?? "Invalid number",
+            error: error instanceof Error ? error.message : "Invalid number",
           }
         }
-        return { value: parsed.value ?? 0, type: "number" }
+      }
+
+      case "constant": {
+        const value = evaluateConstant({
+          constantKey: params.constantKey,
+          decimalPlaces: params.decimalPlaces,
+          constantType: params.constantType,
+        })
+        return { value, type: "number" }
       }
 
       case "variable": {
@@ -166,32 +184,64 @@ function evaluateSingleNode(
       case "subtract":
       case "multiply":
       case "divide": {
-        const a = inputs["a"]?.value as number | undefined
-        const b = inputs["b"]?.value as number | undefined
-        if (a === undefined || b === undefined) {
-          return { value: undefined, type: "number", error: "Missing inputs" }
-        }
-        const op = operatorRegistry[nodeType]
-        if (!op) throw new Error(`Unknown operator: ${nodeType}`)
-        const result = op(a, b)
+        const result = evaluateArithmetic(
+          nodeType,
+          inputs["a"]?.value,
+          inputs["b"]?.value,
+        )
         return { value: result, type: "number" }
       }
 
       case "power": {
-        const base = inputs["base"]?.value as number | undefined
-        const exp = inputs["exp"]?.value as number | undefined
-        if (base === undefined || exp === undefined) {
-          return { value: undefined, type: "number", error: "Missing inputs" }
+        return {
+          value: evaluatePower(inputs["base"]?.value, inputs["exp"]?.value),
+          type: "number",
         }
-        return { value: operatorRegistry.power(base, exp), type: "number" }
       }
 
       case "sqrt": {
-        const val = inputs["value"]?.value as number | undefined
-        if (val === undefined) {
-          return { value: undefined, type: "number", error: "Missing input" }
+        return {
+          value: evaluateRoot(inputs["value"]?.value, params.degree ?? 2),
+          type: "number",
         }
-        return { value: operatorRegistry.sqrt(val), type: "number" }
+      }
+
+      case "root": {
+        return {
+          value: evaluateRoot(inputs["value"]?.value, inputs["degree"]?.value),
+          type: "number",
+        }
+      }
+
+      case "trigonometric": {
+        const result = evaluateTrigonometric(
+          params.operation,
+          inputs["value"]?.value,
+          params.unit,
+        )
+        return { value: result, type: "number" }
+      }
+
+      case "ln": {
+        return { value: evaluateLn(inputs["value"]?.value), type: "number" }
+      }
+
+      case "log": {
+        return {
+          value: evaluateLog(inputs["value"]?.value, inputs["base"]?.value),
+          type: "number",
+        }
+      }
+
+      case "comparator": {
+        return {
+          value: evaluateComparator(
+            params.operator,
+            inputs["left"]?.value,
+            inputs["right"]?.value,
+          ),
+          type: "boolean",
+        }
       }
 
       case "derivative": {

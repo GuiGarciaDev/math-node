@@ -1,9 +1,15 @@
-import React, { useEffect, useMemo, useRef } from "react"
-import { useFlowStore } from "./flowStore"
+import React, { useCallback, useEffect, useMemo, useRef } from "react"
+import type { ContextMenuState } from "../../types"
 
 type MenuItem = {
   id: string
   label: string
+}
+
+interface ContextMenuProps {
+  contextMenu: ContextMenuState
+  onClose: () => void
+  onAction: (action: string, nodeId?: string) => void
 }
 
 const menuByTarget: Record<string, MenuItem[]> = {
@@ -27,72 +33,87 @@ const menuByTarget: Record<string, MenuItem[]> = {
   canvas: [],
 }
 
-export const ContextMenu: React.FC = React.memo(() => {
-  const contextMenu = useFlowStore((s) => s.contextMenu)
-  const closeContextMenu = useFlowStore((s) => s.closeContextMenu)
-  const dispatchContextAction = useFlowStore((s) => s.dispatchContextAction)
-  const menuRef = useRef<HTMLDivElement | null>(null)
+export const ContextMenu: React.FC<ContextMenuProps> = React.memo(
+  ({ contextMenu, onClose, onAction }) => {
+    const menuRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    if (!contextMenu.visible) return
+    const items = useMemo(
+      () => menuByTarget[contextMenu.target] ?? [],
+      [contextMenu.target],
+    )
 
-    const onPointerDown = (event: MouseEvent) => {
-      if (menuRef.current?.contains(event.target as Node)) {
-        return
+    const menuPosition = useMemo(() => {
+      if (!contextMenu.visible || items.length === 0) {
+        return { x: 0, y: 0 }
       }
-      closeContextMenu()
-    }
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeContextMenu()
+      const menuWidth = 176
+      const menuHeight = items.length * 32 + 12
+
+      return {
+        x: Math.min(contextMenu.x, window.innerWidth - menuWidth - 8),
+        y: Math.min(contextMenu.y, window.innerHeight - menuHeight - 8),
       }
+    }, [contextMenu.visible, contextMenu.x, contextMenu.y, items.length])
+
+    const handleAction = useCallback(
+      (actionId: string) => {
+        onAction(actionId, contextMenu.nodeId)
+      },
+      [contextMenu.nodeId, onAction],
+    )
+
+    useEffect(() => {
+      if (!contextMenu.visible) return
+
+      const onPointerDown = (event: MouseEvent) => {
+        if (menuRef.current?.contains(event.target as Node)) {
+          return
+        }
+        onClose()
+      }
+
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          onClose()
+        }
+      }
+
+      window.addEventListener("mousedown", onPointerDown)
+      window.addEventListener("keydown", onKeyDown)
+      return () => {
+        window.removeEventListener("mousedown", onPointerDown)
+        window.removeEventListener("keydown", onKeyDown)
+      }
+    }, [contextMenu.visible, onClose])
+
+    useEffect(() => {
+      if (!contextMenu.visible || !menuRef.current) return
+      menuRef.current.style.left = `${menuPosition.x}px`
+      menuRef.current.style.top = `${menuPosition.y}px`
+    }, [contextMenu.visible, menuPosition.x, menuPosition.y])
+
+    if (!contextMenu.visible || items.length === 0) {
+      return null
     }
 
-    window.addEventListener("mousedown", onPointerDown)
-    window.addEventListener("keydown", onKeyDown)
-    return () => {
-      window.removeEventListener("mousedown", onPointerDown)
-      window.removeEventListener("keydown", onKeyDown)
-    }
-  }, [closeContextMenu, contextMenu.visible])
-
-  const items = useMemo(
-    () => menuByTarget[contextMenu.target] ?? [],
-    [contextMenu.target],
-  )
-
-  if (!contextMenu.visible || items.length === 0) {
-    return null
-  }
-
-  const menuWidth = 176
-  const menuHeight = items.length * 32 + 12
-  const x = Math.min(contextMenu.x, window.innerWidth - menuWidth - 8)
-  const y = Math.min(contextMenu.y, window.innerHeight - menuHeight - 8)
-
-  useEffect(() => {
-    if (!menuRef.current) return
-    menuRef.current.style.left = `${x}px`
-    menuRef.current.style.top = `${y}px`
-  }, [x, y])
-
-  return (
-    <div
-      ref={menuRef}
-      className="fixed z-[60] w-44 rounded-[10px] border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-1.5 shadow-[0_14px_28px_rgba(0,0,0,0.28)] backdrop-blur-md"
-    >
-      {items.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => dispatchContextAction(item.id, contextMenu.nodeId)}
-          className="h-[30px] w-full rounded-lg px-2.5 text-left text-xs text-[var(--text-secondary)] transition-colors duration-100 hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
-  )
-})
+    return (
+      <div
+        ref={menuRef}
+        className="fixed z-[60] w-44 rounded-[10px] border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-1.5 shadow-[0_14px_28px_rgba(0,0,0,0.28)] backdrop-blur-md"
+      >
+        {items.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => handleAction(item.id)}
+            className="h-[30px] w-full rounded-lg px-2.5 text-left text-xs text-[var(--text-secondary)] transition-colors duration-100 hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    )
+  },
+)
 
 ContextMenu.displayName = "ContextMenu"

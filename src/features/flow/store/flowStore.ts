@@ -22,9 +22,9 @@ import type {
   InteractionMode,
   ContextMenuState,
   ClipboardData,
-} from "../../types"
-import { runPipeline, runSingleNode } from "./executionEngine"
-import { validateConnection } from "./edgeValidation"
+} from "../../../types"
+import { runPipeline, runSingleNode } from "../executionEngine"
+import { validateConnection } from "../edgeValidation"
 
 // ─── Node Factory ─────────────────────────────────────────
 
@@ -38,6 +38,13 @@ const nodeDefaults: Record<
     inputs: [],
     outputs: [{ name: "value", type: "number", label: "number" }],
     params: { value: "0" },
+  },
+  constant: {
+    label: "Constant",
+    category: "input",
+    inputs: [],
+    outputs: [{ name: "value", type: "number", label: "number" }],
+    params: { constantKey: "pi", decimalPlaces: 6 },
   },
   variable: {
     label: "Variable",
@@ -103,12 +110,59 @@ const nodeDefaults: Record<
     outputs: [{ name: "result", type: "number", label: "Result" }],
     params: {},
   },
-  sqrt: {
-    label: "Square Root",
+  root: {
+    label: "Root",
     category: "arithmetic",
+    inputs: [
+      { name: "value", type: "number", label: "Value" },
+      { name: "degree", type: "number", label: "n" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "Result" }],
+    params: { degree: 2 },
+  },
+  sqrt: {
+    label: "Root",
+    category: "arithmetic",
+    inputs: [
+      { name: "value", type: "number", label: "Value" },
+      { name: "degree", type: "number", label: "n" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "Result" }],
+    params: { degree: 2 },
+  },
+  trigonometric: {
+    label: "Trigonometric Function",
+    category: "trigonometry",
+    inputs: [{ name: "value", type: "number", label: "Value" }],
+    outputs: [{ name: "result", type: "number", label: "Result" }],
+    params: { operation: "sin", unit: "deg" },
+  },
+  ln: {
+    label: "ln",
+    category: "logarithmic",
     inputs: [{ name: "value", type: "number", label: "Value" }],
     outputs: [{ name: "result", type: "number", label: "Result" }],
     params: {},
+  },
+  log: {
+    label: "log",
+    category: "logarithmic",
+    inputs: [
+      { name: "value", type: "number", label: "Value" },
+      { name: "base", type: "number", label: "Base" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "Result" }],
+    params: { base: 10 },
+  },
+  comparator: {
+    label: "Comparator",
+    category: "logic",
+    inputs: [
+      { name: "left", type: "number", label: "A" },
+      { name: "right", type: "number", label: "B" },
+    ],
+    outputs: [{ name: "result", type: "boolean", label: "Result" }],
+    params: { operator: ">" },
   },
   derivative: {
     label: "Derivative",
@@ -179,6 +233,14 @@ function createNodeData(type: MathNodeType): MathNodeData {
 
 function normalizeSelection(nodeIds: string[]): string[] {
   return Array.from(new Set(nodeIds))
+}
+
+function areSameStringArrays(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
 }
 
 function clone<T>(value: T): T {
@@ -274,6 +336,7 @@ interface FlowState {
   executionMode: ExecutionMode
   selectedNodeId: string | null
   selectedNodeIds: string[]
+  nodeDragInProgress: boolean
   interactionMode: InteractionMode
   contextMenu: ContextMenuState
   historyPast: FlowHistorySnapshot[]
@@ -353,13 +416,19 @@ const defaultNodes: MathNode[] = [
     id: "num_1",
     type: "numberInput",
     position: { x: 60, y: 200 },
-    data: { ...createNodeData("numberInput"), params: { value: "42" } },
+    data: {
+      ...createNodeData("numberInput"),
+      params: { value: "42" },
+    },
   },
   {
     id: "num_2",
-    type: "numberInput",
+    type: "constant",
     position: { x: 60, y: 340 },
-    data: { ...createNodeData("numberInput"), params: { value: "3.14" } },
+    data: {
+      ...createNodeData("constant"),
+      params: { constantKey: "pi", decimalPlaces: 4 },
+    },
   },
   {
     id: "add_1",
@@ -448,6 +517,7 @@ export const useFlowStore = create<FlowState>()(
       executionMode: "manual",
       selectedNodeId: null,
       selectedNodeIds: [],
+      nodeDragInProgress: false,
       interactionMode: "select",
       contextMenu: { visible: false, x: 0, y: 0, target: "canvas" },
       historyPast: [],
@@ -467,24 +537,55 @@ export const useFlowStore = create<FlowState>()(
       // ─── React Flow Handlers ────────────────────────────────
       onNodesChange: (changes) => {
         const state = get()
-        const nextNodes = applyNodeChanges(changes, get().nodes)
-        const selectedNodeIds = normalizeSelection(
-          nextNodes.filter((node) => node.selected).map((node) => node.id),
-        )
+        const nextNodes = applyNodeChanges(changes, state.nodes)
 
-        const shouldRecordHistory = changes.some(
+        const hasDraggingPositionChange = changes.some(
+          (change) => change.type === "position" && change.dragging === true,
+        )
+        const hasDragEndPositionChange = changes.some(
+          (change) => change.type === "position" && change.dragging === false,
+        )
+        const hasStructuralChange = changes.some(
           (change) =>
-            change.type === "position" ||
             change.type === "remove" ||
             change.type === "add" ||
             change.type === "replace",
         )
+        const shouldSyncSelection =
+          hasStructuralChange ||
+          changes.some((change) => change.type === "select")
+
+        const nextSelectedNodeIds = shouldSyncSelection
+          ? normalizeSelection(
+              nextNodes.filter((node) => node.selected).map((node) => node.id),
+            )
+          : state.selectedNodeIds
+        const selectionChanged = shouldSyncSelection
+          ? !areSameStringArrays(nextSelectedNodeIds, state.selectedNodeIds)
+          : false
+
+        // Record one undo entry when drag starts, not for every pointer-move frame.
+        const shouldRecordHistory =
+          hasStructuralChange ||
+          (hasDraggingPositionChange && !state.nodeDragInProgress)
 
         set({
           nodes: nextNodes,
-          selectedNodeIds,
-          selectedNodeId:
-            selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
+          ...(selectionChanged
+            ? {
+                selectedNodeIds: nextSelectedNodeIds,
+                selectedNodeId:
+                  nextSelectedNodeIds.length === 1
+                    ? nextSelectedNodeIds[0]
+                    : null,
+              }
+            : {}),
+          ...(hasDraggingPositionChange && !state.nodeDragInProgress
+            ? { nodeDragInProgress: true }
+            : {}),
+          ...(hasDragEndPositionChange && state.nodeDragInProgress
+            ? { nodeDragInProgress: false }
+            : {}),
           ...(shouldRecordHistory ? withRecordedHistory(state) : {}),
         })
       },
@@ -639,18 +740,34 @@ export const useFlowStore = create<FlowState>()(
       },
 
       setSelectedNodeIds: (nodeIds) => {
+        const state = get()
         const selectedNodeIds = normalizeSelection(nodeIds)
+        const selectedNodeId =
+          selectedNodeIds.length === 1 ? selectedNodeIds[0] : null
+
+        if (
+          areSameStringArrays(selectedNodeIds, state.selectedNodeIds) &&
+          selectedNodeId === state.selectedNodeId
+        ) {
+          return
+        }
+
         const selectedSet = new Set(selectedNodeIds)
-        const nodes = get().nodes.map((node) => ({
-          ...node,
-          selected: selectedSet.has(node.id),
-        }))
+        const nodesNeedSync = state.nodes.some(
+          (node) => node.selected !== selectedSet.has(node.id),
+        )
 
         set({
-          nodes,
+          ...(nodesNeedSync
+            ? {
+                nodes: state.nodes.map((node) => ({
+                  ...node,
+                  selected: selectedSet.has(node.id),
+                })),
+              }
+            : {}),
           selectedNodeIds,
-          selectedNodeId:
-            selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
+          selectedNodeId,
         })
       },
 

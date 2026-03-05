@@ -2,7 +2,7 @@ import React from "react"
 import type { NodeProps } from "@xyflow/react"
 import type { MathNodeData } from "../../../types"
 import { NodeShell } from "./NodeShell"
-import { useFlowStore } from "../flowStore"
+import { useFlowStore } from "../store/flowStore"
 
 /** Shared component for binary arithmetic nodes (add, subtract, multiply, divide) */
 function createArithmeticNode(

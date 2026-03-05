@@ -2,7 +2,7 @@ import React from "react"
 import type { NodeProps } from "@xyflow/react"
 import type { MathNodeData } from "../../../types"
 import { NodeShell } from "./NodeShell"
-import { useFlowStore } from "../flowStore"
+import { useFlowStore } from "../store/flowStore"
 
 export const PowerNode: React.FC<NodeProps> = React.memo(
   ({ id, data, selected }) => {
@@ -36,7 +36,7 @@ export const PowerNode: React.FC<NodeProps> = React.memo(
 
 PowerNode.displayName = "PowerNode"
 
-export const SqrtNode: React.FC<NodeProps> = React.memo(
+export const RootNode: React.FC<NodeProps> = React.memo(
   ({ id, data, selected }) => {
     const nodeData = data as unknown as MathNodeData
     const computed = useFlowStore((s) => s.computedValues.get(id))
@@ -46,7 +46,7 @@ export const SqrtNode: React.FC<NodeProps> = React.memo(
         ? typeof computed.value === "number"
           ? (computed.value as number).toFixed(4)
           : String(computed.value)
-        : "√x"
+        : "root(value, n)"
 
     const valueClass = computed?.error
       ? "text-[var(--status-error)]"
@@ -64,4 +64,7 @@ export const SqrtNode: React.FC<NodeProps> = React.memo(
   },
 )
 
-SqrtNode.displayName = "SqrtNode"
+RootNode.displayName = "RootNode"
+
+// Backward-compatible alias for persisted sqrt nodes.
+export const SqrtNode = RootNode

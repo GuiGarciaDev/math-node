@@ -24,7 +24,15 @@ export type ComputeMode = "numeric" | "symbolic"
 // ─── Node Data ────────────────────────────────────────────
 export interface MathNodeData {
   label: string
-  category: "input" | "arithmetic" | "advanced" | "calculus" | "display"
+  category:
+    | "input"
+    | "arithmetic"
+    | "trigonometry"
+    | "logarithmic"
+    | "logic"
+    | "advanced"
+    | "calculus"
+    | "display"
   inputs: PortDefinition[]
   outputs: PortDefinition[]
   params: Record<string, unknown>
@@ -71,6 +79,7 @@ export interface ClipboardData {
 // ─── Node Type Registry ───────────────────────────────────
 export type MathNodeType =
   | "numberInput"
+  | "constant"
   | "variable"
   | "expression"
   | "add"
@@ -78,7 +87,12 @@ export type MathNodeType =
   | "multiply"
   | "divide"
   | "power"
+  | "root"
   | "sqrt"
+  | "trigonometric"
+  | "ln"
+  | "log"
+  | "comparator"
   | "derivative"
   | "integral"
   | "plot"

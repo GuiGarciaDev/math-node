@@ -5,12 +5,18 @@ import {
   Background,
   BackgroundVariant,
   type Node,
+  type ReactFlowInstance,
   Panel,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { nodeTypes } from "./nodeTypes"
-import { useFlowStore } from "./flowStore"
-import type { MathNodeType } from "../../types"
+import { useFlowStore } from "./store/flowStore"
+import type {
+  ContextMenuState,
+  MathEdge,
+  MathNode,
+  MathNodeType,
+} from "../../types"
 import { RemovableEdge } from "./RemovableEdge"
 import { ContextMenu } from "./ContextMenu"
 import { InteractionToolbar } from "./InteractionToolbar"
@@ -20,13 +26,19 @@ const edgeTypes = {
   removable: RemovableEdge,
 }
 
-const minimapNodeColor = (node: any) => {
+const minimapNodeColor = (node: Node) => {
   const category = node.data?.category
   switch (category) {
     case "input":
       return "var(--category-input)"
     case "arithmetic":
       return "var(--category-arithmetic)"
+    case "trigonometry":
+      return "var(--category-trigonometry)"
+    case "logarithmic":
+      return "var(--category-logarithmic)"
+    case "logic":
+      return "var(--category-logic)"
     case "calculus":
       return "var(--category-calculus)"
     case "display":
@@ -119,8 +131,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
   const clearSelection = useFlowStore((s) => s.clearSelection)
   const selectedNodeIds = useFlowStore((s) => s.selectedNodeIds)
   const interactionMode = useFlowStore((s) => s.interactionMode)
-  const openContextMenu = useFlowStore((s) => s.openContextMenu)
-  const closeContextMenu = useFlowStore((s) => s.closeContextMenu)
+  const dispatchContextAction = useFlowStore((s) => s.dispatchContextAction)
   const removeEdgesByIds = useFlowStore((s) => s.removeEdgesByIds)
   const addNode = useFlowStore((s) => s.addNode)
   const undo = useFlowStore((s) => s.undo)
@@ -128,7 +139,10 @@ export const FlowCanvas: React.FC = React.memo(() => {
   const canUndo = useFlowStore((s) => s.historyPast.length > 0)
   const canRedo = useFlowStore((s) => s.historyFuture.length > 0)
 
-  const reactFlowInstance = useRef<any>(null)
+  const reactFlowInstance = useRef<ReactFlowInstance<
+    MathNode,
+    MathEdge
+  > | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [cutStart, setCutStart] = useState<{ x: number; y: number } | null>(
     null,
@@ -136,10 +150,33 @@ export const FlowCanvas: React.FC = React.memo(() => {
   const [cutCurrent, setCutCurrent] = useState<{ x: number; y: number } | null>(
     null,
   )
+  const [isNodeDragActive, setIsNodeDragActive] = useState(false)
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    visible: false,
+    x: 0,
+    y: 0,
+    target: "canvas",
+  })
 
-  const onInit = useCallback((instance: any) => {
-    reactFlowInstance.current = instance
+  const openContextMenu = useCallback(
+    (payload: Omit<ContextMenuState, "visible">) => {
+      setContextMenu({ ...payload, visible: true })
+    },
+    [],
+  )
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu((prev) =>
+      prev.visible ? { visible: false, x: 0, y: 0, target: "canvas" } : prev,
+    )
   }, [])
+
+  const onInit = useCallback(
+    (instance: ReactFlowInstance<MathNode, MathEdge>) => {
+      reactFlowInstance.current = instance
+    },
+    [],
+  )
 
   const onNodeClick = useCallback(
     (event: React.MouseEvent) => {
@@ -212,10 +249,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
   const onPaneContextMenu = useCallback(
     (event: React.MouseEvent | MouseEvent) => {
       event.preventDefault()
-      const selectedIds =
-        selectedNodeIds.length > 0
-          ? selectedNodeIds
-          : nodes.filter((node) => node.selected).map((node) => node.id)
+      const selectedIds = selectedNodeIds
 
       if (selectedIds.length > 0) {
         openContextMenu({
@@ -228,7 +262,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
       }
       closeContextMenu()
     },
-    [closeContextMenu, nodes, openContextMenu, selectedNodeIds],
+    [closeContextMenu, openContextMenu, selectedNodeIds],
   )
 
   const cutLine = useMemo(() => {
@@ -343,6 +377,14 @@ export const FlowCanvas: React.FC = React.memo(() => {
     [addNode],
   )
 
+  const onNodeDragStart = useCallback(() => {
+    setIsNodeDragActive(true)
+  }, [])
+
+  const onNodeDragStop = useCallback(() => {
+    setIsNodeDragActive(false)
+  }, [])
+
   return (
     <div
       ref={containerRef}
@@ -358,6 +400,8 @@ export const FlowCanvas: React.FC = React.memo(() => {
         onConnect={onConnect}
         onInit={onInit}
         onNodeClick={onNodeClick}
+        onNodeDragStart={onNodeDragStart}
+        onNodeDragStop={onNodeDragStop}
         onNodeContextMenu={onNodeContextMenu}
         onPaneClick={onPaneClick}
         onPaneContextMenu={onPaneContextMenu}
@@ -380,6 +424,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
         fitViewOptions={{ padding: 0.2 }}
         proOptions={{ hideAttribution: true }}
         deleteKeyCode={null}
+        onlyRenderVisibleElements
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -391,13 +436,15 @@ export const FlowCanvas: React.FC = React.memo(() => {
           <InteractionToolbar />
         </Panel>
         <Panel position="bottom-right">
-          <MiniMap
-            className="rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]"
-            nodeColor={minimapNodeColor}
-            maskColor="rgba(0, 0, 0, 0.5)"
-            pannable
-            zoomable
-          />
+          {!isNodeDragActive && (
+            <MiniMap
+              className="rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]"
+              nodeColor={minimapNodeColor}
+              maskColor="rgba(0, 0, 0, 0.5)"
+              pannable
+              zoomable
+            />
+          )}
         </Panel>
         <Panel position="bottom-left">
           <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-md">
@@ -437,7 +484,11 @@ export const FlowCanvas: React.FC = React.memo(() => {
         </svg>
       )}
 
-      <ContextMenu />
+      <ContextMenu
+        contextMenu={contextMenu}
+        onClose={closeContextMenu}
+        onAction={dispatchContextAction}
+      />
     </div>
   )
 })

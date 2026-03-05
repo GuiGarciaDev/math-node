@@ -1,5 +1,5 @@
 import React, { useEffect } from "react"
-import { useFlowStore } from "./flowStore"
+import { useFlowStore } from "./store/flowStore"
 
 function isTextInputFocused() {
   const active = document.activeElement as HTMLElement | null

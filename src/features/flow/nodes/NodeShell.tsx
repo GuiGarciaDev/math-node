@@ -1,7 +1,7 @@
 import React from "react"
 import { Handle, Position } from "@xyflow/react"
 import type { MathNodeData, PortDefinition } from "../../../types"
-import { getHandleTypeConfig } from "./handleTypeConfig"
+import { getHandleTypeConfig } from "../handleTypeConfig"
 
 interface NodeShellProps {
   data: MathNodeData
@@ -35,6 +35,9 @@ interface NodeHandlesSectionProps {
 const categoryColors: Record<string, string> = {
   input: "var(--category-input)",
   arithmetic: "var(--category-arithmetic)",
+  trigonometry: "var(--category-trigonometry)",
+  logarithmic: "var(--category-logarithmic)",
+  logic: "var(--category-logic)",
   calculus: "var(--category-calculus)",
   display: "var(--category-display)",
   advanced: "var(--category-advanced)",
@@ -50,6 +53,9 @@ const borderClassMap: Record<string, string> = {
   "var(--status-success)": "border-[var(--status-success)]",
   "var(--category-input)": "border-[var(--category-input)]",
   "var(--category-arithmetic)": "border-[var(--category-arithmetic)]",
+  "var(--category-trigonometry)": "border-[var(--category-trigonometry)]",
+  "var(--category-logarithmic)": "border-[var(--category-logarithmic)]",
+  "var(--category-logic)": "border-[var(--category-logic)]",
   "var(--category-calculus)": "border-[var(--category-calculus)]",
   "var(--category-display)": "border-[var(--category-display)]",
   "var(--category-advanced)": "border-[var(--category-advanced)]",
@@ -57,18 +63,18 @@ const borderClassMap: Record<string, string> = {
 }
 
 const handleColorClassMap: Record<string, string> = {
-  "var(--category-input)": "bg-[var(--category-input)]",
-  "var(--status-success)": "bg-[var(--status-success)]",
-  "var(--category-calculus)": "bg-[var(--category-calculus)]",
-  "var(--category-display)": "bg-[var(--category-display)]",
-  "var(--text-muted)": "bg-[var(--text-muted)]",
+  "var(--category-input)": "bg-[var(--category-input)]!",
+  "var(--status-success)": "bg-[var(--status-success)]!",
+  "var(--category-calculus)": "bg-[var(--category-calculus)]!",
+  "var(--category-display)": "bg-[var(--category-display)]!",
+  "var(--text-muted)": "bg-[var(--text-muted)]!",
 }
 
 export const NodeContainer: React.FC<NodeContainerProps> = React.memo(
   ({ width, borderClassName, children }) => (
     <div className={widthClassMap[width] ?? "w-[220px]"}>
       <div
-        className={`overflow-hidden rounded-xl border bg-[var(--bg-secondary)] backdrop-blur-xl transition-colors duration-200 ${borderClassName}`}
+        className={`rounded-xl border bg-[var(--bg-secondary)] backdrop-blur-xl transition-colors duration-200 ${borderClassName}`}
       >
         {children}
       </div>
@@ -93,46 +99,24 @@ NodeHeader.displayName = "NodeHeader"
 
 export const TypedHandle: React.FC<TypedHandleProps> = React.memo(
   ({ port, side }) => {
-    const isInput = side === "left"
     const config = getHandleTypeConfig(port.type)
     const handleColorClass =
-      handleColorClassMap[config.color] ?? "bg-[var(--text-muted)]"
+      handleColorClassMap[config.color] ?? "bg-[var(--text-muted)]!"
 
     return (
-      <div
-        className={`relative flex min-w-0 items-center gap-0.5 ${isInput ? "justify-start" : "justify-end"}`}
-      >
-        {isInput ? (
-          <>
-            <Handle
-              type="target"
-              position={Position.Left}
-              id={port.name}
-              className={`left-[-8px] h-2.5 w-2.5 rounded-full border-none shadow-none ${handleColorClass}`}
-            />
-            <span
-              className="truncate whitespace-nowrap font-mono text-[10px] text-[var(--text-secondary)]"
-              title={`${port.label} • ${config.label}`}
-            >
-              {config.label}
-            </span>
-          </>
-        ) : (
-          <>
-            <span
-              className="truncate whitespace-nowrap font-mono text-[10px] text-[var(--text-secondary)]"
-              title={`${port.label} • ${config.label}`}
-            >
-              {config.label}
-            </span>
-            <Handle
-              type="source"
-              position={Position.Right}
-              id={port.name}
-              className={`right-[-8px] h-2.5 w-2.5 rounded-full border-none shadow-none ${handleColorClass}`}
-            />
-          </>
-        )}
+      <div className="relative flex w-fit items-center justify-between">
+        <span
+          className={`truncate whitespace-nowrap font-mono text-[10px] text-[var(--text-secondary)] ${side === "left" ? "ml-3" : "mr-3"}`}
+          title={`${port.label} • ${config.label}`}
+        >
+          {config.label}
+        </span>
+        <Handle
+          type={side === "left" ? "target" : "source"}
+          position={side === "left" ? Position.Left : Position.Right}
+          id={port.name}
+          className={`top-1/2 h-2.5! w-2.5! rounded-full border-none shadow-none ${side === "left" ? "left-0" : "right-0!"} ${handleColorClass}`}
+        />
       </div>
     )
   },
@@ -142,24 +126,18 @@ TypedHandle.displayName = "TypedHandle"
 
 export const NodeHandlesSection: React.FC<NodeHandlesSectionProps> = React.memo(
   ({ inputs, outputs }) => {
-    const rows = Math.max(inputs.length, outputs.length)
-
-    if (rows === 0) {
-      return null
-    }
-
     return (
-      <div className="flex flex-col gap-2 px-3 py-2">
-        {outputs.map((output, index) => (
-          <div key={`output-${index}`} className="min-w-0">
-            <TypedHandle port={output} side="right" />
-          </div>
-        ))}
-        {inputs.map((input, index) => (
-          <div key={`input-${index}`} className="min-w-0">
-            <TypedHandle port={input} side="left" />
-          </div>
-        ))}
+      <div className="flex flex-col gap-1 py-2">
+        <div className="flex justify-end min-w-0">
+          {outputs.map((output, index) => {
+            return <TypedHandle port={output} side="right" key={index} />
+          })}
+        </div>
+        <div className="min-w-0">
+          {inputs.map((input, index) => {
+            return <TypedHandle port={input} side="left" key={index} />
+          })}
+        </div>
       </div>
     )
   },

@@ -1,4 +1,4 @@
-import type { PortType } from "../../../types"
+import type { PortType } from "../../types"
 
 export interface HandleTypeConfigEntry {
   color: string

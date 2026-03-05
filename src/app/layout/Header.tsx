@@ -1,5 +1,5 @@
 import React, { useCallback } from "react"
-import { useFlowStore } from "../../features/flow/flowStore"
+import { useFlowStore } from "../../features/flow/store/flowStore"
 
 export const Header: React.FC = React.memo(() => {
   const runPipeline = useFlowStore((s) => s.runPipeline)

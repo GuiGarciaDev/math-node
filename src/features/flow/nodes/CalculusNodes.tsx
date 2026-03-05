@@ -2,7 +2,7 @@ import React, { useCallback } from "react"
 import type { NodeProps } from "@xyflow/react"
 import type { MathNodeData } from "../../../types"
 import { NodeShell } from "./NodeShell"
-import { useFlowStore } from "../flowStore"
+import { useFlowStore } from "../store/flowStore"
 
 // ─── Derivative Node ──────────────────────────────────────
 

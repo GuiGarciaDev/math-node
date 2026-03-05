@@ -1,11 +1,17 @@
 import React, { useMemo } from "react"
-import { useFlowStore } from "../flow/flowStore"
+import { useFlowStore } from "../flow/store/flowStore"
 
 const categoryIconClass: Record<string, string> = {
   input:
     "bg-[color-mix(in_srgb,var(--category-input)_14%,transparent)] border-[color-mix(in_srgb,var(--category-input)_28%,transparent)]",
   arithmetic:
     "bg-[color-mix(in_srgb,var(--category-arithmetic)_14%,transparent)] border-[color-mix(in_srgb,var(--category-arithmetic)_28%,transparent)]",
+  trigonometry:
+    "bg-[color-mix(in_srgb,var(--category-trigonometry)_14%,transparent)] border-[color-mix(in_srgb,var(--category-trigonometry)_28%,transparent)]",
+  logarithmic:
+    "bg-[color-mix(in_srgb,var(--category-logarithmic)_14%,transparent)] border-[color-mix(in_srgb,var(--category-logarithmic)_28%,transparent)]",
+  logic:
+    "bg-[color-mix(in_srgb,var(--category-logic)_14%,transparent)] border-[color-mix(in_srgb,var(--category-logic)_28%,transparent)]",
   calculus:
     "bg-[color-mix(in_srgb,var(--category-calculus)_14%,transparent)] border-[color-mix(in_srgb,var(--category-calculus)_28%,transparent)]",
   display:
@@ -131,7 +137,13 @@ export const Inspector: React.FC = React.memo(() => {
                 ? "∂"
                 : data.category === "display"
                   ? "📊"
-                  : "🔢"}
+                  : data.category === "trigonometry"
+                    ? "∿"
+                    : data.category === "logarithmic"
+                      ? "log"
+                      : data.category === "logic"
+                        ? "⊨"
+                        : "🔢"}
             </div>
             <div>
               <h2 className="text-sm font-medium text-[var(--text-primary)]">
@@ -173,7 +185,8 @@ export const Inspector: React.FC = React.memo(() => {
                     onChange={(e) => {
                       const raw = e.target.value
                       if (
-                        selectedNode.type === "numberInput" &&
+                        (selectedNode.type === "numberInput" ||
+                          selectedNode.type === "constant") &&
                         key === "value"
                       ) {
                         updateNodeParam(selectedNode.id, key, raw)

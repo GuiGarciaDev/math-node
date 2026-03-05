@@ -9,7 +9,7 @@ import { FlowShortcuts } from "../features/flow/FlowShortcuts"
 import { Inspector } from "../features/inspector/Inspector"
 import { Console } from "../features/console/Console"
 import { DesignSystemPreview } from "./layout/DesignSystemPreview"
-import { useFlowStore } from "../features/flow/flowStore"
+import { useFlowStore } from "../features/flow/store/flowStore"
 
 const App: React.FC = () => {
   const appStarted = useFlowStore((s) => s.appStarted)

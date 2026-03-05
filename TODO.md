@@ -9,8 +9,6 @@ log ln
 trigonometric
 constants (pi, e, etc)
 logical operators (< > <= >= ===)
-matrix
-[]
 
 fixes:
 [] Fix the design of undo and redo buttons.

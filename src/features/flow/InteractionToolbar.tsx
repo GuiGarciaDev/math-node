@@ -1,6 +1,6 @@
 import React from "react"
 import type { InteractionMode } from "../../types"
-import { useFlowStore } from "./flowStore"
+import { useFlowStore } from "./store/flowStore"
 import { MdPanTool } from "react-icons/md"
 import { FaMousePointer } from "react-icons/fa"
 import { HiScissors } from "react-icons/hi2"

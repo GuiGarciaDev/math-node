@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { getBezierPath, type EdgeProps } from "@xyflow/react"
-import { useFlowStore } from "./flowStore.ts"
-import { getHandleTypeConfig } from "./nodes/handleTypeConfig"
+import { useFlowStore } from "./store/flowStore.ts"
+import { getHandleTypeConfig } from "./handleTypeConfig.ts"
 
 const STROKE_WIDTH = 2
 

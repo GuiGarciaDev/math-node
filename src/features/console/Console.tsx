@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { useFlowStore } from "../flow/flowStore"
+import { useFlowStore } from "../flow/store/flowStore"
 
 const levelClassName: Record<string, string> = {
   info: "text-[var(--category-input)]",

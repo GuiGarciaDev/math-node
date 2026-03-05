@@ -26,6 +26,10 @@
   --status-warn: #ff8a00;
   --category-input: #0d99ff;
   --category-arithmetic: #ff8a00;
+  --category-trigonometry: #2f7dff;
+  --category-logarithmic: #00a3a3;
+  --category-constants: #c084fc;
+  --category-logic: #e85d04;
   --category-calculus: #a259ff;
   --category-display: #14ae5c;
   --category-advanced: #f24822;
@@ -53,6 +57,10 @@
   --status-warn: #ff8a00;
   --category-input: #0d99ff;
   --category-arithmetic: #ff8a00;
+  --category-trigonometry: #3568e5;
+  --category-logarithmic: #0f8b8d;
+  --category-constants: #8f46cb;
+  --category-logic: #c45a00;
   --category-calculus: #7b61ff;
   --category-display: #14ae5c;
   --category-advanced: #f24822;
@@ -142,7 +150,6 @@ body,
 .react-flow__handle {
   cursor: crosshair !important;
   transition: opacity 0.12s ease !important;
-  transform: none !important;
   border: none !important;
   box-shadow: none !important;
 }
