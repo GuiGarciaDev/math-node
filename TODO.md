@@ -1,17 +1,15 @@
 features:
 [] Add precision properties in the operation nodes like ADD to control how many cases we want.
 [] Improve design of graphs.
-[] Add tailwind in the project and refactor the components to use it. Also create a file with all types of typography and colors to be easy to check it.
-
-[] Add more types of nodes in the app:
-superior power root
-log ln
-trigonometric
-constants (pi, e, etc)
-logical operators (< > <= >= ===)
+[] Add a button to restart node stats after run the pipeline.
+[] After select one node, place a button out and at the top of the node to allow the user run the pipeline until this node and other button to run just the node.
+[] Inside the input of some operation nodes, implement a almost hidden label to round the output number like this 0,00078 ~ 0. the ~ 0 almost not visible.
+[] Create the presets feature, with a button in the header to save the current state of flowcanvas as a new preset. Allow user to load presets.
+[] Create workflows to save user work, so they can save, reload, delete or create new workflows as necessary.
+[] Allow user change the name of the aggrouped nodes when double click in the group node or through a button in the context menu
 
 fixes:
-[] Fix the design of undo and redo buttons.
+[] Make the nodes not draggable when entry input is focused.
 [] Graph labels are not aligned with the XY axis.
 [] Improve the design of the left sidebar when it is short mode.
 
@@ -31,3 +29,6 @@ Completed:
 [x] Context menu isnt opening when multiple nodes are selected.
 [x] Scissors feature isnt cutting the node conenctions. We must change it to drag a line instead of an area.
 [x] Add undo and redo
+[x] Add more types of nodes in the app: superior power root, log ln, trigonometric, constants (pi, e, etc), logical operators (< > <= >= ===)
+[x] Add tailwind in the project and refactor the components to use it. Also create a file with all types of typography and colors to be easy to check it.
+[x] Fix the design of undo and redo buttons.

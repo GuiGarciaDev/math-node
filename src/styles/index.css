@@ -245,3 +245,51 @@ body,
 .react-flow__panel.bottom.right {
   display: none !important;
 }
+
+/* ─── Landing Page Surfaces ─────────────────────────────── */
+.hero-mesh {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(30, 64, 175, 0.36), transparent 44%),
+    radial-gradient(circle at 78% 30%, rgba(15, 118, 110, 0.28), transparent 40%),
+    linear-gradient(140deg, #121316 0%, #121822 52%, #1b1f24 100%);
+}
+
+.glass-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(
+    130deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+  backdrop-filter: blur(9px);
+}
+
+.project-card {
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 12px 30px rgba(3, 7, 18, 0.45);
+}
+
+.nav-tab-active {
+  color: #fff;
+  background: #252a31;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.22);
+}
+
+.node-preview-dots::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 12px 12px;
+  opacity: 0.35;
+}

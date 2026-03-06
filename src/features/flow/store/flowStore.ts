@@ -25,6 +25,11 @@ import type {
 } from "../../../types"
 import { runPipeline, runSingleNode } from "../executionEngine"
 import { validateConnection } from "../edgeValidation"
+import {
+  cancelAutosave,
+  createAutosave,
+  triggerAutosave,
+} from "../../../storage/autosave"
 
 // ─── Node Factory ─────────────────────────────────────────
 
@@ -350,6 +355,8 @@ interface FlowState {
   consoleOpen: boolean
   inspectorOpen: boolean
   appStarted: boolean
+  currentWorkflowId: string | null
+  currentWorkflowName: string
   theme: "dark" | "light"
   graphModal: {
     title: string
@@ -397,6 +404,13 @@ interface FlowState {
   stepExecute: () => void
   clearConsole: () => void
   setAppStarted: (started: boolean) => void
+  openWorkflowSession: (payload: {
+    id: string
+    name: string
+    nodes: MathNode[]
+    edges: MathEdge[]
+  }) => void
+  setCurrentWorkflowName: (name: string) => void
   toggleConsole: () => void
   toggleInspector: () => void
   toggleTheme: () => void
@@ -531,6 +545,8 @@ export const useFlowStore = create<FlowState>()(
       consoleOpen: true,
       inspectorOpen: true,
       appStarted: false,
+      currentWorkflowId: null,
+      currentWorkflowName: "Untitled",
       theme: "dark" as const,
       graphModal: null,
 
@@ -1287,6 +1303,23 @@ export const useFlowStore = create<FlowState>()(
 
       clearConsole: () => set({ consoleLogs: [] }),
       setAppStarted: (started) => set({ appStarted: started }),
+      openWorkflowSession: (payload) => {
+        createAutosave(payload.id, payload.name)
+        set({
+          nodes: clone(payload.nodes),
+          edges: clone(payload.edges),
+          computedValues: new Map(),
+          selectedNodeId: null,
+          selectedNodeIds: [],
+          historyPast: [],
+          historyFuture: [],
+          nodeDragInProgress: false,
+          currentWorkflowId: payload.id,
+          currentWorkflowName: payload.name,
+          appStarted: true,
+        })
+      },
+      setCurrentWorkflowName: (name) => set({ currentWorkflowName: name }),
       toggleConsole: () => set({ consoleOpen: !get().consoleOpen }),
       toggleInspector: () => set({ inspectorOpen: !get().inspectorOpen }),
       toggleTheme: () => {
@@ -1302,6 +1335,8 @@ export const useFlowStore = create<FlowState>()(
       name: "mathflow-prefs",
       partialize: (state) => ({
         appStarted: state.appStarted,
+        currentWorkflowId: state.currentWorkflowId,
+        currentWorkflowName: state.currentWorkflowName,
         consoleOpen: state.consoleOpen,
         inspectorOpen: state.inspectorOpen,
         theme: state.theme,
@@ -1312,3 +1347,33 @@ export const useFlowStore = create<FlowState>()(
     },
   ),
 )
+
+useFlowStore.subscribe((state, previous) => {
+  if (!state.currentWorkflowId) {
+    cancelAutosave()
+    return
+  }
+
+  // Skip immediate save when switching/opening workflows.
+  if (state.currentWorkflowId !== previous.currentWorkflowId) {
+    return
+  }
+
+  const graphChanged =
+    state.nodes !== previous.nodes || state.edges !== previous.edges
+  const nameChanged = state.currentWorkflowName !== previous.currentWorkflowName
+
+  if (!graphChanged && !nameChanged) {
+    return
+  }
+
+  try {
+    triggerAutosave({
+      name: state.currentWorkflowName,
+      nodes: state.nodes,
+      edges: state.edges,
+    })
+  } catch {
+    // Ignore autosave trigger before initialization.
+  }
+})
