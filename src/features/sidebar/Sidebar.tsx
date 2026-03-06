@@ -1,166 +1,14 @@
 import React, { useCallback, useState } from "react"
-import type { SidebarCategory, MathNodeType } from "../../types"
+import type { MathNodeType } from "../../types"
 import { useFlowStore } from "../flow/store/flowStore"
+import { categories } from "../content/sidebar"
+import MathFlowIcon from "../../components/math-flow-icon"
+import { VscLayoutSidebarLeftOff } from "react-icons/vsc"
+import Button from "../../components/button"
 
 interface SidebarProps {
   collapsed?: boolean
 }
-
-const categories: SidebarCategory[] = [
-  {
-    name: "Inputs",
-    color: "var(--category-input)",
-    items: [
-      {
-        type: "numberInput",
-        label: "Number",
-        icon: "#",
-        iconColor: "var(--category-input)",
-      },
-      {
-        type: "constant",
-        label: "Constant",
-        icon: "π",
-        iconColor: "var(--category-input)",
-        description: "pi, e",
-      },
-      {
-        type: "variable",
-        label: "Variable",
-        icon: "𝑥",
-        iconColor: "var(--category-input)",
-      },
-      {
-        type: "expression",
-        label: "Expression",
-        icon: "ƒ",
-        iconColor: "var(--category-input)",
-      },
-    ],
-  },
-  {
-    name: "Arithmetic",
-    color: "var(--category-arithmetic)",
-    items: [
-      {
-        type: "add",
-        label: "Add",
-        icon: "＋",
-        iconColor: "var(--category-arithmetic)",
-      },
-      {
-        type: "subtract",
-        label: "Subtract",
-        icon: "−",
-        iconColor: "var(--category-arithmetic)",
-      },
-      {
-        type: "multiply",
-        label: "Multiply",
-        icon: "×",
-        iconColor: "var(--category-arithmetic)",
-      },
-      {
-        type: "divide",
-        label: "Divide",
-        icon: "÷",
-        iconColor: "var(--category-arithmetic)",
-      },
-      {
-        type: "power",
-        label: "Power",
-        icon: "^",
-        iconColor: "var(--category-arithmetic)",
-      },
-      {
-        type: "root",
-        label: "Root",
-        icon: "√",
-        iconColor: "var(--category-arithmetic)",
-      },
-    ],
-  },
-  {
-    name: "Trigonometry",
-    color: "var(--category-trigonometry)",
-    items: [
-      {
-        type: "trigonometric",
-        label: "Trigonometric Function",
-        icon: "∿",
-        iconColor: "var(--category-trigonometry)",
-        description: "sin, cos, tan, asin, acos, atan",
-      },
-    ],
-  },
-  {
-    name: "Logarithmic",
-    color: "var(--category-logarithmic)",
-    items: [
-      {
-        type: "ln",
-        label: "ln",
-        icon: "ln",
-        iconColor: "var(--category-logarithmic)",
-      },
-      {
-        type: "log",
-        label: "log",
-        icon: "log",
-        iconColor: "var(--category-logarithmic)",
-      },
-    ],
-  },
-  {
-    name: "Logic",
-    color: "var(--category-logic)",
-    items: [
-      {
-        type: "comparator",
-        label: "Comparator",
-        icon: "⊨",
-        iconColor: "var(--category-logic)",
-        description: "< > <= >= ===",
-      },
-    ],
-  },
-  {
-    name: "Calculus",
-    color: "var(--category-calculus)",
-    items: [
-      {
-        type: "derivative",
-        label: "Derivative",
-        icon: "∂",
-        iconColor: "var(--category-calculus)",
-      },
-      {
-        type: "integral",
-        label: "Integral",
-        icon: "∫",
-        iconColor: "var(--category-calculus)",
-      },
-    ],
-  },
-  {
-    name: "Display",
-    color: "var(--category-display)",
-    items: [
-      {
-        type: "plot",
-        label: "Plot Function",
-        icon: "📈",
-        iconColor: "var(--category-display)",
-      },
-      {
-        type: "matrix",
-        label: "Matrix",
-        icon: "▦",
-        iconColor: "var(--category-display)",
-      },
-    ],
-  },
-]
 
 const tokenToTextClass: Record<string, string> = {
   "var(--category-input)": "text-[var(--category-input)]",
@@ -229,31 +77,28 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({ collapsed }) => {
         collapsed ? "w-14" : "w-64"
       }`}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent)_7%,transparent),transparent)]" />
       <div
         className={`flex h-full w-64 min-w-64 flex-col transition-opacity duration-200 ${
           collapsed ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
-        <div className="border-b border-[var(--border)] px-3 py-3.5">
+        <div className="flex justify-between items-center px-3 py-3.5">
           <button
             type="button"
             onClick={showLanding}
             title="Return to landing page"
             className="group flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors duration-150 hover:bg-[var(--bg-tertiary)]/70"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--category-input))] text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_18px_var(--accent-glow)] transition-transform duration-150 group-hover:scale-105">
-              Σ
-            </div>
-            <div className="min-w-0">
-              <div className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                Workflow Builder
-              </div>
-              <div className="truncate text-sm font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-                MATHFLOW
-              </div>
+            <MathFlowIcon />
+
+            <div className="truncate text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+              MathFlow
             </div>
           </button>
+
+          <Button variant="icon">
+            <VscLayoutSidebarLeftOff />
+          </Button>
         </div>
 
         <div className="border-b border-[var(--border)] p-3">

@@ -38,20 +38,12 @@ const App: React.FC = () => {
         <div className="relative flex flex-1 overflow-hidden">
           <Sidebar collapsed={!sidebarOpen} />
 
-          <div className="relative flex flex-1 flex-col overflow-hidden">
+          {/* <div className="relative flex flex-1 flex-col overflow-hidden">
             <div className="relative flex-1 overflow-hidden">
               <ReactFlowProvider>
                 <FlowCanvas />
                 <FlowShortcuts />
               </ReactFlowProvider>
-
-              {/* <button
-                onClick={toggleSidebar}
-                title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-                className="absolute left-1.5 top-3 z-40 h-8 w-6 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-xs text-[var(--text-muted)] transition-colors duration-150 hover:text-[var(--text-primary)]"
-              >
-                {sidebarOpen ? "◁" : "▷"}
-              </button> */}
 
               <button
                 onClick={toggleInspector}
@@ -66,7 +58,7 @@ const App: React.FC = () => {
               </button>
             </div>
             <Console />
-          </div>
+          </div> */}
 
           <div
             className={`min-h-full shrink-0 overflow-hidden transition-[width] duration-300 ${
