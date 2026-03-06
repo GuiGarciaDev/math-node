@@ -43,8 +43,14 @@ export function triggerAutosave(workflow: Omit<WorkflowInput, "id">): void {
   debouncedSave(workflow)
 }
 
+export function isAutosaveActiveFor(workflowId: string): boolean {
+  return Boolean(debouncedSave) && activeWorkflowId === workflowId
+}
+
 export function cancelAutosave(): void {
   debouncedSave?.cancel()
+  debouncedSave = null
+  activeWorkflowId = null
 }
 
 export const autosaveDelayMs = AUTOSAVE_DELAY_MS

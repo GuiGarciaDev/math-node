@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react"
 import type { SidebarCategory, MathNodeType } from "../../types"
+import { useFlowStore } from "../flow/store/flowStore"
 
 interface SidebarProps {
   collapsed?: boolean
@@ -184,6 +185,7 @@ const tokenToBgClass: Record<string, string> = {
 }
 
 export const Sidebar: React.FC<SidebarProps> = React.memo(({ collapsed }) => {
+  const showLanding = useFlowStore((s) => s.showLanding)
   const [searchQuery, setSearchQuery] = useState("")
   const [expandedCategories, setExpandedCategories] = useState<
     Record<string, boolean>
@@ -233,6 +235,27 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({ collapsed }) => {
           collapsed ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
+        <div className="border-b border-[var(--border)] px-3 py-3.5">
+          <button
+            type="button"
+            onClick={showLanding}
+            title="Return to landing page"
+            className="group flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors duration-150 hover:bg-[var(--bg-tertiary)]/70"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--category-input))] text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_18px_var(--accent-glow)] transition-transform duration-150 group-hover:scale-105">
+              Σ
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                Workflow Builder
+              </div>
+              <div className="truncate text-sm font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+                MATHFLOW
+              </div>
+            </div>
+          </button>
+        </div>
+
         <div className="border-b border-[var(--border)] p-3">
           <div className="relative">
             <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] text-[var(--text-muted)]">
@@ -293,8 +316,15 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({ collapsed }) => {
       </div>
 
       {collapsed && (
-        <div className="absolute inset-0 flex flex-col items-center gap-2 px-2 pb-2 pt-12">
-          <div className="mb-1 h-8 w-8 rounded-lg border border-[var(--border)] bg-[color-mix(in_srgb,var(--accent)_16%,transparent)]" />
+        <div className="absolute inset-0 flex flex-col items-center gap-2 px-2 pb-2 pt-3">
+          <button
+            type="button"
+            onClick={showLanding}
+            title="Return to landing page"
+            className="mb-1 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[linear-gradient(135deg,var(--accent),var(--category-input))] text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_16px_var(--accent-glow)]"
+          >
+            Σ
+          </button>
           {collapsedItems.slice(0, 8).map((item) => (
             <div
               key={`collapsed-${item.type}`}

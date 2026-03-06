@@ -1,10 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ReactFlow,
   MiniMap,
   Background,
   BackgroundVariant,
-  type Node,
+  type Node as FlowNode,
   type ReactFlowInstance,
   Panel,
 } from "@xyflow/react"
@@ -21,12 +21,15 @@ import { RemovableEdge } from "./RemovableEdge"
 import { ContextMenu } from "./ContextMenu"
 import { InteractionToolbar } from "./InteractionToolbar"
 import { MdUndo, MdRedo } from "react-icons/md"
+import { LuChevronDown } from "react-icons/lu"
+import { VscRunAll } from "react-icons/vsc"
+import { FaSpinner } from "react-icons/fa"
 
 const edgeTypes = {
   removable: RemovableEdge,
 }
 
-const minimapNodeColor = (node: Node) => {
+const minimapNodeColor = (node: FlowNode) => {
   const category = node.data?.category
   switch (category) {
     case "input":
@@ -138,12 +141,19 @@ export const FlowCanvas: React.FC = React.memo(() => {
   const redo = useFlowStore((s) => s.redo)
   const canUndo = useFlowStore((s) => s.historyPast.length > 0)
   const canRedo = useFlowStore((s) => s.historyFuture.length > 0)
+  const runPipeline = useFlowStore((s) => s.runPipeline)
+  const executionMode = useFlowStore((s) => s.executionMode)
+  const setExecutionMode = useFlowStore((s) => s.setExecutionMode)
+  const isRunning = useFlowStore((s) => s.isRunning)
+  const theme = useFlowStore((s) => s.theme)
+  const toggleTheme = useFlowStore((s) => s.toggleTheme)
 
   const reactFlowInstance = useRef<ReactFlowInstance<
     MathNode,
     MathEdge
   > | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const runMenuRef = useRef<HTMLDivElement | null>(null)
   const [cutStart, setCutStart] = useState<{ x: number; y: number } | null>(
     null,
   )
@@ -157,6 +167,20 @@ export const FlowCanvas: React.FC = React.memo(() => {
     y: 0,
     target: "canvas",
   })
+  const [runMenuOpen, setRunMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (!runMenuOpen) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!runMenuRef.current?.contains(event.target as globalThis.Node)) {
+        setRunMenuOpen(false)
+      }
+    }
+
+    window.addEventListener("pointerdown", handlePointerDown)
+    return () => window.removeEventListener("pointerdown", handlePointerDown)
+  }, [runMenuOpen])
 
   const openContextMenu = useCallback(
     (payload: Omit<ContextMenuState, "visible">) => {
@@ -194,14 +218,14 @@ export const FlowCanvas: React.FC = React.memo(() => {
   }, [clearSelection, closeContextMenu])
 
   const onSelectionChange = useCallback(
-    ({ nodes: selectedNodes }: { nodes: Node[] }) => {
+    ({ nodes: selectedNodes }: { nodes: FlowNode[] }) => {
       setSelectedNodeIds(selectedNodes.map((node) => node.id))
     },
     [setSelectedNodeIds],
   )
 
   const onSelectionContextMenu = useCallback(
-    (event: React.MouseEvent, selectionNodes: Node[]) => {
+    (event: React.MouseEvent, selectionNodes: FlowNode[]) => {
       event.preventDefault()
 
       const selectedIds = selectionNodes.map((node) => node.id)
@@ -221,7 +245,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
   )
 
   const onNodeContextMenu = useCallback(
-    (event: React.MouseEvent, node: Node) => {
+    (event: React.MouseEvent, node: FlowNode) => {
       event.preventDefault()
 
       const hasMultiSelection =
@@ -385,6 +409,12 @@ export const FlowCanvas: React.FC = React.memo(() => {
     setIsNodeDragActive(false)
   }, [])
 
+  const toggleAutoRun = useCallback(() => {
+    setExecutionMode(executionMode === "auto" ? "manual" : "auto")
+  }, [executionMode, setExecutionMode])
+
+  const isDark = theme === "dark"
+
   return (
     <div
       ref={containerRef}
@@ -432,6 +462,84 @@ export const FlowCanvas: React.FC = React.memo(() => {
           size={1}
           color="var(--border)"
         />
+        <Panel position="top-center" className="w-full pl-5 pr-8">
+          <div className="flex justify-between">
+            <div>Workflow2</div>
+            <div className="pointer-events-nonez-40 flex justify-between gap-6">
+              <div ref={runMenuRef} className="pointer-events-auto relative">
+                <div className="flex h-10 items-center gap-2 rounded-xl border border-(--border) bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-sm font-medium text-(--text-primary) shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--bg-tertiary)]">
+                  <button
+                    type="button"
+                    className="flex h-10 items-center pl-4 pr-2"
+                  >
+                    <span className="text-base text-(--accent)">
+                      <VscRunAll />
+                    </span>
+                    {isRunning && <FaSpinner />}
+                  </button>
+                  <button
+                    className="flex items-center h-10 pr-2 pl-1"
+                    onClick={() => setRunMenuOpen((open) => !open)}
+                  >
+                    <LuChevronDown
+                      className={`text-(--text-muted) transition-transform duration-150 ${
+                        runMenuOpen ? "rotate-180" : "rotate-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {runMenuOpen && (
+                  <div className="absolute right-0 top-[calc(100%+0.5rem)] w-56 rounded-2xl border border-(--border) bg-[color-mix(in_srgb,var(--bg-secondary)_96%,transparent)] p-2 shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        runPipeline()
+                        setRunMenuOpen(false)
+                      }}
+                      disabled={isRunning}
+                      className="flex w-full items-center justify-between rounded-xl border border-[color-mix(in_srgb,var(--accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] px-3 py-2 text-left text-sm font-medium text-[var(--accent)] transition-all duration-150 hover:bg-[var(--accent)] hover:text-[var(--text-primary)] disabled:cursor-wait disabled:opacity-70"
+                    >
+                      <span>Run workflow</span>
+                      <span>
+                        <VscRunAll />
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={toggleAutoRun}
+                      className={`mt-2 flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                        executionMode === "auto"
+                          ? "border-[color-mix(in_srgb,var(--status-success)_24%,transparent)] bg-[color-mix(in_srgb,var(--status-success)_14%,transparent)] text-(--status-success)"
+                          : "border-transparent bg-(--bg-tertiary)/70 text-(--text-secondary) hover:border-(--border) hover:text-(--text-primary)"
+                      }`}
+                    >
+                      <span>Auto run</span>
+                      <span className="flex items-center gap-2">
+                        {executionMode === "auto" && (
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-(--status-success)" />
+                        )}
+                        <span>{executionMode === "auto" ? "On" : "Off"}</span>
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title={
+                  isDark ? "Switch to light theme" : "Switch to dark theme"
+                }
+                className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-base text-[var(--text-secondary)] shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-150 hover:border-[var(--accent)] hover:text-[var(--text-primary)] hover:shadow-[0_0_18px_var(--accent-glow)]"
+              >
+                {isDark ? "☀" : "🌙"}
+              </button>
+            </div>
+          </div>
+        </Panel>
         <Panel position="center-left">
           <InteractionToolbar />
         </Panel>
