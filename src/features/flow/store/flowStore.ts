@@ -28,8 +28,10 @@ import { validateConnection } from "../edgeValidation"
 import {
   cancelAutosave,
   createAutosave,
+  isAutosaveActiveFor,
   triggerAutosave,
 } from "../../../storage/autosave"
+import { loadWorkflow } from "../../../storage/workflowRepository"
 
 // ─── Node Factory ─────────────────────────────────────────
 
@@ -329,6 +331,8 @@ function withRecordedHistory(state: {
   }
 }
 
+let suppressNextAutosave = false
+
 // ─── Store Interface ──────────────────────────────────────
 
 interface FlowState {
@@ -423,108 +427,14 @@ interface FlowState {
   closeGraphModal: () => void
 }
 
-// ─── Default scene ────────────────────────────────────────
-
-const defaultNodes: MathNode[] = [
-  {
-    id: "num_1",
-    type: "numberInput",
-    position: { x: 60, y: 200 },
-    data: {
-      ...createNodeData("numberInput"),
-      params: { value: "42" },
-    },
-  },
-  {
-    id: "num_2",
-    type: "constant",
-    position: { x: 60, y: 340 },
-    data: {
-      ...createNodeData("constant"),
-      params: { constantKey: "pi", decimalPlaces: 4 },
-    },
-  },
-  {
-    id: "add_1",
-    type: "add",
-    position: { x: 360, y: 250 },
-    data: createNodeData("add"),
-  },
-  {
-    id: "var_1",
-    type: "variable",
-    position: { x: 60, y: 500 },
-    data: { ...createNodeData("variable"), params: { name: "x" } },
-  },
-  {
-    id: "expr_1",
-    type: "expression",
-    position: { x: 60, y: 620 },
-    data: {
-      ...createNodeData("expression"),
-      params: { expression: "x^3 - 2x + 5" },
-    },
-  },
-  {
-    id: "deriv_1",
-    type: "derivative",
-    position: { x: 400, y: 540 },
-    data: createNodeData("derivative"),
-  },
-  {
-    id: "plot_1",
-    type: "plot",
-    position: { x: 740, y: 500 },
-    data: createNodeData("plot"),
-  },
-]
-
-const defaultEdges: MathEdge[] = [
-  {
-    id: "e_num1_add",
-    source: "num_1",
-    target: "add_1",
-    sourceHandle: "value",
-    targetHandle: "a",
-  },
-  {
-    id: "e_num2_add",
-    source: "num_2",
-    target: "add_1",
-    sourceHandle: "value",
-    targetHandle: "b",
-  },
-  {
-    id: "e_var_deriv",
-    source: "var_1",
-    target: "deriv_1",
-    sourceHandle: "value",
-    targetHandle: "var",
-  },
-  {
-    id: "e_expr_deriv",
-    source: "expr_1",
-    target: "deriv_1",
-    sourceHandle: "value",
-    targetHandle: "fn",
-  },
-  {
-    id: "e_deriv_plot",
-    source: "deriv_1",
-    target: "plot_1",
-    sourceHandle: "result",
-    targetHandle: "fn",
-  },
-]
-
 // ─── Create Store ─────────────────────────────────────────
 
 export const useFlowStore = create<FlowState>()(
   persist(
     (set, get) => ({
       // Initial data
-      nodes: defaultNodes,
-      edges: defaultEdges,
+      nodes: [],
+      edges: [],
       computedValues: new Map(),
 
       // UI State
@@ -1305,6 +1215,7 @@ export const useFlowStore = create<FlowState>()(
       setAppStarted: (started) => set({ appStarted: started }),
       openWorkflowSession: (payload) => {
         createAutosave(payload.id, payload.name)
+        suppressNextAutosave = true
         set({
           nodes: clone(payload.nodes),
           edges: clone(payload.edges),
@@ -1344,6 +1255,29 @@ export const useFlowStore = create<FlowState>()(
         executionMode: state.executionMode,
         sidebarOpen: state.sidebarOpen,
       }),
+      onRehydrateStorage: () => (state, error) => {
+        if (error || !state?.appStarted || !state.currentWorkflowId) {
+          return
+        }
+
+        void loadWorkflow(state.currentWorkflowId)
+          .then((workflow) => {
+            if (!workflow) {
+              state.setAppStarted(false)
+              return
+            }
+
+            state.openWorkflowSession({
+              id: workflow.id,
+              name: workflow.name,
+              nodes: workflow.nodes,
+              edges: workflow.edges,
+            })
+          })
+          .catch(() => {
+            state.setAppStarted(false)
+          })
+      },
     },
   ),
 )
@@ -1359,6 +1293,11 @@ useFlowStore.subscribe((state, previous) => {
     return
   }
 
+  if (suppressNextAutosave) {
+    suppressNextAutosave = false
+    return
+  }
+
   const graphChanged =
     state.nodes !== previous.nodes || state.edges !== previous.edges
   const nameChanged = state.currentWorkflowName !== previous.currentWorkflowName
@@ -1368,12 +1307,16 @@ useFlowStore.subscribe((state, previous) => {
   }
 
   try {
+    if (!isAutosaveActiveFor(state.currentWorkflowId)) {
+      createAutosave(state.currentWorkflowId, state.currentWorkflowName)
+    }
+
     triggerAutosave({
       name: state.currentWorkflowName,
       nodes: state.nodes,
       edges: state.edges,
     })
   } catch {
-    // Ignore autosave trigger before initialization.
+    // Ignore autosave failures to avoid interrupting editor interactions.
   }
 })

@@ -1,6 +1,5 @@
 import React, { useEffect } from "react"
 import { ReactFlowProvider } from "@xyflow/react"
-import { Header } from "./layout/Header"
 import { LandingPage } from "./layout/LandingPage"
 import { Sidebar } from "../features/sidebar/Sidebar"
 import { FlowCanvas } from "../features/flow/FlowCanvas"
@@ -36,8 +35,6 @@ const App: React.FC = () => {
             : "pointer-events-none opacity-0"
         }`}
       >
-        <Header />
-
         <div className="relative flex flex-1 overflow-hidden">
           <Sidebar collapsed={!sidebarOpen} />
 
@@ -48,13 +45,13 @@ const App: React.FC = () => {
                 <FlowShortcuts />
               </ReactFlowProvider>
 
-              <button
+              {/* <button
                 onClick={toggleSidebar}
                 title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
                 className="absolute left-1.5 top-3 z-40 h-8 w-6 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-xs text-[var(--text-muted)] transition-colors duration-150 hover:text-[var(--text-primary)]"
               >
                 {sidebarOpen ? "◁" : "▷"}
-              </button>
+              </button> */}
 
               <button
                 onClick={toggleInspector}
