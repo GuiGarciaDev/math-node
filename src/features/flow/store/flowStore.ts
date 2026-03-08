@@ -361,7 +361,6 @@ interface FlowState {
   appStarted: boolean
   currentWorkflowId: string | null
   currentWorkflowName: string
-  theme: "dark" | "light"
   graphModal: {
     title: string
     points: Array<{ x: number; y: number }>
@@ -417,7 +416,6 @@ interface FlowState {
   setCurrentWorkflowName: (name: string) => void
   toggleConsole: () => void
   toggleInspector: () => void
-  toggleTheme: () => void
   showLanding: () => void
   openGraphModal: (payload: {
     title: string
@@ -457,7 +455,6 @@ export const useFlowStore = create<FlowState>()(
       appStarted: false,
       currentWorkflowId: null,
       currentWorkflowName: "Untitled",
-      theme: "dark" as const,
       graphModal: null,
 
       // ─── React Flow Handlers ────────────────────────────────
@@ -1233,11 +1230,6 @@ export const useFlowStore = create<FlowState>()(
       setCurrentWorkflowName: (name) => set({ currentWorkflowName: name }),
       toggleConsole: () => set({ consoleOpen: !get().consoleOpen }),
       toggleInspector: () => set({ inspectorOpen: !get().inspectorOpen }),
-      toggleTheme: () => {
-        const next = get().theme === "dark" ? "light" : "dark"
-        document.documentElement.setAttribute("data-theme", next)
-        set({ theme: next })
-      },
       showLanding: () => set({ appStarted: false }),
       openGraphModal: (payload) => set({ graphModal: payload }),
       closeGraphModal: () => set({ graphModal: null }),
@@ -1250,7 +1242,6 @@ export const useFlowStore = create<FlowState>()(
         currentWorkflowName: state.currentWorkflowName,
         consoleOpen: state.consoleOpen,
         inspectorOpen: state.inspectorOpen,
-        theme: state.theme,
         computeMode: state.computeMode,
         executionMode: state.executionMode,
         sidebarOpen: state.sidebarOpen,

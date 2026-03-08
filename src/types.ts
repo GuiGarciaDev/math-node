@@ -1,4 +1,5 @@
 import type { Node, Edge } from "@xyflow/react"
+import { IconType } from "react-icons"
 
 // ─── Port & Data Types ────────────────────────────────────
 export type PortType =
@@ -99,17 +100,30 @@ export type MathNodeType =
   | "matrix"
   | "group"
 
+export type SidebarTone =
+  | "input"
+  | "arithmetic"
+  | "trigonometry"
+  | "logarithmic"
+  | "logic"
+  | "calculus"
+  | "display"
+  | "advanced"
+
 // ─── Sidebar Category ─────────────────────────────────────
 export interface SidebarNodeItem {
   type: MathNodeType
   label: string
-  icon: string
-  iconColor: string
+  icon: IconType
+  iconColor: SidebarTone
   description?: string
 }
 
 export interface SidebarCategory {
   name: string
-  color: string
+  color: SidebarTone
   items: SidebarNodeItem[]
 }
+
+// ─── App Routes ───────────────────────────────────────────
+export type AppRouteName = "landingPage" | "FlowCanvasPage" | "Settings"

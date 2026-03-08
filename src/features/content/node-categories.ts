@@ -1,156 +1,173 @@
+import { LuPi } from "react-icons/lu"
 import type { SidebarCategory } from "../../types"
+import {
+  TbMathEqualGreater,
+  TbMathFunction,
+  TbMathIntegral,
+  TbMathSin,
+  TbMathXDivideY,
+  TbMatrix,
+  TbNumber123,
+  TbSquareRoot2,
+  TbVariable,
+  TbXPowerY,
+} from "react-icons/tb"
+import { FaMinus, FaPlus, FaTimes } from "react-icons/fa"
+import { SiSagemath } from "react-icons/si"
+import { PiSigmaThin } from "react-icons/pi"
+import { BsGraphDown } from "react-icons/bs"
 
 export const categories: SidebarCategory[] = [
   {
     name: "Inputs",
-    color: "var(--category-input)",
+    color: "input",
     items: [
       {
         type: "numberInput",
         label: "Number",
-        icon: "#",
-        iconColor: "var(--category-input)",
+        icon: TbNumber123,
+        iconColor: "input",
       },
       {
         type: "constant",
         label: "Constant",
-        icon: "π",
-        iconColor: "var(--category-input)",
+        icon: LuPi,
+        iconColor: "input",
         description: "pi, e",
       },
       {
         type: "variable",
         label: "Variable",
-        icon: "𝑥",
-        iconColor: "var(--category-input)",
+        icon: TbVariable,
+        iconColor: "input",
       },
       {
         type: "expression",
         label: "Expression",
-        icon: "ƒ",
-        iconColor: "var(--category-input)",
+        icon: TbMathFunction,
+        iconColor: "input",
       },
     ],
   },
   {
     name: "Arithmetic",
-    color: "var(--category-arithmetic)",
+    color: "arithmetic",
     items: [
       {
         type: "add",
         label: "Add",
-        icon: "＋",
-        iconColor: "var(--category-arithmetic)",
+        icon: FaPlus,
+        iconColor: "arithmetic",
       },
       {
         type: "subtract",
         label: "Subtract",
-        icon: "−",
-        iconColor: "var(--category-arithmetic)",
+        icon: FaMinus,
+        iconColor: "arithmetic",
       },
       {
         type: "multiply",
         label: "Multiply",
-        icon: "×",
-        iconColor: "var(--category-arithmetic)",
+        icon: FaTimes,
+        iconColor: "arithmetic",
       },
       {
         type: "divide",
         label: "Divide",
-        icon: "÷",
-        iconColor: "var(--category-arithmetic)",
+        icon: TbMathXDivideY,
+        iconColor: "arithmetic",
       },
       {
         type: "power",
         label: "Power",
-        icon: "^",
-        iconColor: "var(--category-arithmetic)",
+        icon: TbXPowerY,
+        iconColor: "arithmetic",
       },
       {
         type: "root",
         label: "Root",
-        icon: "√",
-        iconColor: "var(--category-arithmetic)",
+        icon: TbSquareRoot2,
+        iconColor: "arithmetic",
       },
     ],
   },
   {
     name: "Trigonometry",
-    color: "var(--category-trigonometry)",
+    color: "trigonometry",
     items: [
       {
         type: "trigonometric",
         label: "Trigonometric Function",
-        icon: "∿",
-        iconColor: "var(--category-trigonometry)",
-        description: "sin, cos, tan, asin, acos, atan",
+        icon: TbMathSin,
+        iconColor: "trigonometry",
+        description: "sin, cos, tan, etc.",
       },
     ],
   },
   {
     name: "Logarithmic",
-    color: "var(--category-logarithmic)",
+    color: "logarithmic",
     items: [
       {
         type: "ln",
         label: "ln",
-        icon: "ln",
-        iconColor: "var(--category-logarithmic)",
+        icon: SiSagemath,
+        iconColor: "logarithmic",
       },
       {
         type: "log",
         label: "log",
-        icon: "log",
-        iconColor: "var(--category-logarithmic)",
+        icon: SiSagemath,
+        iconColor: "logarithmic",
       },
     ],
   },
   {
     name: "Logic",
-    color: "var(--category-logic)",
+    color: "logic",
     items: [
       {
         type: "comparator",
         label: "Comparator",
-        icon: "⊨",
-        iconColor: "var(--category-logic)",
+        icon: TbMathEqualGreater,
+        iconColor: "logic",
         description: "< > <= >= ===",
       },
     ],
   },
   {
     name: "Calculus",
-    color: "var(--category-calculus)",
+    color: "calculus",
     items: [
       {
         type: "derivative",
         label: "Derivative",
-        icon: "∂",
-        iconColor: "var(--category-calculus)",
+        icon: PiSigmaThin,
+        iconColor: "calculus",
       },
       {
         type: "integral",
         label: "Integral",
-        icon: "∫",
-        iconColor: "var(--category-calculus)",
+        icon: TbMathIntegral,
+        iconColor: "calculus",
       },
     ],
   },
   {
     name: "Display",
-    color: "var(--category-display)",
+    color: "display",
     items: [
       {
         type: "plot",
         label: "Plot Function",
-        icon: "📈",
-        iconColor: "var(--category-display)",
+        icon: BsGraphDown,
+        iconColor: "display",
       },
       {
         type: "matrix",
         label: "Matrix",
-        icon: "▦",
-        iconColor: "var(--category-display)",
+        icon: TbMatrix,
+        iconColor: "display",
       },
     ],
   },

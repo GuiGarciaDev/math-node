@@ -24,6 +24,9 @@ import { MdUndo, MdRedo } from "react-icons/md"
 import { LuChevronDown } from "react-icons/lu"
 import { VscRunAll } from "react-icons/vsc"
 import { FaSpinner } from "react-icons/fa"
+import { IoMoon, IoSunny } from "react-icons/io5"
+import RunNodesDropdown from "./run-nodes-dropdown/RunNodesDropdown"
+import { useTheme } from "@/hooks/use-theme"
 
 const edgeTypes = {
   removable: RemovableEdge,
@@ -145,8 +148,7 @@ export const FlowCanvas: React.FC = React.memo(() => {
   const executionMode = useFlowStore((s) => s.executionMode)
   const setExecutionMode = useFlowStore((s) => s.setExecutionMode)
   const isRunning = useFlowStore((s) => s.isRunning)
-  const theme = useFlowStore((s) => s.theme)
-  const toggleTheme = useFlowStore((s) => s.toggleTheme)
+  const { theme, setTheme } = useTheme()
 
   const reactFlowInstance = useRef<ReactFlowInstance<
     MathNode,
@@ -466,76 +468,17 @@ export const FlowCanvas: React.FC = React.memo(() => {
           <div className="flex justify-between">
             <div>Workflow2</div>
             <div className="pointer-events-nonez-40 flex justify-between gap-6">
-              <div ref={runMenuRef} className="pointer-events-auto relative">
-                <div className="flex h-10 items-center gap-2 rounded-xl border border-(--border) bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-sm font-medium text-(--text-primary) shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--bg-tertiary)]">
-                  <button
-                    type="button"
-                    className="flex h-10 items-center pl-4 pr-2"
-                  >
-                    <span className="text-base text-(--accent)">
-                      <VscRunAll />
-                    </span>
-                    {isRunning && <FaSpinner />}
-                  </button>
-                  <button
-                    className="flex items-center h-10 pr-2 pl-1"
-                    onClick={() => setRunMenuOpen((open) => !open)}
-                  >
-                    <LuChevronDown
-                      className={`text-(--text-muted) transition-transform duration-150 ${
-                        runMenuOpen ? "rotate-180" : "rotate-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {runMenuOpen && (
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] w-56 rounded-2xl border border-(--border) bg-[color-mix(in_srgb,var(--bg-secondary)_96%,transparent)] p-2 shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        runPipeline()
-                        setRunMenuOpen(false)
-                      }}
-                      disabled={isRunning}
-                      className="flex w-full items-center justify-between rounded-xl border border-[color-mix(in_srgb,var(--accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] px-3 py-2 text-left text-sm font-medium text-[var(--accent)] transition-all duration-150 hover:bg-[var(--accent)] hover:text-[var(--text-primary)] disabled:cursor-wait disabled:opacity-70"
-                    >
-                      <span>Run workflow</span>
-                      <span>
-                        <VscRunAll />
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={toggleAutoRun}
-                      className={`mt-2 flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm font-medium transition-all duration-150 ${
-                        executionMode === "auto"
-                          ? "border-[color-mix(in_srgb,var(--status-success)_24%,transparent)] bg-[color-mix(in_srgb,var(--status-success)_14%,transparent)] text-(--status-success)"
-                          : "border-transparent bg-(--bg-tertiary)/70 text-(--text-secondary) hover:border-(--border) hover:text-(--text-primary)"
-                      }`}
-                    >
-                      <span>Auto run</span>
-                      <span className="flex items-center gap-2">
-                        {executionMode === "auto" && (
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-(--status-success)" />
-                        )}
-                        <span>{executionMode === "auto" ? "On" : "Off"}</span>
-                      </span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              <RunNodesDropdown />
 
               <button
                 type="button"
-                onClick={toggleTheme}
+                onClick={() => setTheme(isDark ? "light" : "dark")}
                 title={
                   isDark ? "Switch to light theme" : "Switch to dark theme"
                 }
                 className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-base text-[var(--text-secondary)] shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-150 hover:border-[var(--accent)] hover:text-[var(--text-primary)] hover:shadow-[0_0_18px_var(--accent-glow)]"
               >
-                {isDark ? "☀" : "🌙"}
+                {isDark ? <IoSunny /> : <IoMoon />}
               </button>
             </div>
           </div>
