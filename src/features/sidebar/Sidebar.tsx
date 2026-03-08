@@ -1,8 +1,10 @@
 import React, { useCallback, useMemo, useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 import type {
   AppRouteName,
   MathNodeType,
   SidebarNodeItem,
+  SidebarCategory,
   SidebarTone,
 } from "../../types"
 import { useFlowStore } from "../flow/store/flowStore"
@@ -26,11 +28,17 @@ import {
 } from "../../components/ui/tooltip"
 import { cn } from "../../lib/utils"
 import { getSidebarToneClasses } from "../../lib/theme"
-import { FiChevronDown, FiChevronRight, FiSearch } from "react-icons/fi"
+import { FiChevronRight, FiSearch } from "react-icons/fi"
 import {
   MdKeyboardDoubleArrowLeft,
   MdKeyboardDoubleArrowRight,
 } from "react-icons/md"
+import {
+  chevronVariants,
+  containerVariants,
+  sidebarCategoryVariants,
+  sidebarItemVariants,
+} from "../../animations/sidebarAnimations"
 
 interface SidebarProps {
   collapsed?: boolean
@@ -113,6 +121,86 @@ function CategoryLabel({
       <span className={cn("h-2 w-2 rounded-full", toneClasses.bg)} />
       {children}
     </span>
+  )
+}
+
+function AnimatedCategoryGroup({
+  category,
+  expanded,
+  onToggle,
+  onDragStart,
+}: {
+  category: SidebarCategory
+  expanded: boolean
+  onToggle: () => void
+  onDragStart: (event: React.DragEvent, type: MathNodeType) => void
+}) {
+  return (
+    <SidebarGroup className="p-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center justify-between rounded-xl px-1 py-1 text-left transition-colors duration-200 hover:text-[var(--sidebar-foreground)]"
+      >
+        <div>
+          <SidebarGroupLabel className="mb-1 h-auto px-0 text-[12px] group-data-[collapsible=icon]:mt-0 group-data-[collapsible=icon]:opacity-100">
+            <CategoryLabel tone={category.color}>{category.name}</CategoryLabel>
+          </SidebarGroupLabel>
+          <p className="ml-4 text-[11px] text-[var(--muted-foreground)]">
+            {category.items.length} node
+            {category.items.length === 1 ? "" : "s"}
+          </p>
+        </div>
+
+        <motion.span
+          className="flex h-7 w-7 items-center justify-center rounded-xl border border-[var(--sidebar-border)] bg-[color-mix(in_srgb,var(--sidebar-background)_80%,white_2%)] text-[var(--muted-foreground)]"
+          variants={chevronVariants}
+          initial={false}
+          custom={{ itemCount: category.items.length }}
+          animate={expanded ? "expanded" : "collapsed"}
+          style={{ willChange: "transform, opacity" }}
+        >
+          <FiChevronRight />
+        </motion.span>
+      </button>
+
+      <AnimatePresence initial={false} mode="wait">
+        {expanded && (
+          <motion.div
+            key={`${category.name}-content`}
+            className="overflow-hidden"
+            variants={containerVariants}
+            initial="collapsed"
+            animate="expanded"
+            exit="collapsed"
+            style={{ willChange: "height, opacity" }}
+          >
+            <motion.div
+              className="space-y-1.5 rounded-[1.4rem]"
+              variants={sidebarCategoryVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              style={{ willChange: "transform, opacity" }}
+            >
+              {category.items.map((item) => (
+                <motion.div
+                  key={item.type}
+                  variants={sidebarItemVariants}
+                  style={{ willChange: "transform, opacity" }}
+                >
+                  <SidebarNodeButton
+                    item={item}
+                    collapsed={false}
+                    onDragStart={onDragStart}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </SidebarGroup>
   )
 }
 
@@ -253,45 +341,13 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
               <ScrollArea className="h-full">
                 <div className="space-y-5 px-3 py-4">
                   {filteredCategories.map((category) => (
-                    <SidebarGroup key={category.name} className="p-0">
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(category.name)}
-                        className="flex items-center justify-between rounded-xl px-1 py-1 text-left transition-colors duration-200 hover:text-[var(--sidebar-foreground)]"
-                      >
-                        <div>
-                          <SidebarGroupLabel className="mb-1 h-auto px-0 text-[12px] group-data-[collapsible=icon]:mt-0 group-data-[collapsible=icon]:opacity-100">
-                            <CategoryLabel tone={category.color}>
-                              {category.name}
-                            </CategoryLabel>
-                          </SidebarGroupLabel>
-                          <p className="text-[11px] text-[var(--muted-foreground)] ml-4">
-                            {category.items.length} node
-                            {category.items.length === 1 ? "" : "s"}
-                          </p>
-                        </div>
-                        <span className="flex h-7 w-7 items-center justify-center rounded-xl border border-[var(--sidebar-border)] bg-[color-mix(in_srgb,var(--sidebar-background)_80%,white_2%)] text-[var(--muted-foreground)]">
-                          {expandedCategories[category.name] ? (
-                            <FiChevronDown />
-                          ) : (
-                            <FiChevronRight />
-                          )}
-                        </span>
-                      </button>
-
-                      {expandedCategories[category.name] && (
-                        <div className="space-y-1.5 rounded-[1.4rem]">
-                          {category.items.map((item) => (
-                            <SidebarNodeButton
-                              key={item.type}
-                              item={item}
-                              collapsed={false}
-                              onDragStart={onDragStart}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </SidebarGroup>
+                    <AnimatedCategoryGroup
+                      key={category.name}
+                      category={category}
+                      expanded={Boolean(expandedCategories[category.name])}
+                      onToggle={() => toggleCategory(category.name)}
+                      onDragStart={onDragStart}
+                    />
                   ))}
                 </div>
               </ScrollArea>
