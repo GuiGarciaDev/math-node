@@ -77,7 +77,7 @@ const App: React.FC = () => {
           <div className="relative flex flex-1 flex-col overflow-hidden">
             <div className="relative flex-1 overflow-hidden">
               <ReactFlowProvider>
-                <FlowCanvas />
+                <FlowCanvas onRouteChange={handleRouteChange} />
                 <FlowShortcuts />
               </ReactFlowProvider>
 

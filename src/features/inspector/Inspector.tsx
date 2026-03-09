@@ -3,7 +3,7 @@ import { useFlowStore } from "../flow/store/flowStore"
 
 const categoryIconClass: Record<string, string> = {
   input:
-    "bg-[color-mix(in_srgb,var(--category-input)_14%,transparent)] border-[color-mix(in_srgb,var(--category-input)_28%,transparent)]",
+    "bg-[color-mix(in_srgb,var(--category-number)_14%,transparent)] border-[color-mix(in_srgb,var(--category-number)_28%,transparent)]",
   arithmetic:
     "bg-[color-mix(in_srgb,var(--category-arithmetic)_14%,transparent)] border-[color-mix(in_srgb,var(--category-arithmetic)_28%,transparent)]",
   trigonometry:
@@ -13,9 +13,9 @@ const categoryIconClass: Record<string, string> = {
   logic:
     "bg-[color-mix(in_srgb,var(--category-logic)_14%,transparent)] border-[color-mix(in_srgb,var(--category-logic)_28%,transparent)]",
   calculus:
-    "bg-[color-mix(in_srgb,var(--category-calculus)_14%,transparent)] border-[color-mix(in_srgb,var(--category-calculus)_28%,transparent)]",
+    "bg-[color-mix(in_srgb,var(--category-expression)_14%,transparent)] border-[color-mix(in_srgb,var(--category-expression)_28%,transparent)]",
   display:
-    "bg-[color-mix(in_srgb,var(--category-display)_14%,transparent)] border-[color-mix(in_srgb,var(--category-display)_28%,transparent)]",
+    "bg-[color-mix(in_srgb,var(--category-matrix)_14%,transparent)] border-[color-mix(in_srgb,var(--category-matrix)_28%,transparent)]",
   advanced:
     "bg-[color-mix(in_srgb,var(--category-advanced)_14%,transparent)] border-[color-mix(in_srgb,var(--category-advanced)_28%,transparent)]",
 }

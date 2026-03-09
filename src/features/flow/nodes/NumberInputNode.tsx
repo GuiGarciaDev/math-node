@@ -40,7 +40,7 @@ export const NumberInputNode: React.FC<NodeProps> = React.memo(
           value={inputValue}
           onChange={handleChange}
           placeholder="e.g. 3.14 or -10"
-          className={`node-input w-full rounded-md border bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--category-input)] outline-none ${
+          className={`node-input w-full rounded-md border bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--category-number)] outline-none ${
             showValidation
               ? "border-[var(--status-error)]"
               : "border-[var(--border)]"
@@ -117,7 +117,7 @@ export const ConstantNode: React.FC<NodeProps> = React.memo(
               step={1}
               value={decimalPlaces}
               onChange={handlePrecisionChange}
-              className="node-input w-full rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--category-input)] outline-none"
+              className="node-input w-full rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--category-number)] outline-none"
             />
           </label>
         </div>

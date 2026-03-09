@@ -2,8 +2,8 @@ import React, { useRef, useEffect } from "react"
 import { useFlowStore } from "../flow/store/flowStore"
 
 const levelClassName: Record<string, string> = {
-  info: "text-[var(--category-input)]",
-  eval: "text-[var(--category-calculus)]",
+  info: "text-[var(--category-number)]",
+  eval: "text-[var(--category-expression)]",
   success: "text-[var(--status-success)]",
   error: "text-[var(--status-error)]",
   warn: "text-[var(--status-warn)]",

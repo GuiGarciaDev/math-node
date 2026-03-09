@@ -1,6 +1,6 @@
 import type { Variants } from "framer-motion"
 
-const smoothEase: [number, number, number, number] = [0.4, 0, 0.2, 1]
+export const smoothEase: [number, number, number, number] = [0.4, 0, 0.2, 1]
 
 export const sidebarCategoryVariants: Variants = {
   initial: {},

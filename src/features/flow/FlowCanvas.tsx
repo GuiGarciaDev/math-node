@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useMemo, useRef, useState } from "react"
 import {
   ReactFlow,
   MiniMap,
@@ -9,9 +9,10 @@ import {
   Panel,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
-import { nodeTypes } from "./nodeTypes"
+import { nodeTypes } from "../../types/node-types"
 import { useFlowStore } from "./store/flowStore"
 import type {
+  AppRouteName,
   ContextMenuState,
   MathEdge,
   MathNode,
@@ -21,11 +22,9 @@ import { RemovableEdge } from "./RemovableEdge"
 import { ContextMenu } from "./ContextMenu"
 import { InteractionToolbar } from "./InteractionToolbar"
 import { MdUndo, MdRedo } from "react-icons/md"
-import { LuChevronDown } from "react-icons/lu"
-import { VscRunAll } from "react-icons/vsc"
-import { FaSpinner } from "react-icons/fa"
 import { IoMoon, IoSunny } from "react-icons/io5"
 import RunNodesDropdown from "./run-nodes-dropdown/RunNodesDropdown"
+import WorkflowHeaderDropdown from "./workflow-dropdown/WorkflowHeaderDropdown"
 import { useTheme } from "@/hooks/use-theme"
 
 const edgeTypes = {
@@ -36,7 +35,7 @@ const minimapNodeColor = (node: FlowNode) => {
   const category = node.data?.category
   switch (category) {
     case "input":
-      return "var(--category-input)"
+      return "var(--category-number)"
     case "arithmetic":
       return "var(--category-arithmetic)"
     case "trigonometry":
@@ -46,9 +45,9 @@ const minimapNodeColor = (node: FlowNode) => {
     case "logic":
       return "var(--category-logic)"
     case "calculus":
-      return "var(--category-calculus)"
+      return "var(--category-expression)"
     case "display":
-      return "var(--category-display)"
+      return "var(--category-matrix)"
     case "advanced":
       return "var(--category-advanced)"
     default:
@@ -127,421 +126,435 @@ function collectEdgeIdsAlongCutLine(
   return Array.from(ids)
 }
 
-export const FlowCanvas: React.FC = React.memo(() => {
-  const nodes = useFlowStore((s) => s.nodes)
-  const edges = useFlowStore((s) => s.edges)
-  const onNodesChange = useFlowStore((s) => s.onNodesChange)
-  const onEdgesChange = useFlowStore((s) => s.onEdgesChange)
-  const onConnect = useFlowStore((s) => s.onConnect)
-  const setSelectedNodeIds = useFlowStore((s) => s.setSelectedNodeIds)
-  const clearSelection = useFlowStore((s) => s.clearSelection)
-  const selectedNodeIds = useFlowStore((s) => s.selectedNodeIds)
-  const interactionMode = useFlowStore((s) => s.interactionMode)
-  const dispatchContextAction = useFlowStore((s) => s.dispatchContextAction)
-  const removeEdgesByIds = useFlowStore((s) => s.removeEdgesByIds)
-  const addNode = useFlowStore((s) => s.addNode)
-  const undo = useFlowStore((s) => s.undo)
-  const redo = useFlowStore((s) => s.redo)
-  const canUndo = useFlowStore((s) => s.historyPast.length > 0)
-  const canRedo = useFlowStore((s) => s.historyFuture.length > 0)
-  const runPipeline = useFlowStore((s) => s.runPipeline)
-  const executionMode = useFlowStore((s) => s.executionMode)
-  const setExecutionMode = useFlowStore((s) => s.setExecutionMode)
-  const isRunning = useFlowStore((s) => s.isRunning)
-  const { theme, setTheme } = useTheme()
+interface FlowCanvasProps {
+  onRouteChange?: (route: AppRouteName) => void
+}
 
-  const reactFlowInstance = useRef<ReactFlowInstance<
-    MathNode,
-    MathEdge
-  > | null>(null)
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const runMenuRef = useRef<HTMLDivElement | null>(null)
-  const [cutStart, setCutStart] = useState<{ x: number; y: number } | null>(
-    null,
-  )
-  const [cutCurrent, setCutCurrent] = useState<{ x: number; y: number } | null>(
-    null,
-  )
-  const [isNodeDragActive, setIsNodeDragActive] = useState(false)
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-    visible: false,
-    x: 0,
-    y: 0,
-    target: "canvas",
-  })
-  const [runMenuOpen, setRunMenuOpen] = useState(false)
+export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
+  ({ onRouteChange }) => {
+    const nodes = useFlowStore((s) => s.nodes)
+    const edges = useFlowStore((s) => s.edges)
+    const onNodesChange = useFlowStore((s) => s.onNodesChange)
+    const onEdgesChange = useFlowStore((s) => s.onEdgesChange)
+    const onConnect = useFlowStore((s) => s.onConnect)
+    const setSelectedNodeIds = useFlowStore((s) => s.setSelectedNodeIds)
+    const clearSelection = useFlowStore((s) => s.clearSelection)
+    const selectedNodeIds = useFlowStore((s) => s.selectedNodeIds)
+    const interactionMode = useFlowStore((s) => s.interactionMode)
+    const dispatchContextAction = useFlowStore((s) => s.dispatchContextAction)
+    const removeEdgesByIds = useFlowStore((s) => s.removeEdgesByIds)
+    const addNode = useFlowStore((s) => s.addNode)
+    const undo = useFlowStore((s) => s.undo)
+    const redo = useFlowStore((s) => s.redo)
+    const canUndo = useFlowStore((s) => s.historyPast.length > 0)
+    const canRedo = useFlowStore((s) => s.historyFuture.length > 0)
+    const runPipeline = useFlowStore((s) => s.runPipeline)
+    const executionMode = useFlowStore((s) => s.executionMode)
+    const setExecutionMode = useFlowStore((s) => s.setExecutionMode)
+    const isRunning = useFlowStore((s) => s.isRunning)
+    const currentWorkflowName = useFlowStore((s) => s.currentWorkflowName)
+    const setCurrentWorkflowName = useFlowStore((s) => s.setCurrentWorkflowName)
+    const { theme, setTheme } = useTheme()
 
-  useEffect(() => {
-    if (!runMenuOpen) return
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!runMenuRef.current?.contains(event.target as globalThis.Node)) {
-        setRunMenuOpen(false)
-      }
-    }
-
-    window.addEventListener("pointerdown", handlePointerDown)
-    return () => window.removeEventListener("pointerdown", handlePointerDown)
-  }, [runMenuOpen])
-
-  const openContextMenu = useCallback(
-    (payload: Omit<ContextMenuState, "visible">) => {
-      setContextMenu({ ...payload, visible: true })
-    },
-    [],
-  )
-
-  const closeContextMenu = useCallback(() => {
-    setContextMenu((prev) =>
-      prev.visible ? { visible: false, x: 0, y: 0, target: "canvas" } : prev,
+    const reactFlowInstance = useRef<ReactFlowInstance<
+      MathNode,
+      MathEdge
+    > | null>(null)
+    const containerRef = useRef<HTMLDivElement | null>(null)
+    const [cutStart, setCutStart] = useState<{ x: number; y: number } | null>(
+      null,
     )
-  }, [])
+    const [cutCurrent, setCutCurrent] = useState<{
+      x: number
+      y: number
+    } | null>(null)
+    const [isNodeDragActive, setIsNodeDragActive] = useState(false)
+    const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+      visible: false,
+      x: 0,
+      y: 0,
+      target: "canvas",
+    })
 
-  const onInit = useCallback(
-    (instance: ReactFlowInstance<MathNode, MathEdge>) => {
-      reactFlowInstance.current = instance
-    },
-    [],
-  )
+    const openContextMenu = useCallback(
+      (payload: Omit<ContextMenuState, "visible">) => {
+        setContextMenu({ ...payload, visible: true })
+      },
+      [],
+    )
 
-  const onNodeClick = useCallback(
-    (event: React.MouseEvent) => {
-      if (event.button !== 0) return
-      if (interactionMode === "cut") return
+    const closeContextMenu = useCallback(() => {
+      setContextMenu((prev) =>
+        prev.visible ? { visible: false, x: 0, y: 0, target: "canvas" } : prev,
+      )
+    }, [])
 
-      closeContextMenu()
-    },
-    [closeContextMenu, interactionMode],
-  )
+    const onInit = useCallback(
+      (instance: ReactFlowInstance<MathNode, MathEdge>) => {
+        reactFlowInstance.current = instance
+      },
+      [],
+    )
 
-  const onPaneClick = useCallback(() => {
-    clearSelection()
-    closeContextMenu()
-  }, [clearSelection, closeContextMenu])
+    const onNodeClick = useCallback(
+      (event: React.MouseEvent) => {
+        if (event.button !== 0) return
+        if (interactionMode === "cut") return
 
-  const onSelectionChange = useCallback(
-    ({ nodes: selectedNodes }: { nodes: FlowNode[] }) => {
-      setSelectedNodeIds(selectedNodes.map((node) => node.id))
-    },
-    [setSelectedNodeIds],
-  )
-
-  const onSelectionContextMenu = useCallback(
-    (event: React.MouseEvent, selectionNodes: FlowNode[]) => {
-      event.preventDefault()
-
-      const selectedIds = selectionNodes.map((node) => node.id)
-      if (selectedIds.length === 0) {
         closeContextMenu()
-        return
-      }
+      },
+      [closeContextMenu, interactionMode],
+    )
 
-      openContextMenu({
-        x: event.clientX,
-        y: event.clientY,
-        target: selectedIds.length > 1 ? "multi" : "node",
-        nodeId: selectedIds.length === 1 ? selectedIds[0] : undefined,
-      })
-    },
-    [closeContextMenu, openContextMenu],
-  )
+    const onPaneClick = useCallback(() => {
+      clearSelection()
+      closeContextMenu()
+    }, [clearSelection, closeContextMenu])
 
-  const onNodeContextMenu = useCallback(
-    (event: React.MouseEvent, node: FlowNode) => {
-      event.preventDefault()
+    const onSelectionChange = useCallback(
+      ({ nodes: selectedNodes }: { nodes: FlowNode[] }) => {
+        setSelectedNodeIds(selectedNodes.map((node) => node.id))
+      },
+      [setSelectedNodeIds],
+    )
 
-      const hasMultiSelection =
-        selectedNodeIds.length > 1 && selectedNodeIds.includes(node.id)
+    const onSelectionContextMenu = useCallback(
+      (event: React.MouseEvent, selectionNodes: FlowNode[]) => {
+        event.preventDefault()
 
-      if (!selectedNodeIds.includes(node.id)) {
-        setSelectedNodeIds([node.id])
-      }
+        const selectedIds = selectionNodes.map((node) => node.id)
+        if (selectedIds.length === 0) {
+          closeContextMenu()
+          return
+        }
 
-      openContextMenu({
-        x: event.clientX,
-        y: event.clientY,
-        target:
-          node.type === "group"
-            ? "group"
-            : hasMultiSelection
-              ? "multi"
-              : "node",
-        nodeId: node.id,
-      })
-    },
-    [openContextMenu, selectedNodeIds, setSelectedNodeIds],
-  )
-
-  const onPaneContextMenu = useCallback(
-    (event: React.MouseEvent | MouseEvent) => {
-      event.preventDefault()
-      const selectedIds = selectedNodeIds
-
-      if (selectedIds.length > 0) {
         openContextMenu({
           x: event.clientX,
           y: event.clientY,
           target: selectedIds.length > 1 ? "multi" : "node",
           nodeId: selectedIds.length === 1 ? selectedIds[0] : undefined,
         })
-        return
-      }
-      closeContextMenu()
-    },
-    [closeContextMenu, openContextMenu, selectedNodeIds],
-  )
+      },
+      [closeContextMenu, openContextMenu],
+    )
 
-  const cutLine = useMemo(() => {
-    if (!cutStart || !cutCurrent) return null
-    return {
-      x1: cutStart.x,
-      y1: cutStart.y,
-      x2: cutCurrent.x,
-      y2: cutCurrent.y,
-    }
-  }, [cutCurrent, cutStart])
-
-  const onPaneMouseDown = useCallback(
-    (event: React.MouseEvent) => {
-      if (!isPaneEventTarget(event.target)) return
-      if (interactionMode !== "cut") return
-      if (event.button !== 0) return
-      event.preventDefault()
-      const bounds = containerRef.current?.getBoundingClientRect()
-      if (!bounds) return
-      closeContextMenu()
-      setCutStart({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      })
-      setCutCurrent({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      })
-    },
-    [closeContextMenu, interactionMode],
-  )
-
-  const onPaneMouseMove = useCallback(
-    (event: React.MouseEvent) => {
-      if (!isPaneEventTarget(event.target)) return
-      if (interactionMode !== "cut" || !cutStart) return
-      event.preventDefault()
-      const bounds = containerRef.current?.getBoundingClientRect()
-      if (!bounds) return
-      setCutCurrent({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      })
-    },
-    [cutStart, interactionMode],
-  )
-
-  const onPaneMouseUp = useCallback(
-    (event: React.MouseEvent) => {
-      if (!isPaneEventTarget(event.target)) return
-      if (interactionMode === "cut") {
+    const onNodeContextMenu = useCallback(
+      (event: React.MouseEvent, node: FlowNode) => {
         event.preventDefault()
-      }
 
-      if (interactionMode !== "cut" || !cutLine) {
+        const hasMultiSelection =
+          selectedNodeIds.length > 1 && selectedNodeIds.includes(node.id)
+
+        if (!selectedNodeIds.includes(node.id)) {
+          setSelectedNodeIds([node.id])
+        }
+
+        openContextMenu({
+          x: event.clientX,
+          y: event.clientY,
+          target:
+            node.type === "group"
+              ? "group"
+              : hasMultiSelection
+                ? "multi"
+                : "node",
+          nodeId: node.id,
+        })
+      },
+      [openContextMenu, selectedNodeIds, setSelectedNodeIds],
+    )
+
+    const onPaneContextMenu = useCallback(
+      (event: React.MouseEvent | MouseEvent) => {
+        event.preventDefault()
+        const selectedIds = selectedNodeIds
+
+        if (selectedIds.length > 0) {
+          openContextMenu({
+            x: event.clientX,
+            y: event.clientY,
+            target: selectedIds.length > 1 ? "multi" : "node",
+            nodeId: selectedIds.length === 1 ? selectedIds[0] : undefined,
+          })
+          return
+        }
+        closeContextMenu()
+      },
+      [closeContextMenu, openContextMenu, selectedNodeIds],
+    )
+
+    const cutLine = useMemo(() => {
+      if (!cutStart || !cutCurrent) return null
+      return {
+        x1: cutStart.x,
+        y1: cutStart.y,
+        x2: cutCurrent.x,
+        y2: cutCurrent.y,
+      }
+    }, [cutCurrent, cutStart])
+
+    const onPaneMouseDown = useCallback(
+      (event: React.MouseEvent) => {
+        if (!isPaneEventTarget(event.target)) return
+        if (interactionMode !== "cut") return
+        if (event.button !== 0) return
+        event.preventDefault()
+        const bounds = containerRef.current?.getBoundingClientRect()
+        if (!bounds) return
+        closeContextMenu()
+        setCutStart({
+          x: event.clientX - bounds.left,
+          y: event.clientY - bounds.top,
+        })
+        setCutCurrent({
+          x: event.clientX - bounds.left,
+          y: event.clientY - bounds.top,
+        })
+      },
+      [closeContextMenu, interactionMode],
+    )
+
+    const onPaneMouseMove = useCallback(
+      (event: React.MouseEvent) => {
+        if (!isPaneEventTarget(event.target)) return
+        if (interactionMode !== "cut" || !cutStart) return
+        event.preventDefault()
+        const bounds = containerRef.current?.getBoundingClientRect()
+        if (!bounds) return
+        setCutCurrent({
+          x: event.clientX - bounds.left,
+          y: event.clientY - bounds.top,
+        })
+      },
+      [cutStart, interactionMode],
+    )
+
+    const onPaneMouseUp = useCallback(
+      (event: React.MouseEvent) => {
+        if (!isPaneEventTarget(event.target)) return
+        if (interactionMode === "cut") {
+          event.preventDefault()
+        }
+
+        if (interactionMode !== "cut" || !cutLine) {
+          setCutStart(null)
+          setCutCurrent(null)
+          return
+        }
+
+        const bounds = containerRef.current?.getBoundingClientRect()
+        if (!bounds) {
+          setCutStart(null)
+          setCutCurrent(null)
+          return
+        }
+
+        const cutLength = Math.hypot(
+          cutLine.x2 - cutLine.x1,
+          cutLine.y2 - cutLine.y1,
+        )
+        if (cutLength < 4) {
+          setCutStart(null)
+          setCutCurrent(null)
+          return
+        }
+
+        const edgeIdsToRemove = collectEdgeIdsAlongCutLine(cutLine, bounds)
+
+        if (edgeIdsToRemove.length > 0) {
+          removeEdgesByIds(edgeIdsToRemove)
+        }
+
         setCutStart(null)
         setCutCurrent(null)
-        return
-      }
+      },
+      [cutLine, interactionMode, removeEdgesByIds],
+    )
 
-      const bounds = containerRef.current?.getBoundingClientRect()
-      if (!bounds) {
-        setCutStart(null)
-        setCutCurrent(null)
-        return
-      }
-
-      const cutLength = Math.hypot(
-        cutLine.x2 - cutLine.x1,
-        cutLine.y2 - cutLine.y1,
-      )
-      if (cutLength < 4) {
-        setCutStart(null)
-        setCutCurrent(null)
-        return
-      }
-
-      const edgeIdsToRemove = collectEdgeIdsAlongCutLine(cutLine, bounds)
-
-      if (edgeIdsToRemove.length > 0) {
-        removeEdgesByIds(edgeIdsToRemove)
-      }
-
-      setCutStart(null)
-      setCutCurrent(null)
-    },
-    [cutLine, interactionMode, removeEdgesByIds],
-  )
-
-  // Drag and drop from sidebar
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = "move"
-  }, [])
-
-  const onDrop = useCallback(
-    (e: React.DragEvent) => {
+    // Drag and drop from sidebar
+    const onDragOver = useCallback((e: React.DragEvent) => {
       e.preventDefault()
-      const type = e.dataTransfer.getData(
-        "application/mathflow-node",
-      ) as MathNodeType
-      if (!type || !reactFlowInstance.current) return
+      e.dataTransfer.dropEffect = "move"
+    }, [])
 
-      const position = reactFlowInstance.current.screenToFlowPosition({
-        x: e.clientX,
-        y: e.clientY,
-      })
+    const onDrop = useCallback(
+      (e: React.DragEvent) => {
+        e.preventDefault()
+        const type = e.dataTransfer.getData(
+          "application/mathflow-node",
+        ) as MathNodeType
+        if (!type || !reactFlowInstance.current) return
 
-      addNode(type, position)
-    },
-    [addNode],
-  )
+        const position = reactFlowInstance.current.screenToFlowPosition({
+          x: e.clientX,
+          y: e.clientY,
+        })
 
-  const onNodeDragStart = useCallback(() => {
-    setIsNodeDragActive(true)
-  }, [])
+        addNode(type, position)
+      },
+      [addNode],
+    )
 
-  const onNodeDragStop = useCallback(() => {
-    setIsNodeDragActive(false)
-  }, [])
+    const onNodeDragStart = useCallback(() => {
+      setIsNodeDragActive(true)
+    }, [])
 
-  const toggleAutoRun = useCallback(() => {
-    setExecutionMode(executionMode === "auto" ? "manual" : "auto")
-  }, [executionMode, setExecutionMode])
+    const onNodeDragStop = useCallback(() => {
+      setIsNodeDragActive(false)
+    }, [])
 
-  const isDark = theme === "dark"
+    const toggleAutoRun = useCallback(() => {
+      setExecutionMode(executionMode === "auto" ? "manual" : "auto")
+    }, [executionMode, setExecutionMode])
 
-  return (
-    <div
-      ref={containerRef}
-      className={`relative h-full w-full ${interactionMode === "cut" ? "cursor-crosshair" : "cursor-default"}`}
-    >
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onSelectionChange={onSelectionChange}
-        onSelectionContextMenu={onSelectionContextMenu}
-        onConnect={onConnect}
-        onInit={onInit}
-        onNodeClick={onNodeClick}
-        onNodeDragStart={onNodeDragStart}
-        onNodeDragStop={onNodeDragStop}
-        onNodeContextMenu={onNodeContextMenu}
-        onPaneClick={onPaneClick}
-        onPaneContextMenu={onPaneContextMenu}
-        onMouseDown={onPaneMouseDown}
-        onMouseMove={onPaneMouseMove}
-        onMouseUp={onPaneMouseUp}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        defaultEdgeOptions={edgeOptions}
-        connectionLineStyle={connectionLineStyle}
-        panOnDrag={interactionMode === "pan"}
-        nodesDraggable={interactionMode === "select"}
-        elementsSelectable={interactionMode === "select"}
-        selectionOnDrag={interactionMode === "select"}
-        nodesConnectable={interactionMode !== "cut"}
-        multiSelectionKeyCode="Shift"
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        proOptions={{ hideAttribution: true }}
-        deleteKeyCode={null}
-        onlyRenderVisibleElements
+    const handleBackHome = useCallback(() => {
+      onRouteChange?.("landingPage")
+    }, [onRouteChange])
+
+    const handleRenameWorkflow = useCallback(
+      (name: string) => {
+        setCurrentWorkflowName(name)
+      },
+      [setCurrentWorkflowName],
+    )
+
+    const isDark = theme === "dark"
+
+    return (
+      <div
+        ref={containerRef}
+        className={`relative h-full w-full ${interactionMode === "cut" ? "cursor-crosshair" : "cursor-default"}`}
       >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={24}
-          size={1}
-          color="var(--border)"
-        />
-        <Panel position="top-center" className="w-full pl-5 pr-8">
-          <div className="flex justify-between">
-            <div>Workflow2</div>
-            <div className="pointer-events-nonez-40 flex justify-between gap-6">
-              <RunNodesDropdown />
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onSelectionChange={onSelectionChange}
+          onSelectionContextMenu={onSelectionContextMenu}
+          onConnect={onConnect}
+          onInit={onInit}
+          onNodeClick={onNodeClick}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
+          onNodeContextMenu={onNodeContextMenu}
+          onPaneClick={onPaneClick}
+          onPaneContextMenu={onPaneContextMenu}
+          onMouseDown={onPaneMouseDown}
+          onMouseMove={onPaneMouseMove}
+          onMouseUp={onPaneMouseUp}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          defaultEdgeOptions={edgeOptions}
+          connectionLineStyle={connectionLineStyle}
+          panOnDrag={interactionMode === "pan"}
+          nodesDraggable={interactionMode === "select"}
+          elementsSelectable={interactionMode === "select"}
+          selectionOnDrag={interactionMode === "select"}
+          nodesConnectable={interactionMode !== "cut"}
+          multiSelectionKeyCode="Shift"
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
+          proOptions={{ hideAttribution: true }}
+          deleteKeyCode={null}
+          onlyRenderVisibleElements
+        >
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={24}
+            size={1}
+            color="var(--border)"
+          />
+          <Panel position="top-center" className="w-full pl-5 pr-8">
+            <div className="flex justify-between">
+              <WorkflowHeaderDropdown
+                workflowName={currentWorkflowName}
+                onRenameWorkflow={handleRenameWorkflow}
+                onBackHome={handleBackHome}
+              />
+              <div className="z-40 flex justify-between gap-6">
+                <RunNodesDropdown
+                  isRunning={isRunning}
+                  executionMode={executionMode}
+                  onRunWorkflow={runPipeline}
+                  onToggleAutoRun={toggleAutoRun}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setTheme(isDark ? "light" : "dark")}
+                  title={
+                    isDark ? "Switch to light theme" : "Switch to dark theme"
+                  }
+                  className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-base text-[var(--text-secondary)] shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-150 hover:border-[var(--accent)] hover:text-[var(--text-primary)] hover:shadow-[0_0_18px_var(--accent-glow)]"
+                >
+                  {isDark ? <IoSunny /> : <IoMoon />}
+                </button>
+              </div>
+            </div>
+          </Panel>
+          <Panel position="center-left">
+            <InteractionToolbar />
+          </Panel>
+          <Panel position="bottom-right">
+            {!isNodeDragActive && (
+              <MiniMap
+                className="rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]"
+                nodeColor={minimapNodeColor}
+                maskColor="rgba(0, 0, 0, 0.5)"
+                pannable
+                zoomable
+              />
+            )}
+          </Panel>
+          <Panel position="bottom-left">
+            <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-md">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                title="Undo (Ctrl+Z)"
+                className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                <MdUndo />
+              </button>
 
               <button
-                type="button"
-                onClick={() => setTheme(isDark ? "light" : "dark")}
-                title={
-                  isDark ? "Switch to light theme" : "Switch to dark theme"
-                }
-                className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-base text-[var(--text-secondary)] shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-150 hover:border-[var(--accent)] hover:text-[var(--text-primary)] hover:shadow-[0_0_18px_var(--accent-glow)]"
+                onClick={redo}
+                disabled={!canRedo}
+                title="Redo (Ctrl+Y)"
+                className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-35"
               >
-                {isDark ? <IoSunny /> : <IoMoon />}
+                <MdRedo />
               </button>
             </div>
-          </div>
-        </Panel>
-        <Panel position="center-left">
-          <InteractionToolbar />
-        </Panel>
-        <Panel position="bottom-right">
-          {!isNodeDragActive && (
-            <MiniMap
-              className="rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]"
-              nodeColor={minimapNodeColor}
-              maskColor="rgba(0, 0, 0, 0.5)"
-              pannable
-              zoomable
+          </Panel>
+        </ReactFlow>
+
+        {cutLine && (
+          <svg className="pointer-events-none absolute inset-0 z-30 h-full w-full">
+            <line
+              x1={cutLine.x1}
+              y1={cutLine.y1}
+              x2={cutLine.x2}
+              y2={cutLine.y2}
+              stroke="var(--status-error)"
+              strokeWidth={2}
+              strokeDasharray="6 4"
+              strokeLinecap="round"
             />
-          )}
-        </Panel>
-        <Panel position="bottom-left">
-          <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-md">
-            <button
-              onClick={undo}
-              disabled={!canUndo}
-              title="Undo (Ctrl+Z)"
-              className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-35"
-            >
-              <MdUndo />
-            </button>
+          </svg>
+        )}
 
-            <button
-              onClick={redo}
-              disabled={!canRedo}
-              title="Redo (Ctrl+Y)"
-              className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-35"
-            >
-              <MdRedo />
-            </button>
-          </div>
-        </Panel>
-      </ReactFlow>
-
-      {cutLine && (
-        <svg className="pointer-events-none absolute inset-0 z-30 h-full w-full">
-          <line
-            x1={cutLine.x1}
-            y1={cutLine.y1}
-            x2={cutLine.x2}
-            y2={cutLine.y2}
-            stroke="var(--status-error)"
-            strokeWidth={2}
-            strokeDasharray="6 4"
-            strokeLinecap="round"
-          />
-        </svg>
-      )}
-
-      <ContextMenu
-        contextMenu={contextMenu}
-        onClose={closeContextMenu}
-        onAction={dispatchContextAction}
-      />
-    </div>
-  )
-})
+        <ContextMenu
+          contextMenu={contextMenu}
+          onClose={closeContextMenu}
+          onAction={dispatchContextAction}
+        />
+      </div>
+    )
+  },
+)
 
 FlowCanvas.displayName = "FlowCanvas"

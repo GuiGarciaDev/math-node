@@ -13,10 +13,10 @@ const colorTokens = [
   "--status-success",
   "--status-error",
   "--status-warn",
-  "--category-input",
+  "--category-number",
   "--category-arithmetic",
-  "--category-calculus",
-  "--category-display",
+  "--category-expression",
+  "--category-matrix",
   "--category-advanced",
 ]
 
@@ -33,10 +33,10 @@ const tokenToBgClass: Record<string, string> = {
   "--status-success": "bg-[var(--status-success)]",
   "--status-error": "bg-[var(--status-error)]",
   "--status-warn": "bg-[var(--status-warn)]",
-  "--category-input": "bg-[var(--category-input)]",
+  "--category-number": "bg-[var(--category-number)]",
   "--category-arithmetic": "bg-[var(--category-arithmetic)]",
-  "--category-calculus": "bg-[var(--category-calculus)]",
-  "--category-display": "bg-[var(--category-display)]",
+  "--category-expression": "bg-[var(--category-expression)]",
+  "--category-matrix": "bg-[var(--category-matrix)]",
   "--category-advanced": "bg-[var(--category-advanced)]",
 }
 

@@ -42,7 +42,7 @@ export const DerivativeNode: React.FC<NodeProps> = React.memo(
               type="text"
               value={String(nodeData.params.variable ?? "x")}
               onChange={handleVarChange}
-              className="node-input w-10 rounded border border-[var(--border)] bg-[var(--bg-input)] px-1.5 py-0.5 text-center font-mono text-xs text-[var(--category-calculus)] outline-none"
+              className="node-input w-10 rounded border border-[var(--border)] bg-[var(--bg-input)] px-1.5 py-0.5 text-center font-mono text-xs text-[var(--category-expression)] outline-none"
             />
           </div>
 
@@ -104,7 +104,7 @@ export const IntegralNode: React.FC<NodeProps> = React.memo(
               type="text"
               value={String(nodeData.params.variable ?? "x")}
               onChange={handleVarChange}
-              className="node-input w-10 rounded border border-[var(--border)] bg-[var(--bg-input)] px-1.5 py-0.5 text-center font-mono text-xs text-[var(--category-calculus)] outline-none"
+              className="node-input w-10 rounded border border-[var(--border)] bg-[var(--bg-input)] px-1.5 py-0.5 text-center font-mono text-xs text-[var(--category-expression)] outline-none"
             />
           </div>
 

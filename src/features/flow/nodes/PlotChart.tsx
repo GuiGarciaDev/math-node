@@ -156,7 +156,7 @@ export const PlotChart: React.FC<PlotChartProps> = React.memo(
             <path
               d={metrics.path}
               fill="none"
-              stroke="var(--category-display)"
+              stroke="var(--category-matrix)"
               strokeWidth="0.9"
               vectorEffect="non-scaling-stroke"
               filter="drop-shadow(0 0 4px rgba(20, 174, 92, 0.35))"

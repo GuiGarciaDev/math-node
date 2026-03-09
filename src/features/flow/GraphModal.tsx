@@ -32,7 +32,7 @@ export const GraphModal: React.FC = React.memo(() => {
       >
         <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-tertiary)] px-4 py-3">
           <div className="flex items-center gap-2.5">
-            <span className="h-2 w-2 rounded-full bg-[var(--category-display)] shadow-[0_0_10px_rgba(20,174,92,0.4)]" />
+            <span className="h-2 w-2 rounded-full bg-[var(--category-matrix)] shadow-[0_0_10px_rgba(20,174,92,0.4)]" />
             <span className="text-[13px] font-semibold text-[var(--text-primary)]">
               {graphModal.title}
             </span>

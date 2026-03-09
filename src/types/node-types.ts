@@ -1,24 +1,34 @@
 import type { NodeTypes } from "@xyflow/react"
-import { ConstantNode, NumberInputNode } from "./nodes/NumberInputNode"
-import { VariableNode } from "./nodes/VariableNode"
-import { ExpressionNode } from "./nodes/ExpressionNode"
+import {
+  ConstantNode,
+  NumberInputNode,
+} from "../features/flow/nodes/NumberInputNode"
+import { VariableNode } from "../features/flow/nodes/VariableNode"
+import { ExpressionNode } from "../features/flow/nodes/ExpressionNode"
 import {
   AddNode,
   SubtractNode,
   MultiplyNode,
   DivideNode,
-} from "./nodes/ArithmeticNodes"
-import { PowerNode, RootNode, SqrtNode } from "./nodes/PowerNodes"
+} from "../features/flow/nodes/ArithmeticNodes"
+import {
+  PowerNode,
+  RootNode,
+  SqrtNode,
+} from "../features/flow/nodes/PowerNodes"
 import {
   TrigonometricNode,
   LnNode,
   LogNode,
   ComparatorNode,
-} from "./nodes/ScientificNodes"
-import { DerivativeNode, IntegralNode } from "./nodes/CalculusNodes"
-import { PlotNode } from "./nodes/PlotNode"
-import { MatrixNode } from "./nodes/MatrixNode"
-import { GroupNode } from "./nodes/GroupNode"
+} from "../features/flow/nodes/ScientificNodes"
+import {
+  DerivativeNode,
+  IntegralNode,
+} from "../features/flow/nodes/CalculusNodes"
+import { PlotNode } from "../features/flow/nodes/PlotNode"
+import { MatrixNode } from "../features/flow/nodes/MatrixNode"
+import { GroupNode } from "../features/flow/nodes/GroupNode"
 
 export const nodeTypes: NodeTypes = {
   numberInput: NumberInputNode,

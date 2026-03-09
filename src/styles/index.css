@@ -64,9 +64,11 @@
   --node-display: oklch(48.009% 0.11749 245.583);
   --node-advanced: oklch(48.009% 0.11749 245.583);
 
-  --category-input: oklch(48.009% 0.11749 245.583);
-  --category-calculus: oklch(48.009% 0.11749 245.583);
-  --category-display: oklch(48.009% 0.11749 245.583);
+  --handle-category-number: oklch(49.043% 0.09756 242.61);
+  --handle-category-expression: oklch(50.514% 0.19709 334.359);
+  --handle-category-matrix: oklch(49.471% 0.13034 148.636);
+  --handle-category-boolean: oklch(91.886% 0.19889 109.764);
+
   --status-success: oklch(51.354% 0.10112 156.097);
 }
 
@@ -131,9 +133,11 @@
   --node-display: oklch(48.009% 0.11749 245.583);
   --node-advanced: oklch(48.009% 0.11749 245.583);
 
-  --category-input: oklch(48.009% 0.11749 245.583);
-  --category-calculus: oklch(48.009% 0.11749 245.583);
-  --category-display: oklch(48.009% 0.11749 245.583);
+  --handle-category-number: oklch(49.043% 0.09756 242.61);
+  --handle-category-expression: oklch(50.514% 0.19709 334.359);
+  --handle-category-matrix: oklch(49.471% 0.13034 148.636);
+  --handle-category-boolean: oklch(91.886% 0.19889 109.764);
+
   --status-success: oklch(51.354% 0.10112 156.097);
 }
 
@@ -198,9 +202,11 @@
   --node-display: var(--node-display);
   --node-advanced: var(--node-advanced);
 
-  --category-input: var(--category-input);
-  --category-calculus: var(--category-calculus);
-  --category-display: var(--category-display);
+  --category-number: var(--category-number);
+  --category-expression: var(--category-expression);
+  --category-matrix: var(--category-matrix);
+  --category-boolean: var(--category-boolean);
+  
   --status-success: var(--status-success);
 }
 

@@ -11,7 +11,8 @@ features:
 fixes:
 [] Make the nodes not draggable when entry input is focused.
 [] Graph labels are not aligned with the XY axis.
-[] Improve the design of the left sidebar when it is short mode.
+[] The viewport state is saving from the last workflow visit. For example, if the user enter in workflow 1 and then exit, the viewport state will be saved. Then, if he visit another workflow, the viewport will be in the same position as he leaved workflow 1. We need to sabe viewport state for every workflow or just adjust the viewport position to fit nodes.
+[] Remove auto focus in nodes input when open a workflow.
 
 Completed:
 [x] Number node dont accept number with decimal case and the execution causes error. The sidebar value input of the node accepts "." or "," but it throw "invalid number" error after execution.
@@ -32,3 +33,4 @@ Completed:
 [x] Add more types of nodes in the app: superior power root, log ln, trigonometric, constants (pi, e, etc), logical operators (< > <= >= ===)
 [x] Add tailwind in the project and refactor the components to use it. Also create a file with all types of typography and colors to be easy to check it.
 [x] Fix the design of undo and redo buttons.
+[x] Improve the design of the left sidebar when it is short mode.

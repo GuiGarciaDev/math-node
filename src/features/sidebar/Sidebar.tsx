@@ -1,5 +1,11 @@
-import React, { useCallback, useMemo, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useAnimationControls,
+  useMotionValue,
+} from "framer-motion"
 import type {
   AppRouteName,
   MathNodeType,
@@ -8,7 +14,7 @@ import type {
   SidebarTone,
 } from "../../types"
 import { useFlowStore } from "../flow/store/flowStore"
-import { categories } from "../content/node-categories"
+import { categories } from "../content/sidebar-config"
 import MathFlowIcon from "../../components/math-flow-icon"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
@@ -121,6 +127,193 @@ function CategoryLabel({
       <span className={cn("h-2 w-2 rounded-full", toneClasses.bg)} />
       {children}
     </span>
+  )
+}
+
+function SidebarSearchInput({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+}) {
+  const [focused, setFocused] = useState(false)
+  const sequenceRef = useRef(0)
+  const ledOffset = useMotionValue(0)
+  const ringControls = useAnimationControls()
+  const inputLayerRef = useRef<HTMLDivElement | null>(null)
+  const [inputBox, setInputBox] = useState({ width: 0, height: 0 })
+
+  useEffect(() => {
+    const sequenceId = ++sequenceRef.current
+    let activeAnimation: ReturnType<typeof animate> | null = null
+
+    const runRingSequence = async () => {
+      if (!focused) {
+        ringControls.stop()
+        if (activeAnimation) {
+          activeAnimation.stop()
+        }
+        return
+      }
+
+      const startOffset = ledOffset.get()
+      activeAnimation = animate(ledOffset, [startOffset, startOffset - 1], {
+        duration: 1,
+        ease: "linear",
+      })
+      await activeAnimation.finished
+
+      if (sequenceId !== sequenceRef.current) {
+        return
+      }
+
+      const slowStartOffset = ledOffset.get()
+      activeAnimation = animate(
+        ledOffset,
+        [slowStartOffset, slowStartOffset - 1],
+        {
+          duration: 5,
+          ease: "linear",
+          repeat: Infinity,
+          repeatType: "loop",
+        },
+      )
+      await activeAnimation.finished
+    }
+
+    void runRingSequence()
+
+    return () => {
+      if (activeAnimation) {
+        activeAnimation.stop()
+      }
+      sequenceRef.current += 1
+    }
+  }, [focused, ledOffset, ringControls])
+
+  useEffect(() => {
+    const target = inputLayerRef.current
+    if (!target) {
+      return
+    }
+
+    const updateBox = () => {
+      setInputBox({
+        width: target.clientWidth,
+        height: target.clientHeight,
+      })
+    }
+
+    updateBox()
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateBox)
+      return () => {
+        window.removeEventListener("resize", updateBox)
+      }
+    }
+
+    const observer = new ResizeObserver(updateBox)
+    observer.observe(target)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (focused) {
+      void ringControls.start({
+        opacity: 1,
+        transition: { duration: 0.12, ease: "easeOut" },
+      })
+      return
+    }
+
+    void ringControls.start({
+      opacity: 0,
+      transition: { duration: 0.25, ease: "easeOut" },
+    })
+  }, [focused, ringControls])
+
+  const ringInset = -1
+  const ringRadius = 16
+  const ringStroke = 2
+  const svgWidth = Math.max(inputBox.width - ringInset * 2, 0)
+  const svgHeight = Math.max(inputBox.height - ringInset * 2, 0)
+  const rectInset = ringStroke / 2
+  const rectWidth = Math.max(svgWidth - ringStroke, 0)
+  const rectHeight = Math.max(svgHeight - ringStroke, 0)
+
+  return (
+    <div className="relative">
+      <div
+        ref={inputLayerRef}
+        className="relative inline-block w-full align-top"
+      >
+        <FiSearch className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-sm text-[var(--muted-foreground)]" />
+        <Input
+          value={value}
+          onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder="Search nodes, formulas, and actions"
+          className="pr-14 pl-11 text-[13px]"
+        />
+        <motion.div
+          className="pointer-events-none absolute z-20"
+          initial={{ opacity: 0 }}
+          animate={ringControls}
+          style={{
+            inset: `${ringInset}px`,
+            borderRadius: `${ringRadius}px`,
+            willChange: "opacity",
+          }}
+        >
+          {svgWidth > 0 && svgHeight > 0 && (
+            <svg
+              className="h-full w-full"
+              viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <rect
+                x={rectInset}
+                y={rectInset}
+                width={rectWidth}
+                height={rectHeight}
+                rx={ringRadius}
+                fill="none"
+                stroke="color-mix(in srgb, var(--sidebar-ring) 22%, transparent)"
+                strokeWidth={1}
+              />
+              <motion.rect
+                x={rectInset}
+                y={rectInset}
+                width={rectWidth}
+                height={rectHeight}
+                rx={ringRadius}
+                fill="none"
+                stroke="color-mix(in srgb, var(--sidebar-ring) 85%, white 15%)"
+                strokeWidth={ringStroke}
+                strokeLinecap="round"
+                pathLength={1}
+                strokeDasharray="0.08 0.92"
+                style={{
+                  strokeDashoffset: ledOffset,
+                  filter:
+                    "drop-shadow(0 0 4px color-mix(in srgb, var(--sidebar-ring) 65%, transparent))",
+                }}
+              />
+            </svg>
+          )}
+        </motion.div>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-lg border border-[var(--border)] bg-[var(--sidebar-background)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+          /
+        </span>
+      </div>
+    </div>
   )
 }
 
@@ -277,7 +470,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
                     "group flex min-w-0 items-center gap-3 rounded-[1.35rem] border border-transparent px-2 py-1.5 text-left transition-all duration-200 hover:bg-[var(--sidebar-accent)]",
                     collapsed ? "w-full justify-center px-0" : "flex-1",
                   )}
-                  title="Return to landing page"
+                  title="Return to home page"
                 >
                   <MathFlowIcon />
                   {!collapsed && (
@@ -321,18 +514,10 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
 
           {!collapsed && (
             <div className="border-b border-[var(--sidebar-border)] px-3 pb-3">
-              <div className="relative">
-                <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[var(--muted-foreground)]" />
-                <Input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search nodes, formulas, and actions"
-                  className="pr-14 pl-11 text-[13px]"
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-lg border border-[var(--border)] bg-[var(--sidebar-background)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-                  /
-                </span>
-              </div>
+              <SidebarSearchInput
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
             </div>
           )}
 

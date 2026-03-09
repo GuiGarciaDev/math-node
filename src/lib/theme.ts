@@ -59,13 +59,13 @@ const toneClasses: Record<SidebarTone, ToneClasses> = {
 }
 
 const legacyToneMap: Record<string, SidebarTone> = {
-  "var(--category-input)": "input",
+  "var(--category-number)": "input",
   "var(--category-arithmetic)": "arithmetic",
   "var(--category-trigonometry)": "trigonometry",
   "var(--category-logarithmic)": "logarithmic",
   "var(--category-logic)": "logic",
-  "var(--category-calculus)": "calculus",
-  "var(--category-display)": "display",
+  "var(--category-expression)": "calculus",
+  "var(--category-matrix)": "display",
   "var(--category-advanced)": "advanced",
 }
 

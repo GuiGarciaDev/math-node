@@ -63,7 +63,7 @@ export const MatrixNode: React.FC<NodeProps> = React.memo(
                   type="text"
                   value={cell}
                   onChange={(e) => handleCellChange(ri, ci, e.target.value)}
-                  className="node-input w-9 rounded-[3px] border border-[var(--border)] bg-[var(--bg-input)] px-1 py-0.5 text-center font-mono text-[10px] text-[var(--category-display)] outline-none"
+                  className="node-input w-9 rounded-[3px] border border-[var(--border)] bg-[var(--bg-input)] px-1 py-0.5 text-center font-mono text-[10px] text-[var(--category-matrix)] outline-none"
                 />
               )),
             )}

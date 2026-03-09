@@ -13,13 +13,13 @@ This project now exposes shadcn-style semantic tokens in `src/styles/index.css` 
 | `--text-muted`            | `--muted-foreground`     |
 | `--accent`                | `--primary` / `--accent` |
 | `--border`                | `--border`               |
-| `--category-input`        | `--node-input`           |
+| `--category-number`       | `--node-input`           |
 | `--category-arithmetic`   | `--node-arithmetic`      |
 | `--category-trigonometry` | `--node-trigonometry`    |
 | `--category-logarithmic`  | `--node-logarithmic`     |
 | `--category-logic`        | `--node-logic`           |
-| `--category-calculus`     | `--node-calculus`        |
-| `--category-display`      | `--node-display`         |
+| `--category-expression`   | `--node-calculus`        |
+| `--category-matrix`       | `--node-display`         |
 | `--category-advanced`     | `--node-advanced`        |
 
 Sidebar-specific surfaces use these shadcn-style variables:

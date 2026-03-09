@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import { motion } from "framer-motion"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,100 +8,126 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  CreditCardIcon,
-  LogOutIcon,
-  SettingsIcon,
-  UserIcon,
-} from "lucide-react"
+  dropdownContentVariants,
+  dropdownItemVariants,
+} from "@/animations/dropdownAnimations"
+import type { ExecutionMode } from "@/types"
+import { ChevronDown, Loader2, Play, WandSparkles } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
-export default function RunNodesDropdown() {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button>Open</Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem>
-          <UserIcon />
-          Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <CreditCardIcon />
-          Billing
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <SettingsIcon />
-          Settings
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <LogOutIcon />
-          Log out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+interface RunNodesDropdownProps {
+  isRunning: boolean
+  executionMode: ExecutionMode
+  onRunWorkflow: () => void
+  onToggleAutoRun: () => void
 }
 
-{
-  /* <div ref={runMenuRef} className="pointer-events-auto relative">
-                <div className="flex h-10 items-center gap-2 rounded-xl border border-(--border) bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-sm font-medium text-(--text-primary) shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--bg-tertiary)]">
-                  <button
-                    type="button"
-                    className="flex h-10 items-center pl-4 pr-2"
-                  >
-                    <span className="text-base text-(--accent)">
-                      <VscRunAll />
-                    </span>
-                    {isRunning && <FaSpinner />}
-                  </button>
-                  <button
-                    className="flex items-center h-10 pr-2 pl-1"
-                    onClick={() => setRunMenuOpen((open) => !open)}
-                  >
-                    <LuChevronDown
-                      className={`text-(--text-muted) transition-transform duration-150 ${
-                        runMenuOpen ? "rotate-180" : "rotate-0"
-                      }`}
-                    />
-                  </button>
-                </div>
+export default function RunNodesDropdown({
+  isRunning,
+  executionMode,
+  onRunWorkflow,
+  onToggleAutoRun,
+}: RunNodesDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const isAutoRun = executionMode === "auto"
 
-                {runMenuOpen && (
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] w-56 rounded-2xl border border-(--border) bg-[color-mix(in_srgb,var(--bg-secondary)_96%,transparent)] p-2 shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        runPipeline()
-                        setRunMenuOpen(false)
-                      }}
-                      disabled={isRunning}
-                      className="flex w-full items-center justify-between rounded-xl border border-[color-mix(in_srgb,var(--accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] px-3 py-2 text-left text-sm font-medium text-[var(--accent)] transition-all duration-150 hover:bg-[var(--accent)] hover:text-[var(--text-primary)] disabled:cursor-wait disabled:opacity-70"
-                    >
-                      <span>Run workflow</span>
-                      <span>
-                        <VscRunAll />
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={toggleAutoRun}
-                      className={`mt-2 flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm font-medium transition-all duration-150 ${
-                        executionMode === "auto"
-                          ? "border-[color-mix(in_srgb,var(--status-success)_24%,transparent)] bg-[color-mix(in_srgb,var(--status-success)_14%,transparent)] text-(--status-success)"
-                          : "border-transparent bg-(--bg-tertiary)/70 text-(--text-secondary) hover:border-(--border) hover:text-(--text-primary)"
-                      }`}
-                    >
-                      <span>Auto run</span>
-                      <span className="flex items-center gap-2">
-                        {executionMode === "auto" && (
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-(--status-success)" />
-                        )}
-                        <span>{executionMode === "auto" ? "On" : "Off"}</span>
-                      </span>
-                    </button>
-                  </div>
+  return (
+    <div className="pointer-events-auto flex items-center rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-[var(--text-primary)] shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-200 hover:border-[var(--border-hover)] hover:bg-[var(--bg-tertiary)]">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={onRunWorkflow}
+              disabled={isRunning}
+              title="Run workflow"
+              className="flex h-10 items-center gap-2 rounded-l-xl px-2 text-sm font-medium text-[var(--accent)] transition-colors duration-200 hover:text-[var(--text-primary)] disabled:cursor-wait disabled:opacity-70"
+            >
+              <span className="grid h-4 w-4 shrink-0 place-items-center">
+                {isRunning ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4" />
                 )}
-              </div> */
+              </span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent align="center">
+            {isRunning ? "Workflow is running..." : "Run workflow"}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="flex h-10 items-center rounded-r-xl px-2 text-[var(--text-muted)] transition-colors duration-200 hover:text-[var(--text-primary)]"
+            aria-label="Open run options"
+          >
+            <motion.span
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </motion.span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          forceMount
+          align="end"
+          sideOffset={8}
+          className="w-56 rounded-2xl border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_96%,transparent)] p-1.5 text-[var(--text-primary)] shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl data-[state=open]:animate-none data-[state=closed]:animate-none"
+        >
+          <motion.div
+            variants={dropdownContentVariants}
+            initial="initial"
+            animate={isOpen ? "animate" : "exit"}
+          >
+            <motion.div variants={dropdownItemVariants}>
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  onRunWorkflow()
+                }}
+                disabled={isRunning}
+                className="rounded-sm border border-[color-mix(in_srgb,var(--accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] px-3 py-2 font-medium text-[var(--accent)] focus:bg-[var(--accent)] focus:text-[var(--text-primary)]"
+              >
+                <Play className="h-4 w-4" />
+                <span>Run workflow</span>
+              </DropdownMenuItem>
+            </motion.div>
+
+            <motion.div variants={dropdownItemVariants}>
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  onToggleAutoRun()
+                }}
+                className={`rounded-sm px-3 py-2 font-medium transition-all duration-150 ${
+                  isAutoRun
+                    ? "border border-[color-mix(in_srgb,var(--status-success)_24%,transparent)] bg-[color-mix(in_srgb,var(--status-success)_14%,transparent)] text-[var(--status-success)]"
+                    : "border border-transparent bg-[var(--bg-tertiary)]/70 text-[var(--text-secondary)] focus:border-[var(--border)] focus:text-[var(--text-primary)]"
+                }`}
+              >
+                <WandSparkles className="h-4 w-4" />
+                <span>Auto run</span>
+                <span className="ml-auto flex items-center gap-2">
+                  {isAutoRun && (
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--status-success)]" />
+                  )}
+                  <span>{isAutoRun ? "On" : "Off"}</span>
+                </span>
+              </DropdownMenuItem>
+            </motion.div>
+          </motion.div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
 }

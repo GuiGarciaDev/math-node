@@ -1,7 +1,13 @@
 import React from "react"
 import { Handle, Position } from "@xyflow/react"
 import type { MathNodeData, PortDefinition } from "../../../types"
-import { getHandleTypeConfig } from "../handleTypeConfig"
+import { getHandleTypeConfig } from "../../../config/handle-type-config"
+import {
+  categoryBorderTokens,
+  defaultBorderToken,
+  handleColorTokens,
+  statusBorderTokens,
+} from "../../../config/node-style-config"
 
 interface NodeShellProps {
   data: MathNodeData
@@ -32,42 +38,9 @@ interface NodeHandlesSectionProps {
   outputs: PortDefinition[]
 }
 
-const categoryColors: Record<string, string> = {
-  input: "var(--category-input)",
-  arithmetic: "var(--category-arithmetic)",
-  trigonometry: "var(--category-trigonometry)",
-  logarithmic: "var(--category-logarithmic)",
-  logic: "var(--category-logic)",
-  calculus: "var(--category-calculus)",
-  display: "var(--category-display)",
-  advanced: "var(--category-advanced)",
-}
-
 const widthClassMap: Record<number, string> = {
   220: "w-[220px]",
   280: "w-[280px]",
-}
-
-const borderClassMap: Record<string, string> = {
-  "var(--status-error)": "border-[var(--status-error)]",
-  "var(--status-success)": "border-[var(--status-success)]",
-  "var(--category-input)": "border-[var(--category-input)]",
-  "var(--category-arithmetic)": "border-[var(--category-arithmetic)]",
-  "var(--category-trigonometry)": "border-[var(--category-trigonometry)]",
-  "var(--category-logarithmic)": "border-[var(--category-logarithmic)]",
-  "var(--category-logic)": "border-[var(--category-logic)]",
-  "var(--category-calculus)": "border-[var(--category-calculus)]",
-  "var(--category-display)": "border-[var(--category-display)]",
-  "var(--category-advanced)": "border-[var(--category-advanced)]",
-  "var(--border)": "border-[var(--border)]",
-}
-
-const handleColorClassMap: Record<string, string> = {
-  "var(--category-input)": "bg-[var(--category-input)]!",
-  "var(--status-success)": "bg-[var(--status-success)]!",
-  "var(--category-calculus)": "bg-[var(--category-calculus)]!",
-  "var(--category-display)": "bg-[var(--category-display)]!",
-  "var(--text-muted)": "bg-[var(--text-muted)]!",
 }
 
 export const NodeContainer: React.FC<NodeContainerProps> = React.memo(
@@ -101,7 +74,8 @@ export const TypedHandle: React.FC<TypedHandleProps> = React.memo(
   ({ port, side }) => {
     const config = getHandleTypeConfig(port.type)
     const handleColorClass =
-      handleColorClassMap[config.color] ?? "bg-[var(--text-muted)]!"
+      handleColorTokens[config.colorKey]?.bgClass ??
+      handleColorTokens.muted.bgClass
 
     return (
       <div className="relative flex w-fit items-center justify-between">
@@ -115,7 +89,7 @@ export const TypedHandle: React.FC<TypedHandleProps> = React.memo(
           type={side === "left" ? "target" : "source"}
           position={side === "left" ? Position.Left : Position.Right}
           id={port.name}
-          className={`top-1/2 h-2.5! w-2.5! rounded-full border-none shadow-none ${side === "left" ? "left-0" : "right-0!"} ${handleColorClass}`}
+          className={`top-1/2 h-2.5! w-2.5! rounded-full border-blue-300/80! shadow-none ${side === "left" ? "left-0" : "right-0!"} ${handleColorClass}`}
         />
       </div>
     )
@@ -147,18 +121,15 @@ NodeHandlesSection.displayName = "NodeHandlesSection"
 
 export const NodeShell: React.FC<NodeShellProps> = React.memo(
   ({ data, selected, children, headerActions, width = 220 }) => {
-    const accentColor = categoryColors[data.category] ?? "#6b7280"
-    const borderColor =
-      data.status === "error"
-        ? "var(--status-error)"
-        : data.status === "success"
-          ? "var(--status-success)"
-          : selected
-            ? accentColor
-            : "var(--border)"
-
+    const categoryToken = categoryBorderTokens[data.category]
     const borderClassName =
-      borderClassMap[borderColor] ?? "border-[var(--border)]"
+      data.status === "error"
+        ? statusBorderTokens.error.borderClass
+        : data.status === "success"
+          ? statusBorderTokens.success.borderClass
+          : selected
+            ? categoryToken.borderClass
+            : defaultBorderToken.borderClass
 
     return (
       <NodeContainer width={width} borderClassName={borderClassName}>

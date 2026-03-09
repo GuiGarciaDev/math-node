@@ -1,43 +1,44 @@
-import type { PortType } from "../../types"
+import type { PortType } from "../types"
+import type { HandleColorKey } from "./node-style-config"
 
 export interface HandleTypeConfigEntry {
-  color: string
+  colorKey: HandleColorKey
   label: string
 }
 
 export const HANDLE_TYPE_CONFIG: Record<string, HandleTypeConfigEntry> = {
   number: {
-    color: "var(--category-input)",
+    colorKey: "number",
     label: "number",
   },
   boolean: {
-    color: "var(--status-success)",
+    colorKey: "success",
     label: "boolean",
   },
   expression: {
-    color: "var(--category-calculus)",
+    colorKey: "expression",
     label: "expression",
   },
   symbolic: {
-    color: "var(--category-calculus)",
+    colorKey: "expression",
     label: "expression",
   },
   matrix: {
-    color: "var(--category-display)",
+    colorKey: "matrix",
     label: "matrix",
   },
   function: {
-    color: "var(--category-display)",
+    colorKey: "matrix",
     label: "function",
   },
   array: {
-    color: "var(--category-display)",
+    colorKey: "matrix",
     label: "array",
   },
 }
 
 const fallbackType: HandleTypeConfigEntry = {
-  color: "var(--text-muted)",
+  colorKey: "muted",
   label: "value",
 }
 

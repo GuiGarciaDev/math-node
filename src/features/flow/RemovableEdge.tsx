@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react"
 import { getBezierPath, type EdgeProps } from "@xyflow/react"
 import { useFlowStore } from "./store/flowStore.ts"
-import { getHandleTypeConfig } from "./handleTypeConfig.ts"
+import { getHandleTypeConfig } from "../../config/handle-type-config"
+import { handleColorTokens } from "../../config/node-style-config"
 
 const STROKE_WIDTH = 2
 
@@ -50,7 +51,8 @@ export const RemovableEdge: React.FC<EdgeProps> = React.memo(
         : sourceNode.data.outputs[0]
       if (!outputPort) return "var(--accent)"
 
-      return getHandleTypeConfig(outputPort.type).color
+      const handleConfig = getHandleTypeConfig(outputPort.type)
+      return handleColorTokens[handleConfig.colorKey].cssVar
     }, [edges, id, nodes, source])
 
     const stroke = edgeColor

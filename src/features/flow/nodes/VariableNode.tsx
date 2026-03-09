@@ -22,7 +22,7 @@ export const VariableNode: React.FC<NodeProps> = React.memo(
           type="text"
           value={String(nodeData.params.name ?? "x")}
           onChange={handleChange}
-          className="node-input w-full rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--category-input)] outline-none"
+          className="node-input w-full rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--category-number)] outline-none"
         />
       </NodeShell>
     )
