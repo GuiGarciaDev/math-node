@@ -12,7 +12,6 @@ import "@xyflow/react/dist/style.css"
 import { nodeTypes } from "../../types/node-types"
 import { useFlowStore } from "./store/flowStore"
 import type {
-  AppRouteName,
   ContextMenuState,
   MathEdge,
   MathNode,
@@ -22,10 +21,10 @@ import { RemovableEdge } from "./RemovableEdge"
 import { ContextMenu } from "./ContextMenu"
 import { InteractionToolbar } from "./InteractionToolbar"
 import { MdUndo, MdRedo } from "react-icons/md"
-import { IoMoon, IoSunny } from "react-icons/io5"
 import RunNodesDropdown from "./run-nodes-dropdown/RunNodesDropdown"
 import WorkflowHeaderDropdown from "./workflow-dropdown/WorkflowHeaderDropdown"
-import { useTheme } from "@/hooks/use-theme"
+import { Routes } from "@/types/routes-types"
+import ToggleThemeButton from "@/components/toggle-theme"
 
 const edgeTypes = {
   removable: RemovableEdge,
@@ -127,7 +126,7 @@ function collectEdgeIdsAlongCutLine(
 }
 
 interface FlowCanvasProps {
-  onRouteChange?: (route: AppRouteName) => void
+  onRouteChange?: (route: Routes) => void
 }
 
 export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
@@ -154,7 +153,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     const isRunning = useFlowStore((s) => s.isRunning)
     const currentWorkflowName = useFlowStore((s) => s.currentWorkflowName)
     const setCurrentWorkflowName = useFlowStore((s) => s.setCurrentWorkflowName)
-    const { theme, setTheme } = useTheme()
 
     const reactFlowInstance = useRef<ReactFlowInstance<
       MathNode,
@@ -408,7 +406,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     }, [executionMode, setExecutionMode])
 
     const handleBackHome = useCallback(() => {
-      onRouteChange?.("landingPage")
+      onRouteChange?.("LANDING_PAGE")
     }, [onRouteChange])
 
     const handleRenameWorkflow = useCallback(
@@ -417,8 +415,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
       },
       [setCurrentWorkflowName],
     )
-
-    const isDark = theme === "dark"
 
     return (
       <div
@@ -482,16 +478,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
                   onToggleAutoRun={toggleAutoRun}
                 />
 
-                <button
-                  type="button"
-                  onClick={() => setTheme(isDark ? "light" : "dark")}
-                  title={
-                    isDark ? "Switch to light theme" : "Switch to dark theme"
-                  }
-                  className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-base text-[var(--text-secondary)] shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-150 hover:border-[var(--accent)] hover:text-[var(--text-primary)] hover:shadow-[0_0_18px_var(--accent-glow)]"
-                >
-                  {isDark ? <IoSunny /> : <IoMoon />}
-                </button>
+                <ToggleThemeButton />
               </div>
             </div>
           </Panel>

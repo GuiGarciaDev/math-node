@@ -4,8 +4,8 @@ features:
 [] Add a button to restart node stats after run the pipeline.
 [] After select one node, place a button out and at the top of the node to allow the user run the pipeline until this node and other button to run just the node.
 [] Inside the input of some operation nodes, implement a almost hidden label to round the output number like this 0,00078 ~ 0. the ~ 0 almost not visible.
-[] Create the presets feature, with a button in the header to save the current state of flowcanvas as a new preset. Allow user to load presets.
-[] Create workflows to save user work, so they can save, reload, delete or create new workflows as necessary.
+[] Create the presets feature with a button in the header to save the current state of flowcanvas as a new preset. Allow user to load presets. (Maybe a dropdown in the presets button in the toolbar with option like navigate presets and save/create preset)
+
 [] Allow user change the name of the aggrouped nodes when double click in the group node or through a button in the context menu
 
 fixes:
@@ -34,3 +34,4 @@ Completed:
 [x] Add tailwind in the project and refactor the components to use it. Also create a file with all types of typography and colors to be easy to check it.
 [x] Fix the design of undo and redo buttons.
 [x] Improve the design of the left sidebar when it is short mode.
+[x] Create workflows to save user work, so they can save, reload, delete or create new workflows as necessary.
