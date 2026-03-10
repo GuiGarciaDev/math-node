@@ -6,6 +6,10 @@ export interface WorkflowRecord {
   createdAt: number
   updatedAt: number
   data: string
+  tag?: string
+  gradient?: string
+  tone?: string
+  preview?: "panel" | "orbit" | "bars" | "lattice"
 }
 
 class WorkflowDB extends Dexie {
@@ -15,6 +19,9 @@ class WorkflowDB extends Dexie {
     super("workflowDB")
     this.version(1).stores({
       workflows: "id, name, updatedAt",
+    })
+    this.version(2).stores({
+      workflows: "id, name, updatedAt, tag, preview",
     })
   }
 }

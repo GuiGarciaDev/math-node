@@ -1,34 +1,21 @@
-import React, { useCallback, useMemo, useRef, useState } from "react"
-import { LandingPage } from "./routes/LandingPage"
+import React from "react"
 import { useFlowStore } from "../features/flow/store/flowStore"
-import type { AppRouteName } from "../types"
 import { useUIStore } from "@/features/flow/store/ui-store"
 import { Routes } from "@/types/routes-types"
 import NodeFlowCanvas from "./routes/NodeFlowCanvas"
+import ProjectsPage from "./routes/ProjectsPage"
 
 const App: React.FC = () => {
-  const currentWorkflowId = useFlowStore((s) => s.currentWorkflowId)
   const sidebarOpen = useFlowStore((s) => s.sidebarOpen)
-  const presetsOpen = useFlowStore((s) => s.presetsOpen)
-  const togglePresets = useFlowStore((s) => s.togglePresets)
-  const lastAutoRoutedWorkflowId = useRef<string | null>(null)
-  const [currentRoute, setCurrentRoute] = useState<Routes>(
-    () => (useUIStore.getState().route as Routes) || "LANDING_PAGE",
-  )
-  const setRoute = useCallback((route: Routes) => {
-    useUIStore.setState({ route })
-  }, [])
+  const currentRoute = useUIStore((s) => s.route)
 
   function handleRouteChange(route: Routes) {
-    setRoute(route)
-    setCurrentRoute(route)
+    useUIStore.setState({ route })
   }
 
   switch (currentRoute) {
-    case "LANDING_PAGE":
-      return (
-        <LandingPage currentRoute={currentRoute} setRoute={handleRouteChange} />
-      )
+    case "PROJECTS_PAGE":
+      return <ProjectsPage />
     case "FLOW_CANVAS_PAGE":
       return (
         <NodeFlowCanvas collapsed={sidebarOpen} setRoute={handleRouteChange} />

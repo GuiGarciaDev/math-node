@@ -465,7 +465,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  onClick={() => onRouteChange("LANDING_PAGE")}
+                  onClick={() => onRouteChange("PROJECTS_PAGE")}
                   className={cn(
                     "group flex min-w-0 items-center gap-3 rounded-[1.35rem] border border-transparent px-2 py-1.5 text-left transition-all duration-200 hover:bg-[var(--sidebar-accent)]",
                     collapsed ? "w-full justify-center px-0" : "flex-1",

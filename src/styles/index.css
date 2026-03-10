@@ -2,38 +2,38 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.1450 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.1450 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.1450 0 0);
-  --primary: oklch(0.2050 0 0);
-  --primary-foreground: oklch(0.9850 0 0);
-  --secondary: oklch(0.9700 0 0);
-  --secondary-foreground: oklch(0.2050 0 0);
-  --muted: oklch(0.9700 0 0);
-  --muted-foreground: oklch(0.5560 0 0);
-  --accent: oklch(0.9700 0 0);
-  --accent-foreground: oklch(0.2050 0 0);
+  --background: #fdfbf7;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #10b981;
+  --primary-foreground: #f8fafc;
+  --secondary: #fef3c7;
+  --secondary-foreground: #1f2937;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --accent: #fbbf24;
+  --accent-foreground: #1f2937;
   --destructive: oklch(0.5770 0.2450 27.3250);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.9220 0 0);
-  --input: oklch(0.9220 0 0);
-  --ring: oklch(0.7080 0 0);
-  --chart-1: oklch(0.8100 0.1000 252);
-  --chart-2: oklch(0.6200 0.1900 260);
-  --chart-3: oklch(0.5500 0.2200 263);
-  --chart-4: oklch(0.4900 0.2200 264);
-  --chart-5: oklch(0.4200 0.1800 266);
-  --sidebar: oklch(0.9850 0 0);
-  --sidebar-foreground: oklch(0.1450 0 0);
-  --sidebar-primary: oklch(0.2050 0 0);
-  --sidebar-primary-foreground: oklch(0.9850 0 0);
-  --sidebar-accent: oklch(0.9700 0 0);
-  --sidebar-accent-foreground: oklch(0.2050 0 0);
-  --sidebar-border: oklch(0.9220 0 0);
-  --sidebar-ring: oklch(0.7080 0 0);
+  --border: rgba(251, 191, 36, 0.2);
+  --input: rgba(251, 191, 36, 0.2);
+  --ring: rgba(251, 191, 36, 0.45);
+  --chart-1: #10b981;
+  --chart-2: #fbbf24;
+  --chart-3: #fb7185;
+  --chart-4: #34d399;
+  --chart-5: #f59e0b;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #10b981;
+  --sidebar-primary-foreground: #f8fafc;
+  --sidebar-accent: #fef3c7;
+  --sidebar-accent-foreground: #1f2937;
+  --sidebar-border: rgba(251, 191, 36, 0.2);
+  --sidebar-ring: rgba(251, 191, 36, 0.45);
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -55,56 +55,56 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
-  --node-input: oklch(48.009% 0.11749 245.583);
-  --node-arithmetic: oklch(48.009% 0.11749 245.583);
-  --node-trigonometry: oklch(48.009% 0.11749 245.583);
-  --node-logic: oklch(48.009% 0.11749 245.583);
-  --node-logarithmic: oklch(48.009% 0.11749 245.583);
-  --node-calculus: oklch(48.009% 0.11749 245.583);
-  --node-display: oklch(48.009% 0.11749 245.583);
-  --node-advanced: oklch(48.009% 0.11749 245.583);
+  --node-input: #10b981;
+  --node-arithmetic: #fbbf24;
+  --node-trigonometry: #fb7185;
+  --node-logic: #10b981;
+  --node-logarithmic: #f59e0b;
+  --node-calculus: #fbbf24;
+  --node-display: #34d399;
+  --node-advanced: #fb7185;
 
-  --handle-category-number: oklch(49.043% 0.09756 242.61);
-  --handle-category-expression: oklch(50.514% 0.19709 334.359);
-  --handle-category-matrix: oklch(49.471% 0.13034 148.636);
-  --handle-category-boolean: oklch(91.886% 0.19889 109.764);
+  --handle-category-number: #10b981;
+  --handle-category-expression: #fbbf24;
+  --handle-category-matrix: #fb7185;
+  --handle-category-boolean: #fef08a;
 
   --status-success: oklch(51.354% 0.10112 156.097);
 }
 
 .dark {
-  --background: oklch(0.1450 0 0);
-  --foreground: oklch(0.9850 0 0);
-  --card: oklch(0.2050 0 0);
-  --card-foreground: oklch(0.9850 0 0);
-  --popover: oklch(0.2690 0 0);
-  --popover-foreground: oklch(0.9850 0 0);
-  --primary: oklch(0.9220 0 0);
-  --primary-foreground: oklch(0.2050 0 0);
-  --secondary: oklch(0.2690 0 0);
-  --secondary-foreground: oklch(0.9850 0 0);
-  --muted: oklch(0.2690 0 0);
-  --muted-foreground: oklch(0.7080 0 0);
-  --accent: oklch(0.3710 0 0);
-  --accent-foreground: oklch(0.9850 0 0);
+  --background: #040806;
+  --foreground: #f8fafc;
+  --card: #0a110d;
+  --card-foreground: #f8fafc;
+  --popover: #111a14;
+  --popover-foreground: #f8fafc;
+  --primary: #fbbf24;
+  --primary-foreground: #111827;
+  --secondary: #12201a;
+  --secondary-foreground: #f8fafc;
+  --muted: #16231c;
+  --muted-foreground: #94a3b8;
+  --accent: #1b2d23;
+  --accent-foreground: #f8fafc;
   --destructive: oklch(0.7040 0.1910 22.2160);
   --destructive-foreground: oklch(0.9850 0 0);
-  --border: oklch(0.2750 0 0);
-  --input: oklch(0.3250 0 0);
-  --ring: oklch(0.5560 0 0);
-  --chart-1: oklch(0.8100 0.1000 252);
-  --chart-2: oklch(0.6200 0.1900 260);
-  --chart-3: oklch(0.5500 0.2200 263);
-  --chart-4: oklch(0.4900 0.2200 264);
-  --chart-5: oklch(0.4200 0.1800 266);
-  --sidebar: oklch(0.2050 0 0);
-  --sidebar-foreground: oklch(0.9850 0 0);
-  --sidebar-primary: oklch(0.4880 0.2430 264.3760);
-  --sidebar-primary-foreground: oklch(0.9850 0 0);
-  --sidebar-accent: oklch(0.2690 0 0);
-  --sidebar-accent-foreground: oklch(0.9850 0 0);
-  --sidebar-border: oklch(0.2750 0 0);
-  --sidebar-ring: oklch(0.4390 0 0);
+  --border: rgba(251, 191, 36, 0.16);
+  --input: rgba(251, 191, 36, 0.2);
+  --ring: rgba(251, 191, 36, 0.4);
+  --chart-1: #10b981;
+  --chart-2: #fbbf24;
+  --chart-3: #fb7185;
+  --chart-4: #34d399;
+  --chart-5: #f59e0b;
+  --sidebar: #0f1712;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #fbbf24;
+  --sidebar-primary-foreground: #111827;
+  --sidebar-accent: #16231c;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: rgba(251, 191, 36, 0.16);
+  --sidebar-ring: rgba(251, 191, 36, 0.4);
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -124,19 +124,19 @@
   --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 
-  --node-input: oklch(48.009% 0.11749 245.583);
-  --node-arithmetic: oklch(48.009% 0.11749 245.583);
-  --node-trigonometry: oklch(48.009% 0.11749 245.583);
-  --node-logic: oklch(48.009% 0.11749 245.583);
-  --node-logarithmic: oklch(48.009% 0.11749 245.583);
-  --node-calculus: oklch(48.009% 0.11749 245.583);
-  --node-display: oklch(48.009% 0.11749 245.583);
-  --node-advanced: oklch(48.009% 0.11749 245.583);
+  --node-input: #10b981;
+  --node-arithmetic: #fbbf24;
+  --node-trigonometry: #fb7185;
+  --node-logic: #10b981;
+  --node-logarithmic: #f59e0b;
+  --node-calculus: #fbbf24;
+  --node-display: #34d399;
+  --node-advanced: #fb7185;
 
-  --handle-category-number: oklch(49.043% 0.09756 242.61);
-  --handle-category-expression: oklch(50.514% 0.19709 334.359);
-  --handle-category-matrix: oklch(49.471% 0.13034 148.636);
-  --handle-category-boolean: oklch(91.886% 0.19889 109.764);
+  --handle-category-number: #10b981;
+  --handle-category-expression: #fbbf24;
+  --handle-category-matrix: #fb7185;
+  --handle-category-boolean: #fef08a;
 
   --status-success: oklch(51.354% 0.10112 156.097);
 }
@@ -217,4 +217,35 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes theme-toggle-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes theme-toggle-ring {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+html.theme-transition-active * {
+  transition:
+    background-color 380ms ease,
+    border-color 380ms ease,
+    color 380ms ease,
+    box-shadow 380ms ease;
 }

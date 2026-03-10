@@ -1,6 +1,10 @@
 import type { MathEdge, MathNode } from "../types"
 import { compressWorkflow, decompressWorkflow } from "./compression"
 import { workflowDB, type WorkflowRecord } from "./db"
+import {
+  type WorkflowAppearance,
+  normalizeWorkflowAppearance,
+} from "@/utils/workflowAppearance"
 
 export interface WorkflowGraph {
   nodes: MathNode[]
@@ -12,16 +16,20 @@ export interface WorkflowInput extends WorkflowGraph {
   name: string
   createdAt?: number
   updatedAt?: number
+  tag?: string
+  gradient?: string
+  tone?: string
+  preview?: WorkflowAppearance["preview"]
 }
 
-export interface Workflow extends WorkflowGraph {
+export interface Workflow extends WorkflowGraph, WorkflowAppearance {
   id: string
   name: string
   createdAt: number
   updatedAt: number
 }
 
-export interface WorkflowSummary {
+export interface WorkflowSummary extends WorkflowAppearance {
   id: string
   name: string
   createdAt: number
@@ -29,11 +37,17 @@ export interface WorkflowSummary {
 }
 
 function toSummary(record: WorkflowRecord): WorkflowSummary {
+  const appearance = normalizeWorkflowAppearance(record)
+
   return {
     id: record.id,
     name: record.name,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
+    tag: appearance.tag,
+    gradient: appearance.gradient,
+    tone: appearance.tone,
+    preview: appearance.preview,
   }
 }
 
@@ -49,12 +63,27 @@ export async function saveWorkflow(
   const now = workflow.updatedAt ?? Date.now()
   const existing = await workflowDB.workflows.get(workflow.id)
   const createdAt = existing?.createdAt ?? workflow.createdAt ?? now
+  const appearance = normalizeWorkflowAppearance({
+    ...(existing
+      ? {
+          tag: existing.tag,
+          gradient: existing.gradient,
+          tone: existing.tone,
+          preview: existing.preview,
+        }
+      : {}),
+    ...workflow,
+  })
 
   const record: WorkflowRecord = {
     id: workflow.id,
     name: workflow.name,
     createdAt,
     updatedAt: now,
+    tag: appearance.tag,
+    gradient: appearance.gradient,
+    tone: appearance.tone,
+    preview: appearance.preview,
     data: compressWorkflow({
       nodes: workflow.nodes,
       edges: workflow.edges,
@@ -75,11 +104,22 @@ export async function updateWorkflow(
 
   const nextUpdatedAt = workflow.updatedAt ?? Date.now()
 
+  const appearance = normalizeWorkflowAppearance({
+    tag: workflow.tag ?? existing.tag,
+    gradient: workflow.gradient ?? existing.gradient,
+    tone: workflow.tone ?? existing.tone,
+    preview: workflow.preview ?? existing.preview,
+  })
+
   const record: WorkflowRecord = {
     id: workflow.id,
     name: workflow.name,
     createdAt: existing.createdAt,
     updatedAt: nextUpdatedAt,
+    tag: appearance.tag,
+    gradient: appearance.gradient,
+    tone: appearance.tone,
+    preview: appearance.preview,
     data: compressWorkflow({
       nodes: workflow.nodes,
       edges: workflow.edges,
@@ -98,11 +138,17 @@ export async function loadWorkflow(id: string): Promise<Workflow | null> {
 
   const graph = decompressWorkflow<WorkflowGraph>(record.data)
 
+  const appearance = normalizeWorkflowAppearance(record)
+
   return {
     id: record.id,
     name: record.name,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
+    tag: appearance.tag,
+    gradient: appearance.gradient,
+    tone: appearance.tone,
+    preview: appearance.preview,
     nodes: graph.nodes,
     edges: graph.edges,
   }

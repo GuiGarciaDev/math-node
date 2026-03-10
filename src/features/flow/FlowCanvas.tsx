@@ -25,6 +25,8 @@ import RunNodesDropdown from "./run-nodes-dropdown/RunNodesDropdown"
 import WorkflowHeaderDropdown from "./workflow-dropdown/WorkflowHeaderDropdown"
 import { Routes } from "@/types/routes-types"
 import ToggleThemeButton from "@/components/toggle-theme"
+import WorkflowAppearanceSheet from "./workflow-dropdown/WorkflowAppearanceSheet"
+import { saveWorkflow } from "@/storage/workflowRepository"
 
 const edgeTypes = {
   removable: RemovableEdge,
@@ -153,6 +155,13 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     const isRunning = useFlowStore((s) => s.isRunning)
     const currentWorkflowName = useFlowStore((s) => s.currentWorkflowName)
     const setCurrentWorkflowName = useFlowStore((s) => s.setCurrentWorkflowName)
+    const currentWorkflowId = useFlowStore((s) => s.currentWorkflowId)
+    const currentWorkflowAppearance = useFlowStore(
+      (s) => s.currentWorkflowAppearance,
+    )
+    const setCurrentWorkflowAppearance = useFlowStore(
+      (s) => s.setCurrentWorkflowAppearance,
+    )
 
     const reactFlowInstance = useRef<ReactFlowInstance<
       MathNode,
@@ -406,7 +415,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     }, [executionMode, setExecutionMode])
 
     const handleBackHome = useCallback(() => {
-      onRouteChange?.("LANDING_PAGE")
+      onRouteChange?.("PROJECTS_PAGE")
     }, [onRouteChange])
 
     const handleRenameWorkflow = useCallback(
@@ -414,6 +423,34 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
         setCurrentWorkflowName(name)
       },
       [setCurrentWorkflowName],
+    )
+
+    const handleSaveAppearance = useCallback(
+      (appearance: {
+        tag: string
+        gradient: string
+        tone: string
+        preview: "panel" | "orbit" | "bars" | "lattice"
+      }) => {
+        setCurrentWorkflowAppearance(appearance)
+
+        if (!currentWorkflowId) return
+
+        void saveWorkflow({
+          id: currentWorkflowId,
+          name: currentWorkflowName,
+          nodes,
+          edges,
+          ...appearance,
+        })
+      },
+      [
+        currentWorkflowId,
+        currentWorkflowName,
+        edges,
+        nodes,
+        setCurrentWorkflowAppearance,
+      ],
     )
 
     return (
@@ -476,6 +513,12 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
                   executionMode={executionMode}
                   onRunWorkflow={runPipeline}
                   onToggleAutoRun={toggleAutoRun}
+                />
+
+                <WorkflowAppearanceSheet
+                  value={currentWorkflowAppearance}
+                  disabled={!currentWorkflowId}
+                  onSave={handleSaveAppearance}
                 />
 
                 <ToggleThemeButton />

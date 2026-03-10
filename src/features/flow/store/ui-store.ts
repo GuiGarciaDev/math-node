@@ -10,7 +10,7 @@ interface UIStore {
 export const useUIStore = create<UIStore>()(
   persist(
     (set) => ({
-      route: "LANDING_PAGE",
+      route: "PROJECTS_PAGE",
       setRoute: (route: Routes) => set({ route }),
     }),
     {

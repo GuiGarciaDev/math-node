@@ -32,6 +32,11 @@ import {
   triggerAutosave,
 } from "../../../storage/autosave"
 import { loadWorkflow } from "../../../storage/workflowRepository"
+import {
+  type WorkflowAppearance,
+  createDefaultWorkflowAppearance,
+  normalizeWorkflowAppearance,
+} from "@/utils/workflowAppearance"
 
 // ─── Node Factory ─────────────────────────────────────────
 
@@ -361,6 +366,7 @@ interface FlowState {
   appStarted: boolean
   currentWorkflowId: string | null
   currentWorkflowName: string
+  currentWorkflowAppearance: WorkflowAppearance
   graphModal: {
     title: string
     points: Array<{ x: number; y: number }>
@@ -412,8 +418,15 @@ interface FlowState {
     name: string
     nodes: MathNode[]
     edges: MathEdge[]
+    tag?: string
+    gradient?: string
+    tone?: string
+    preview?: WorkflowAppearance["preview"]
   }) => void
   setCurrentWorkflowName: (name: string) => void
+  setCurrentWorkflowAppearance: (
+    appearance: Partial<WorkflowAppearance>,
+  ) => void
   toggleConsole: () => void
   toggleInspector: () => void
   showLanding: () => void
@@ -455,6 +468,7 @@ export const useFlowStore = create<FlowState>()(
       appStarted: false,
       currentWorkflowId: null,
       currentWorkflowName: "Untitled",
+      currentWorkflowAppearance: createDefaultWorkflowAppearance(),
       graphModal: null,
 
       // ─── React Flow Handlers ────────────────────────────────
@@ -1211,6 +1225,7 @@ export const useFlowStore = create<FlowState>()(
       clearConsole: () => set({ consoleLogs: [] }),
       setAppStarted: (started) => set({ appStarted: started }),
       openWorkflowSession: (payload) => {
+        const appearance = normalizeWorkflowAppearance(payload)
         createAutosave(payload.id, payload.name)
         suppressNextAutosave = true
         set({
@@ -1224,10 +1239,18 @@ export const useFlowStore = create<FlowState>()(
           nodeDragInProgress: false,
           currentWorkflowId: payload.id,
           currentWorkflowName: payload.name,
+          currentWorkflowAppearance: appearance,
           appStarted: true,
         })
       },
       setCurrentWorkflowName: (name) => set({ currentWorkflowName: name }),
+      setCurrentWorkflowAppearance: (appearance) =>
+        set((state) => ({
+          currentWorkflowAppearance: normalizeWorkflowAppearance({
+            ...state.currentWorkflowAppearance,
+            ...appearance,
+          }),
+        })),
       toggleConsole: () => set({ consoleOpen: !get().consoleOpen }),
       toggleInspector: () => set({ inspectorOpen: !get().inspectorOpen }),
       showLanding: () => set({ appStarted: false }),
@@ -1240,6 +1263,7 @@ export const useFlowStore = create<FlowState>()(
         appStarted: state.appStarted,
         currentWorkflowId: state.currentWorkflowId,
         currentWorkflowName: state.currentWorkflowName,
+        currentWorkflowAppearance: state.currentWorkflowAppearance,
         consoleOpen: state.consoleOpen,
         inspectorOpen: state.inspectorOpen,
         computeMode: state.computeMode,
@@ -1263,6 +1287,10 @@ export const useFlowStore = create<FlowState>()(
               name: workflow.name,
               nodes: workflow.nodes,
               edges: workflow.edges,
+              tag: workflow.tag,
+              gradient: workflow.gradient,
+              tone: workflow.tone,
+              preview: workflow.preview,
             })
           })
           .catch(() => {
@@ -1292,8 +1320,10 @@ useFlowStore.subscribe((state, previous) => {
   const graphChanged =
     state.nodes !== previous.nodes || state.edges !== previous.edges
   const nameChanged = state.currentWorkflowName !== previous.currentWorkflowName
+  const appearanceChanged =
+    state.currentWorkflowAppearance !== previous.currentWorkflowAppearance
 
-  if (!graphChanged && !nameChanged) {
+  if (!graphChanged && !nameChanged && !appearanceChanged) {
     return
   }
 
@@ -1306,6 +1336,10 @@ useFlowStore.subscribe((state, previous) => {
       name: state.currentWorkflowName,
       nodes: state.nodes,
       edges: state.edges,
+      tag: state.currentWorkflowAppearance.tag,
+      gradient: state.currentWorkflowAppearance.gradient,
+      tone: state.currentWorkflowAppearance.tone,
+      preview: state.currentWorkflowAppearance.preview,
     })
   } catch {
     // Ignore autosave failures to avoid interrupting editor interactions.
