@@ -298,6 +298,40 @@ function getAbsoluteNodePosition(
   return { x, y }
 }
 
+function collectUpstreamNodeIds(
+  targetIds: string[],
+  edges: MathEdge[],
+): Set<string> {
+  const upstreamByTarget = new Map<string, string[]>()
+
+  for (const edge of edges) {
+    const existing = upstreamByTarget.get(edge.target)
+    if (existing) {
+      existing.push(edge.source)
+    } else {
+      upstreamByTarget.set(edge.target, [edge.source])
+    }
+  }
+
+  const visited = new Set<string>()
+  const queue = [...targetIds]
+
+  while (queue.length > 0) {
+    const current = queue.shift()
+    if (!current || visited.has(current)) continue
+    visited.add(current)
+
+    const upstream = upstreamByTarget.get(current) ?? []
+    for (const sourceId of upstream) {
+      if (!visited.has(sourceId)) {
+        queue.push(sourceId)
+      }
+    }
+  }
+
+  return visited
+}
+
 const MAX_HISTORY_ENTRIES = 100
 
 interface FlowHistorySnapshot {
@@ -410,7 +444,11 @@ interface FlowState {
 
   // Execution
   runPipeline: () => void
+  runPipelineToNode: (nodeId: string) => void
+  runGroupNodes: (groupId: string) => void
+  resetNodeStats: () => void
   stepExecute: () => void
+  renameNode: (nodeId: string, name: string) => void
   clearConsole: () => void
   setAppStarted: (started: boolean) => void
   openWorkflowSession: (payload: {
@@ -790,9 +828,31 @@ export const useFlowStore = create<FlowState>()(
             state.setSelectedNodeIds([nodeId])
             state.deleteSelectedNodes()
           }
+        } else if (action === "run_group") {
+          if (nodeId) {
+            state.runGroupNodes(nodeId)
+          }
         }
 
         state.closeContextMenu()
+      },
+
+      renameNode: (nodeId, name) => {
+        const trimmedName = name.trim()
+        if (!trimmedName) return
+
+        const state = get()
+        const targetExists = state.nodes.some((node) => node.id === nodeId)
+        if (!targetExists) return
+
+        set({
+          nodes: state.nodes.map((node) =>
+            node.id === nodeId
+              ? { ...node, data: { ...node.data, label: trimmedName } }
+              : node,
+          ),
+          ...withRecordedHistory(state),
+        })
       },
 
       deleteSelectedNodes: () => {
@@ -1159,6 +1219,183 @@ export const useFlowStore = create<FlowState>()(
             consoleLogs: [...get().consoleLogs, ...result.logs],
             isRunning: false,
           })
+        })
+      },
+
+      runPipelineToNode: (nodeId) => {
+        const state = get()
+        const executableNodes = state.nodes.filter(
+          (node) => node.type !== "group",
+        )
+        const executableNodeIds = new Set(
+          executableNodes.map((node) => node.id),
+        )
+
+        if (!executableNodeIds.has(nodeId)) return
+
+        const executableEdges = state.edges.filter(
+          (edge) =>
+            executableNodeIds.has(edge.source) &&
+            executableNodeIds.has(edge.target),
+        )
+
+        const scopedNodeIds = collectUpstreamNodeIds([nodeId], executableEdges)
+        if (scopedNodeIds.size === 0) return
+
+        const scopedNodes = executableNodes.filter((node) =>
+          scopedNodeIds.has(node.id),
+        )
+        const scopedEdges = executableEdges.filter(
+          (edge) =>
+            scopedNodeIds.has(edge.source) && scopedNodeIds.has(edge.target),
+        )
+
+        set({
+          isRunning: true,
+          nodes: state.nodes.map((node) =>
+            scopedNodeIds.has(node.id)
+              ? {
+                  ...node,
+                  data: { ...node.data, status: "running" as const },
+                }
+              : node,
+          ),
+        })
+
+        requestAnimationFrame(() => {
+          const result = runPipeline(scopedNodes, scopedEdges)
+          const computedValues = new Map(get().computedValues)
+          for (const [computedNodeId, computedValue] of result.computedValues) {
+            computedValues.set(computedNodeId, computedValue)
+          }
+
+          set({
+            nodes: get().nodes.map((node) => {
+              if (!scopedNodeIds.has(node.id)) {
+                return node
+              }
+
+              const computed = result.computedValues.get(node.id)
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  dirty: false,
+                  status: computed?.error
+                    ? ("error" as const)
+                    : ("success" as const),
+                  computeTimeMs: result.totalTimeMs,
+                },
+              }
+            }),
+            computedValues,
+            consoleLogs: [...get().consoleLogs, ...result.logs],
+            isRunning: false,
+          })
+        })
+      },
+
+      runGroupNodes: (groupId) => {
+        const state = get()
+        const childNodes = state.nodes.filter(
+          (node) => node.parentId === groupId && node.type !== "group",
+        )
+        if (childNodes.length === 0) return
+
+        const executableNodes = state.nodes.filter(
+          (node) => node.type !== "group",
+        )
+        const executableNodeIds = new Set(
+          executableNodes.map((node) => node.id),
+        )
+        const executableEdges = state.edges.filter(
+          (edge) =>
+            executableNodeIds.has(edge.source) &&
+            executableNodeIds.has(edge.target),
+        )
+
+        const targetIds = childNodes.map((node) => node.id)
+        const scopedNodeIds = collectUpstreamNodeIds(targetIds, executableEdges)
+        if (scopedNodeIds.size === 0) return
+
+        const scopedNodes = executableNodes.filter((node) =>
+          scopedNodeIds.has(node.id),
+        )
+        const scopedEdges = executableEdges.filter(
+          (edge) =>
+            scopedNodeIds.has(edge.source) && scopedNodeIds.has(edge.target),
+        )
+
+        set({
+          isRunning: true,
+          nodes: state.nodes.map((node) =>
+            scopedNodeIds.has(node.id) || node.id === groupId
+              ? {
+                  ...node,
+                  data: { ...node.data, status: "running" as const },
+                }
+              : node,
+          ),
+        })
+
+        requestAnimationFrame(() => {
+          const result = runPipeline(scopedNodes, scopedEdges)
+          const computedValues = new Map(get().computedValues)
+          for (const [computedNodeId, computedValue] of result.computedValues) {
+            computedValues.set(computedNodeId, computedValue)
+          }
+
+          set({
+            nodes: get().nodes.map((node) => {
+              if (node.id === groupId) {
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    dirty: false,
+                    status: "success" as const,
+                    computeTimeMs: result.totalTimeMs,
+                  },
+                }
+              }
+
+              if (!scopedNodeIds.has(node.id)) {
+                return node
+              }
+
+              const computed = result.computedValues.get(node.id)
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  dirty: false,
+                  status: computed?.error
+                    ? ("error" as const)
+                    : ("success" as const),
+                  computeTimeMs: result.totalTimeMs,
+                },
+              }
+            }),
+            computedValues,
+            consoleLogs: [...get().consoleLogs, ...result.logs],
+            isRunning: false,
+          })
+        })
+      },
+
+      resetNodeStats: () => {
+        const state = get()
+        set({
+          nodes: state.nodes.map((node) => ({
+            ...node,
+            data: {
+              ...node.data,
+              dirty: true,
+              status: "idle" as const,
+              computeTimeMs: undefined,
+            },
+          })),
+          computedValues: new Map(),
         })
       },
 

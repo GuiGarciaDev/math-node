@@ -32,27 +32,34 @@ const edgeTypes = {
   removable: RemovableEdge,
 }
 
+function cssVarColor(name: string, fallback: string): string {
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim()
+  return value || fallback
+}
+
 const minimapNodeColor = (node: FlowNode) => {
   const category = node.data?.category
   switch (category) {
     case "input":
-      return "var(--category-number)"
+      return cssVarColor("--category-number", "#22c55e")
     case "arithmetic":
-      return "var(--category-arithmetic)"
+      return cssVarColor("--category-arithmetic", "#f97316")
     case "trigonometry":
-      return "var(--category-trigonometry)"
+      return cssVarColor("--category-trigonometry", "#0ea5e9")
     case "logarithmic":
-      return "var(--category-logarithmic)"
+      return cssVarColor("--category-logarithmic", "#8b5cf6")
     case "logic":
-      return "var(--category-logic)"
+      return cssVarColor("--category-logic", "#14b8a6")
     case "calculus":
-      return "var(--category-expression)"
+      return cssVarColor("--category-expression", "#eab308")
     case "display":
-      return "var(--category-matrix)"
+      return cssVarColor("--category-matrix", "#ec4899")
     case "advanced":
-      return "var(--category-advanced)"
+      return cssVarColor("--category-advanced", "#ef4444")
     default:
-      return "var(--text-muted)"
+      return cssVarColor("--text-muted", "#6b7280")
   }
 }
 
@@ -150,9 +157,11 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     const canUndo = useFlowStore((s) => s.historyPast.length > 0)
     const canRedo = useFlowStore((s) => s.historyFuture.length > 0)
     const runPipeline = useFlowStore((s) => s.runPipeline)
+    const resetNodeStats = useFlowStore((s) => s.resetNodeStats)
     const executionMode = useFlowStore((s) => s.executionMode)
     const setExecutionMode = useFlowStore((s) => s.setExecutionMode)
     const isRunning = useFlowStore((s) => s.isRunning)
+    const renameNode = useFlowStore((s) => s.renameNode)
     const currentWorkflowName = useFlowStore((s) => s.currentWorkflowName)
     const setCurrentWorkflowName = useFlowStore((s) => s.setCurrentWorkflowName)
     const currentWorkflowId = useFlowStore((s) => s.currentWorkflowId)
@@ -425,6 +434,24 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
       [setCurrentWorkflowName],
     )
 
+    const handleContextMenuAction = useCallback(
+      (action: string, nodeId?: string) => {
+        if (action === "rename_group" && nodeId) {
+          const groupNode = nodes.find((node) => node.id === nodeId)
+          const currentName = String(groupNode?.data.label ?? "Group")
+          const nextName = window.prompt("Rename group", currentName)
+          if (nextName && nextName.trim()) {
+            renameNode(nodeId, nextName)
+          }
+          closeContextMenu()
+          return
+        }
+
+        dispatchContextAction(action, nodeId)
+      },
+      [closeContextMenu, dispatchContextAction, nodes, renameNode],
+    )
+
     const handleSaveAppearance = useCallback(
       (appearance: {
         tag: string
@@ -513,6 +540,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
                   executionMode={executionMode}
                   onRunWorkflow={runPipeline}
                   onToggleAutoRun={toggleAutoRun}
+                  onResetNodeStats={resetNodeStats}
                 />
 
                 <WorkflowAppearanceSheet
@@ -531,7 +559,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
           <Panel position="bottom-right">
             {!isNodeDragActive && (
               <MiniMap
-                className="rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]"
+                className="rounded-md border-2 border-border bg-background!"
                 nodeColor={minimapNodeColor}
                 maskColor="rgba(0, 0, 0, 0.5)"
                 pannable
@@ -540,7 +568,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
             )}
           </Panel>
           <Panel position="bottom-left">
-            <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-md">
+            <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-card p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-md">
               <button
                 onClick={undo}
                 disabled={!canUndo}
@@ -580,7 +608,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
         <ContextMenu
           contextMenu={contextMenu}
           onClose={closeContextMenu}
-          onAction={dispatchContextAction}
+          onAction={handleContextMenuAction}
         />
       </div>
     )

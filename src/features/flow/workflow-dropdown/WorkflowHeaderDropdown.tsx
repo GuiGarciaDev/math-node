@@ -34,7 +34,7 @@ export default function WorkflowHeaderDropdown({
         <div
           tabIndex={0}
           aria-label="Open workflow menu"
-          className="group pointer-events-auto flex w-fit max-w-56 h-10 items-center rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] pr-3 transition-all duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--bg-tertiary)]"
+          className="group pointer-events-auto flex w-fit max-w-56 h-10 items-center rounded-xl border border-border bg-card pr-3 transition-all duration-150 hover:border-accent"
         >
           <div className="flex h-9 items-center justify-center rounded-l-2xl bg-transparent text-sm font-semibold transition duration-150 hover:brightness-150">
             <span className="shrink-0 pl-3 pr-0.5 text-lg">Σ</span>
@@ -62,7 +62,7 @@ export default function WorkflowHeaderDropdown({
         forceMount
         align="start"
         sideOffset={8}
-        className="w-56 rounded-2xl border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_96%,transparent)] p-1.5 text-[var(--text-primary)] shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl data-[state=open]:animate-none data-[state=closed]:animate-none"
+        className="w-56 rounded-2xl bg-card p-1.5 text-card-foreground shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl data-[state=open]:animate-none data-[state=closed]:animate-none"
       >
         <motion.div
           variants={dropdownContentVariants}
@@ -82,7 +82,7 @@ export default function WorkflowHeaderDropdown({
             </DropdownMenuItem>
           </motion.div>
 
-          <DropdownMenuSeparator className="my-1 bg-[var(--border)]" />
+          <DropdownMenuSeparator className="my-1 bg-muted" />
 
           <motion.div variants={dropdownItemVariants}>
             <DropdownMenuItem

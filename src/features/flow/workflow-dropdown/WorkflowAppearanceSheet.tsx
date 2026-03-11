@@ -64,13 +64,13 @@ export default function WorkflowAppearanceSheet({
           size="icon"
           disabled={disabled}
           title="Workflow card style"
-          className="h-10 w-10 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-[var(--text-secondary)] shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-150 hover:border-[var(--accent)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed"
+          className="h-10 w-10 rounded-xl bg-card text-card-foreground shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md duration-150 hover:border-accent hover:translate-0 disabled:cursor-not-allowed"
         >
           <SlidersHorizontal className="h-4 w-4" />
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-[440px] sm:max-w-[440px]">
+      <SheetContent side="right" className="w-110 sm:max-w-110">
         <SheetHeader>
           <SheetTitle>Workflow card settings</SheetTitle>
           <SheetDescription>
@@ -79,9 +79,10 @@ export default function WorkflowAppearanceSheet({
         </SheetHeader>
 
         <div className="space-y-5 px-4">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">Tag</label>
             <Input
+              className="rounded-md"
               value={draft.tag}
               onChange={(event) =>
                 setDraft((prev) => ({ ...prev, tag: event.target.value }))
@@ -152,6 +153,7 @@ export default function WorkflowAppearanceSheet({
 
         <SheetFooter>
           <Button
+            variant={"secondary"}
             onClick={() => {
               setDraft(value)
               setOpen(false)

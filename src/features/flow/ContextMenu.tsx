@@ -26,6 +26,8 @@ const menuByTarget: Record<string, MenuItem[]> = {
     { id: "group", label: "Group Selected" },
   ],
   group: [
+    { id: "run_group", label: "Run Group" },
+    { id: "rename_group", label: "Rename Group" },
     { id: "ungroup", label: "Ungroup" },
     { id: "copy_group", label: "Copy Group" },
     { id: "delete_group", label: "Delete Group" },
@@ -100,13 +102,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = React.memo(
     return (
       <div
         ref={menuRef}
-        className="fixed z-[60] w-44 rounded-[10px] border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] p-1.5 shadow-[0_14px_28px_rgba(0,0,0,0.28)] backdrop-blur-md"
+        className="fixed z-60 w-44 rounded-[10px] border border-border bg-card p-1.5 shadow-[0_14px_28px_rgba(0,0,0,0.28)] backdrop-blur-md"
       >
         {items.map((item) => (
           <button
             key={item.id}
             onClick={() => handleAction(item.id)}
-            className="h-[30px] w-full rounded-lg px-2.5 text-left text-xs text-[var(--text-secondary)] transition-colors duration-100 hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
+            className="h-7.5 w-full rounded-lg px-2.5 text-left text-xs text-card-foreground transition-colors duration-100 hover:bg-accent/70"
           >
             {item.label}
           </button>

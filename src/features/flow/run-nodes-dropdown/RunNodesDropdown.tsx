@@ -25,6 +25,7 @@ interface RunNodesDropdownProps {
   executionMode: ExecutionMode
   onRunWorkflow: () => void
   onToggleAutoRun: () => void
+  onResetNodeStats: () => void
 }
 
 export default function RunNodesDropdown({
@@ -32,12 +33,13 @@ export default function RunNodesDropdown({
   executionMode,
   onRunWorkflow,
   onToggleAutoRun,
+  onResetNodeStats,
 }: RunNodesDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const isAutoRun = executionMode === "auto"
 
   return (
-    <div className="pointer-events-auto flex items-center rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_92%,transparent)] text-[var(--text-primary)] shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-200 hover:border-[var(--border-hover)] hover:bg-[var(--bg-tertiary)]">
+    <div className="pointer-events-auto flex items-center rounded-xl border border-border bg-card text-card-foreground shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition-all duration-200 hover:border-accent">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -46,7 +48,7 @@ export default function RunNodesDropdown({
               onClick={onRunWorkflow}
               disabled={isRunning}
               title="Run workflow"
-              className="flex h-10 items-center gap-2 rounded-l-xl px-2 text-sm font-medium text-[var(--accent)] transition-colors duration-200 hover:text-[var(--text-primary)] disabled:cursor-wait disabled:opacity-70"
+              className="flex h-10 items-center gap-2 rounded-l-xl px-2 text-sm font-medium text-accent transition-colors duration-200 hover:text-card-foreground disabled:cursor-wait disabled:opacity-70"
             >
               <span className="grid h-4 w-4 shrink-0 place-items-center">
                 {isRunning ? (
@@ -82,7 +84,7 @@ export default function RunNodesDropdown({
           forceMount
           align="end"
           sideOffset={8}
-          className="w-56 rounded-2xl border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-secondary)_96%,transparent)] p-1.5 text-[var(--text-primary)] shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl data-[state=open]:animate-none data-[state=closed]:animate-none"
+          className="w-56 rounded-2xl bg-card p-1.5 text-card-foreground shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl data-[state=open]:animate-none data-[state=closed]:animate-none"
         >
           <motion.div
             variants={dropdownContentVariants}
@@ -119,10 +121,24 @@ export default function RunNodesDropdown({
                 <span>Auto run</span>
                 <span className="ml-auto flex items-center gap-2">
                   {isAutoRun && (
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--status-success)]" />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-status-success" />
                   )}
                   <span>{isAutoRun ? "On" : "Off"}</span>
                 </span>
+              </DropdownMenuItem>
+            </motion.div>
+
+            <DropdownMenuSeparator className="my-1 bg-muted" />
+
+            <motion.div variants={dropdownItemVariants}>
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  onResetNodeStats()
+                }}
+                className="rounded-sm border border-transparent px-3 py-2 font-medium text-[var(--text-secondary)] focus:border-[var(--border)] focus:bg-[var(--bg-tertiary)] focus:text-[var(--text-primary)]"
+              >
+                <span>Reset node stats</span>
               </DropdownMenuItem>
             </motion.div>
           </motion.div>

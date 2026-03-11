@@ -1,18 +1,14 @@
 features:
 [] Add precision properties in the operation nodes like ADD to control how many cases we want.
 [] Improve design of graphs.
-[] Add a button to restart node stats after run the pipeline.
-[] After select one node, place a button out and at the top of the node to allow the user run the pipeline until this node and other button to run just the node.
 [] Inside the input of some operation nodes, implement a almost hidden label to round the output number like this 0,00078 ~ 0. the ~ 0 almost not visible.
 [] Create the presets feature with a button in the header to save the current state of flowcanvas as a new preset. Allow user to load presets. (Maybe a dropdown in the presets button in the toolbar with option like navigate presets and save/create preset)
-
-[] Allow user change the name of the aggrouped nodes when double click in the group node or through a button in the context menu
 
 fixes:
 [] Make the nodes not draggable when entry input is focused.
 [] Graph labels are not aligned with the XY axis.
-[] The viewport state is saving from the last workflow visit. For example, if the user enter in workflow 1 and then exit, the viewport state will be saved. Then, if he visit another workflow, the viewport will be in the same position as he leaved workflow 1. We need to sabe viewport state for every workflow or just adjust the viewport position to fit nodes.
-[] Remove auto focus in nodes input when open a workflow.
+
+working:
 
 Completed:
 [x] Number node dont accept number with decimal case and the execution causes error. The sidebar value input of the node accepts "." or "," but it throw "invalid number" error after execution.
@@ -35,3 +31,8 @@ Completed:
 [x] Fix the design of undo and redo buttons.
 [x] Improve the design of the left sidebar when it is short mode.
 [x] Create workflows to save user work, so they can save, reload, delete or create new workflows as necessary.
+[x] Remove auto focus in nodes input when open a workflow.
+[x] The viewport state is saving from the last workflow visit. For example, if the user enter in workflow 1 and then exit, the viewport state will be saved. Then, if he visit another workflow, the viewport will be in the same position as he leaved workflow 1. We need to sabe viewport state for every workflow or just adjust the viewport position to fit nodes.
+[x] Add a button to restart node stats after run the pipeline.
+[x] After select one node, place a button out and at the top of the node to allow the user run the pipeline from this node.
+[x] Allow user change the name of the aggrouped nodes when double click in the group node or through a button in the context menu

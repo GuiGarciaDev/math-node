@@ -1,6 +1,7 @@
 import React from "react"
-import { Handle, Position } from "@xyflow/react"
+import { Handle, Position, useNodeId } from "@xyflow/react"
 import type { MathNodeData, PortDefinition } from "../../../types"
+import { useFlowStore } from "../store/flowStore"
 import { getHandleTypeConfig } from "../../../config/handle-type-config"
 import {
   categoryBorderTokens,
@@ -47,7 +48,7 @@ export const NodeContainer: React.FC<NodeContainerProps> = React.memo(
   ({ width, borderClassName, children }) => (
     <div className={widthClassMap[width] ?? "w-[220px]"}>
       <div
-        className={`rounded-xl border bg-[var(--bg-secondary)] backdrop-blur-xl transition-colors duration-200 ${borderClassName}`}
+        className={`rounded-xl border bg-card backdrop-blur-xl transition-colors duration-200 ${borderClassName}`}
       >
         {children}
       </div>
@@ -121,6 +122,10 @@ NodeHandlesSection.displayName = "NodeHandlesSection"
 
 export const NodeShell: React.FC<NodeShellProps> = React.memo(
   ({ data, selected, children, headerActions, width = 220 }) => {
+    const nodeId = useNodeId()
+    const runPipelineToNode = useFlowStore((s) => s.runPipelineToNode)
+    const isRunning = useFlowStore((s) => s.isRunning)
+
     const categoryToken = categoryBorderTokens[data.category]
     const borderClassName =
       data.status === "error"
@@ -132,11 +137,26 @@ export const NodeShell: React.FC<NodeShellProps> = React.memo(
             : defaultBorderToken.borderClass
 
     return (
-      <NodeContainer width={width} borderClassName={borderClassName}>
-        <NodeHeader title={data.label} headerActions={headerActions} />
-        <NodeHandlesSection inputs={data.inputs} outputs={data.outputs} />
-        <div className="px-3 py-2">{children}</div>
-      </NodeContainer>
+      <div
+        className={`relative overflow-visible ${selected ? "p-2 -m-2" : ""}`}
+      >
+        {selected && nodeId && (
+          <button
+            type="button"
+            onClick={() => runPipelineToNode(nodeId)}
+            disabled={isRunning}
+            className={`absolute top-0 -left-12 origin-right z-20 -translate-x-1/2 rounded-md bg-accent px-2 py-2 text-[10px] font-semibold text-accent-foreground shadow-[0_6px_18px_rgba(0,0,0,0.24)] backdrop-blur-sm hover:scale-105 transition-transform disabled:cursor-wait disabled:opacity-60`}
+          >
+            Run Workflow
+          </button>
+        )}
+
+        <NodeContainer width={width} borderClassName={borderClassName}>
+          <NodeHeader title={data.label} headerActions={headerActions} />
+          <NodeHandlesSection inputs={data.inputs} outputs={data.outputs} />
+          <div className="px-3 py-2">{children}</div>
+        </NodeContainer>
+      </div>
     )
   },
 )
