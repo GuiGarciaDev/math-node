@@ -58,6 +58,13 @@ const nodeDefaults: Record<
     outputs: [{ name: "value", type: "number", label: "number" }],
     params: { constantKey: "pi", decimalPlaces: 6 },
   },
+  time: {
+    label: "Time",
+    category: "input",
+    inputs: [],
+    outputs: [{ name: "value", type: "number", label: "seconds" }],
+    params: { elapsedSeconds: 0 },
+  },
   variable: {
     label: "Variable",
     category: "input",
@@ -180,21 +187,79 @@ const nodeDefaults: Record<
     label: "Derivative",
     category: "calculus",
     inputs: [
-      { name: "fn", type: "symbolic", label: "Function" },
-      { name: "var", type: "symbolic", label: "Variable" },
+      { name: "functionValue", type: "number", label: "f(x)" },
+      { name: "functionValuePlusDelta", type: "number", label: "f(x+h)" },
+      { name: "deltaX", type: "number", label: "h" },
     ],
-    outputs: [{ name: "result", type: "symbolic", label: "f'(x)" }],
-    params: { variable: "x" },
+    outputs: [{ name: "result", type: "number", label: "f'(x)" }],
+    params: { deltaX: 0.001 },
   },
   integral: {
     label: "Integral",
     category: "calculus",
     inputs: [
-      { name: "fn", type: "symbolic", label: "Function" },
-      { name: "var", type: "symbolic", label: "Variable" },
+      { name: "function", type: "number", label: "f(x)" },
+      { name: "start", type: "number", label: "Start" },
+      { name: "end", type: "number", label: "End" },
+      { name: "steps", type: "number", label: "Steps" },
     ],
-    outputs: [{ name: "result", type: "symbolic", label: "∫f(x)dx" }],
-    params: { variable: "x" },
+    outputs: [{ name: "result", type: "number", label: "Integral" }],
+    params: { steps: 100 },
+  },
+  vector2: {
+    label: "Vector2",
+    category: "vectors",
+    inputs: [
+      { name: "x", type: "number", label: "x" },
+      { name: "y", type: "number", label: "y" },
+    ],
+    outputs: [{ name: "vector", type: "vector2", label: "vector2" }],
+    params: {},
+  },
+  vector3: {
+    label: "Vector3",
+    category: "vectors",
+    inputs: [
+      { name: "x", type: "number", label: "x" },
+      { name: "y", type: "number", label: "y" },
+      { name: "z", type: "number", label: "z" },
+    ],
+    outputs: [{ name: "vector", type: "vector3", label: "vector3" }],
+    params: {},
+  },
+  dotProduct: {
+    label: "Dot Product",
+    category: "vectors",
+    inputs: [
+      { name: "vectorA", type: "vector", label: "A" },
+      { name: "vectorB", type: "vector", label: "B" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "dot" }],
+    params: {},
+  },
+  crossProduct: {
+    label: "Cross Product",
+    category: "vectors",
+    inputs: [
+      { name: "vectorA", type: "vector3", label: "A" },
+      { name: "vectorB", type: "vector3", label: "B" },
+    ],
+    outputs: [{ name: "result", type: "vector3", label: "vector3" }],
+    params: {},
+  },
+  normalize: {
+    label: "Normalize",
+    category: "vectors",
+    inputs: [{ name: "vector", type: "vector", label: "v" }],
+    outputs: [{ name: "result", type: "vector", label: "unit" }],
+    params: {},
+  },
+  length: {
+    label: "Length",
+    category: "vectors",
+    inputs: [{ name: "vector", type: "vector", label: "v" }],
+    outputs: [{ name: "result", type: "number", label: "|v|" }],
+    params: {},
   },
   plot: {
     label: "Plot",
@@ -205,17 +270,114 @@ const nodeDefaults: Record<
   },
   matrix: {
     label: "Matrix",
-    category: "display",
+    category: "matrices",
     inputs: [],
     outputs: [{ name: "value", type: "matrix", label: "Matrix" }],
     params: {
-      matrix: [
+      values: [
         [0, 0],
         [0, 0],
       ],
       rows: 2,
       cols: 2,
     },
+  },
+  matrixMultiply: {
+    label: "Matrix Multiply",
+    category: "matrices",
+    inputs: [
+      { name: "matrixA", type: "matrix", label: "A" },
+      { name: "matrixB", type: "matrix", label: "B" },
+    ],
+    outputs: [{ name: "result", type: "matrix", label: "A*B" }],
+    params: {},
+  },
+  determinant: {
+    label: "Determinant",
+    category: "matrices",
+    inputs: [{ name: "matrix", type: "matrix", label: "M" }],
+    outputs: [{ name: "result", type: "number", label: "det(M)" }],
+    params: {},
+  },
+  inverse: {
+    label: "Inverse",
+    category: "matrices",
+    inputs: [{ name: "matrix", type: "matrix", label: "M" }],
+    outputs: [{ name: "result", type: "matrix", label: "M^-1" }],
+    params: {},
+  },
+  velocity: {
+    label: "Velocity",
+    category: "physics",
+    inputs: [
+      { name: "position", type: "number", label: "dx" },
+      { name: "time", type: "number", label: "dt" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "v" }],
+    params: {},
+  },
+  acceleration: {
+    label: "Acceleration",
+    category: "physics",
+    inputs: [
+      { name: "velocity", type: "number", label: "dv" },
+      { name: "time", type: "number", label: "dt" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "a" }],
+    params: {},
+  },
+  force: {
+    label: "Force",
+    category: "physics",
+    inputs: [
+      { name: "mass", type: "number", label: "m" },
+      { name: "acceleration", type: "number", label: "a" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "F" }],
+    params: {},
+  },
+  kineticEnergy: {
+    label: "Kinetic Energy",
+    category: "physics",
+    inputs: [
+      { name: "mass", type: "number", label: "m" },
+      { name: "velocity", type: "number", label: "v" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "Ek" }],
+    params: {},
+  },
+  potentialEnergy: {
+    label: "Potential Energy",
+    category: "physics",
+    inputs: [
+      { name: "mass", type: "number", label: "m" },
+      { name: "gravity", type: "number", label: "g" },
+      { name: "height", type: "number", label: "h" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "Ep" }],
+    params: { gravity: 9.81 },
+  },
+  oscillator: {
+    label: "Oscillator",
+    category: "signals",
+    inputs: [
+      { name: "amplitude", type: "number", label: "A" },
+      { name: "frequency", type: "number", label: "f" },
+      { name: "phase", type: "number", label: "phi" },
+      { name: "time", type: "number", label: "t" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "wave" }],
+    params: { amplitude: 1, frequency: 1, phase: 0 },
+  },
+  random: {
+    label: "Random",
+    category: "signals",
+    inputs: [
+      { name: "min", type: "number", label: "min" },
+      { name: "max", type: "number", label: "max" },
+    ],
+    outputs: [{ name: "result", type: "number", label: "rand" }],
+    params: { seed: 1 },
   },
   group: {
     label: "Group",
@@ -371,6 +533,16 @@ function withRecordedHistory(state: {
 }
 
 let suppressNextAutosave = false
+let timeAnimationFrameId: number | null = null
+let timeAnimationStartMs: number | null = null
+
+function stopTimeAnimationLoop(): void {
+  if (timeAnimationFrameId !== null) {
+    cancelAnimationFrame(timeAnimationFrameId)
+    timeAnimationFrameId = null
+  }
+  timeAnimationStartMs = null
+}
 
 // ─── Store Interface ──────────────────────────────────────
 
@@ -413,7 +585,11 @@ interface FlowState {
   onConnect: (connection: Connection) => void
 
   // Actions
-  addNode: (type: MathNodeType, position: { x: number; y: number }) => void
+  addNode: (
+    type: MathNodeType,
+    position: { x: number; y: number },
+    presetParams?: Record<string, unknown>,
+  ) => void
   removeNode: (nodeId: string) => void
   removeEdge: (edgeId: string) => void
   removeEdgesByIds: (edgeIds: string[]) => void
@@ -623,13 +799,17 @@ export const useFlowStore = create<FlowState>()(
       },
 
       // ─── Actions ────────────────────────────────────────────
-      addNode: (type, position) => {
+      addNode: (type, position, presetParams) => {
         const state = get()
+        const data = createNodeData(type)
+        if (presetParams) {
+          data.params = { ...data.params, ...presetParams }
+        }
         const newNode: MathNode = {
           id: generateNodeId(type),
           type,
           position,
-          data: createNodeData(type),
+          data,
           selected: false,
         }
         set({ nodes: [...state.nodes, newNode], ...withRecordedHistory(state) })
@@ -1172,9 +1352,34 @@ export const useFlowStore = create<FlowState>()(
         set({ nodes: runningNodes })
 
         requestAnimationFrame(() => {
-          const executableNodes = get().nodes.filter(
-            (node) => node.type !== "group",
-          )
+          const nowMs = performance.now()
+          const hasTimeNode = get().nodes.some((node) => node.type === "time")
+          if (hasTimeNode && timeAnimationStartMs === null) {
+            timeAnimationStartMs = nowMs
+          }
+          const elapsedSeconds =
+            hasTimeNode && timeAnimationStartMs !== null
+              ? (nowMs - timeAnimationStartMs) / 1000
+              : 0
+
+          const executableNodes = get()
+            .nodes.filter((node) => node.type !== "group")
+            .map((node) => {
+              if (node.type !== "time") {
+                return node
+              }
+
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  params: {
+                    ...node.data.params,
+                    elapsedSeconds,
+                  },
+                },
+              }
+            })
           const executableNodeIds = new Set(
             executableNodes.map((node) => node.id),
           )
@@ -1581,4 +1786,39 @@ useFlowStore.subscribe((state, previous) => {
   } catch {
     // Ignore autosave failures to avoid interrupting editor interactions.
   }
+})
+
+useFlowStore.subscribe((state, previous) => {
+  const hasTimeNode = state.nodes.some((node) => node.type === "time")
+  const hadTimeNode = previous.nodes.some((node) => node.type === "time")
+
+  if (!state.appStarted || !hasTimeNode) {
+    stopTimeAnimationLoop()
+    return
+  }
+
+  if (hasTimeNode && !hadTimeNode) {
+    timeAnimationStartMs = performance.now()
+  }
+
+  if (timeAnimationFrameId !== null) {
+    return
+  }
+
+  const tick = () => {
+    const current = useFlowStore.getState()
+    const stillHasTime = current.nodes.some((node) => node.type === "time")
+    if (!current.appStarted || !stillHasTime) {
+      stopTimeAnimationLoop()
+      return
+    }
+
+    if (!current.isRunning) {
+      current.runPipeline()
+    }
+
+    timeAnimationFrameId = requestAnimationFrame(tick)
+  }
+
+  timeAnimationFrameId = requestAnimationFrame(tick)
 })

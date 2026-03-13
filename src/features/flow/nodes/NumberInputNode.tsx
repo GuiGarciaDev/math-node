@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from "react"
 import type { NodeProps } from "@xyflow/react"
 import type { MathNodeData } from "../../../types"
 import { NodeShell } from "./NodeShell"
-import { useFlowStore } from "../store/flowStore.ts"
+import { useFlowStore } from "../store/flowStore"
 import { parseLocalizedNumberInput } from "../../../lib/math/numberInput"
 
 const AVAILABLE_CONSTANTS = [

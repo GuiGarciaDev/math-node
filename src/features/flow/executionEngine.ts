@@ -3,13 +3,7 @@
 // Pure, deterministic, side-effect free.
 
 import type { MathNode, MathEdge, ComputedValue, LogEntry } from "../../types"
-import {
-  parseExpression,
-  differentiate,
-  integrate,
-  simplify,
-  formatExpression,
-} from "../../lib/math/symbolic"
+import { parseExpression } from "../../lib/math/symbolic"
 import { evaluateRange } from "../../lib/math/evaluator"
 import {
   evaluateNumberInput,
@@ -21,6 +15,26 @@ import {
   evaluateLn,
   evaluateLog,
   evaluateComparator,
+  evaluateTime,
+  evaluateOscillator,
+  evaluateVector2,
+  evaluateVector3,
+  evaluateDotProduct,
+  evaluateCrossProduct,
+  evaluateVectorLength,
+  evaluateNormalize,
+  evaluateMatrix,
+  evaluateMatrixMultiply,
+  evaluateDeterminant,
+  evaluateInverse,
+  evaluateDerivativeNumeric,
+  evaluateIntegralNumeric,
+  evaluateVelocity,
+  evaluateAcceleration,
+  evaluateForce,
+  evaluateKineticEnergy,
+  evaluatePotentialEnergy,
+  evaluateRandom,
 } from "../../lib/math/nodeEvaluation"
 
 type ComputedMap = Map<string, ComputedValue>
@@ -169,6 +183,13 @@ function evaluateSingleNode(
         return { value, type: "number" }
       }
 
+      case "time": {
+        return {
+          value: evaluateTime({ elapsedSeconds: params.elapsedSeconds }),
+          type: "number",
+        }
+      }
+
       case "variable": {
         const name = String(params.name ?? "x")
         return { value: name, type: "symbolic" }
@@ -245,82 +266,92 @@ function evaluateSingleNode(
       }
 
       case "derivative": {
-        const fnInput = inputs["fn"]
-        const varInput = inputs["var"]
-        const variable =
-          (varInput?.value as string) ?? String(params.variable ?? "x")
-
-        if (!fnInput?.value) {
-          return {
-            value: undefined,
-            type: "symbolic",
-            error: "Missing function input",
-          }
-        }
-
-        let terms
-        if (
-          typeof fnInput.value === "object" &&
-          "terms" in (fnInput.value as Record<string, unknown>)
-        ) {
-          terms = (
-            fnInput.value as { terms: ReturnType<typeof parseExpression> }
-          ).terms
-        } else if (typeof fnInput.value === "string") {
-          terms = parseExpression(fnInput.value)
-        } else {
-          return {
-            value: undefined,
-            type: "symbolic",
-            error: "Invalid function input",
-          }
-        }
-
-        const result = simplify(differentiate(terms, variable))
-        const formatted = formatExpression(result)
         return {
-          value: { raw: formatted, terms: result },
-          type: "symbolic",
+          value: evaluateDerivativeNumeric(
+            inputs["functionValue"]?.value,
+            inputs["functionValuePlusDelta"]?.value,
+            inputs["deltaX"]?.value,
+          ),
+          type: "number",
         }
       }
 
       case "integral": {
-        const fnInput = inputs["fn"]
-        const varInput = inputs["var"]
-        const variable =
-          (varInput?.value as string) ?? String(params.variable ?? "x")
-
-        if (!fnInput?.value) {
-          return {
-            value: undefined,
-            type: "symbolic",
-            error: "Missing function input",
-          }
-        }
-
-        let terms
-        if (
-          typeof fnInput.value === "object" &&
-          "terms" in (fnInput.value as Record<string, unknown>)
-        ) {
-          terms = (
-            fnInput.value as { terms: ReturnType<typeof parseExpression> }
-          ).terms
-        } else if (typeof fnInput.value === "string") {
-          terms = parseExpression(fnInput.value)
-        } else {
-          return {
-            value: undefined,
-            type: "symbolic",
-            error: "Invalid function input",
-          }
-        }
-
-        const result = simplify(integrate(terms, variable))
-        const formatted = formatExpression(result)
         return {
-          value: { raw: formatted, terms: result },
-          type: "symbolic",
+          value: evaluateIntegralNumeric(
+            inputs["start"]?.value,
+            inputs["end"]?.value,
+            inputs["steps"]?.value,
+            inputs["function"]?.value,
+          ),
+          type: "number",
+        }
+      }
+
+      case "vector2": {
+        return {
+          value: evaluateVector2(inputs["x"]?.value, inputs["y"]?.value),
+          type: "vector2",
+        }
+      }
+
+      case "vector3": {
+        return {
+          value: evaluateVector3(
+            inputs["x"]?.value,
+            inputs["y"]?.value,
+            inputs["z"]?.value,
+          ),
+          type: "vector3",
+        }
+      }
+
+      case "dotProduct": {
+        return {
+          value: evaluateDotProduct(
+            inputs["vectorA"]?.value,
+            inputs["vectorB"]?.value,
+          ),
+          type: "number",
+        }
+      }
+
+      case "crossProduct": {
+        return {
+          value: evaluateCrossProduct(
+            inputs["vectorA"]?.value,
+            inputs["vectorB"]?.value,
+          ),
+          type: "vector3",
+        }
+      }
+
+      case "length": {
+        return {
+          value: evaluateVectorLength(inputs["vector"]?.value),
+          type: "number",
+        }
+      }
+
+      case "normalize": {
+        const value = evaluateNormalize(inputs["vector"]?.value)
+        const isVector3Value =
+          typeof value === "object" && value !== null && "z" in value
+        return {
+          value,
+          type: isVector3Value ? "vector3" : "vector2",
+        }
+      }
+
+      case "oscillator": {
+        return {
+          value: evaluateOscillator(
+            inputs["amplitude"]?.value,
+            inputs["frequency"]?.value,
+            inputs["phase"]?.value,
+            inputs["time"]?.value,
+          ),
+          type: "number",
         }
       }
 
@@ -406,8 +437,99 @@ function evaluateSingleNode(
       }
 
       case "matrix": {
-        const matrix = (params.matrix as number[][]) ?? [[0]]
+        const matrix = evaluateMatrix({
+          values: params.values,
+          matrix: params.matrix,
+          rows: params.rows,
+          cols: params.cols,
+        })
         return { value: matrix, type: "matrix" }
+      }
+
+      case "matrixMultiply": {
+        return {
+          value: evaluateMatrixMultiply(
+            inputs["matrixA"]?.value,
+            inputs["matrixB"]?.value,
+          ),
+          type: "matrix",
+        }
+      }
+
+      case "determinant": {
+        return {
+          value: evaluateDeterminant(inputs["matrix"]?.value),
+          type: "number",
+        }
+      }
+
+      case "inverse": {
+        return {
+          value: evaluateInverse(inputs["matrix"]?.value),
+          type: "matrix",
+        }
+      }
+
+      case "velocity": {
+        return {
+          value: evaluateVelocity(
+            inputs["position"]?.value,
+            inputs["time"]?.value,
+          ),
+          type: "number",
+        }
+      }
+
+      case "acceleration": {
+        return {
+          value: evaluateAcceleration(
+            inputs["velocity"]?.value,
+            inputs["time"]?.value,
+          ),
+          type: "number",
+        }
+      }
+
+      case "force": {
+        return {
+          value: evaluateForce(
+            inputs["mass"]?.value,
+            inputs["acceleration"]?.value,
+          ),
+          type: "number",
+        }
+      }
+
+      case "kineticEnergy": {
+        return {
+          value: evaluateKineticEnergy(
+            inputs["mass"]?.value,
+            inputs["velocity"]?.value,
+          ),
+          type: "number",
+        }
+      }
+
+      case "potentialEnergy": {
+        return {
+          value: evaluatePotentialEnergy(
+            inputs["mass"]?.value,
+            inputs["gravity"]?.value,
+            inputs["height"]?.value,
+          ),
+          type: "number",
+        }
+      }
+
+      case "random": {
+        return {
+          value: evaluateRandom(
+            inputs["min"]?.value,
+            inputs["max"]?.value,
+            params.seed,
+          ),
+          type: "number",
+        }
       }
 
       default:

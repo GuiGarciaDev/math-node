@@ -8,6 +8,9 @@ export type PortType =
   | "expression"
   | "symbolic"
   | "matrix"
+  | "vector"
+  | "vector2"
+  | "vector3"
   | "function"
   | "array"
 
@@ -29,6 +32,10 @@ export interface MathNodeData {
     | "input"
     | "arithmetic"
     | "trigonometry"
+    | "vectors"
+    | "matrices"
+    | "physics"
+    | "signals"
     | "logarithmic"
     | "logic"
     | "advanced"
@@ -81,6 +88,7 @@ export interface ClipboardData {
 export type MathNodeType =
   | "numberInput"
   | "constant"
+  | "time"
   | "variable"
   | "expression"
   | "add"
@@ -96,14 +104,34 @@ export type MathNodeType =
   | "comparator"
   | "derivative"
   | "integral"
+  | "vector2"
+  | "vector3"
+  | "dotProduct"
+  | "crossProduct"
+  | "normalize"
+  | "length"
   | "plot"
   | "matrix"
+  | "matrixMultiply"
+  | "determinant"
+  | "inverse"
+  | "velocity"
+  | "acceleration"
+  | "force"
+  | "kineticEnergy"
+  | "potentialEnergy"
+  | "oscillator"
+  | "random"
   | "group"
 
 export type SidebarTone =
   | "input"
   | "arithmetic"
   | "trigonometry"
+  | "vectors"
+  | "matrices"
+  | "physics"
+  | "signals"
   | "logarithmic"
   | "logic"
   | "calculus"
@@ -117,6 +145,7 @@ export interface SidebarNodeItem {
   icon: IconType
   iconColor: SidebarTone
   description?: string
+  presetParams?: Record<string, unknown>
 }
 
 export interface SidebarCategory {

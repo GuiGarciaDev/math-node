@@ -48,6 +48,14 @@ const minimapNodeColor = (node: FlowNode) => {
       return cssVarColor("--category-arithmetic", "#f97316")
     case "trigonometry":
       return cssVarColor("--category-trigonometry", "#0ea5e9")
+    case "vectors":
+      return cssVarColor("--category-trigonometry", "#0ea5e9")
+    case "matrices":
+      return cssVarColor("--category-matrix", "#ec4899")
+    case "physics":
+      return cssVarColor("--category-arithmetic", "#f97316")
+    case "signals":
+      return cssVarColor("--category-expression", "#eab308")
     case "logarithmic":
       return cssVarColor("--category-logarithmic", "#8b5cf6")
     case "logic":
@@ -57,7 +65,7 @@ const minimapNodeColor = (node: FlowNode) => {
     case "display":
       return cssVarColor("--category-matrix", "#ec4899")
     case "advanced":
-      return cssVarColor("--category-advanced", "#ef4444")
+      return cssVarColor("--category-advanced", "#bc77f8")
     default:
       return cssVarColor("--text-muted", "#6b7280")
   }
@@ -396,9 +404,22 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     const onDrop = useCallback(
       (e: React.DragEvent) => {
         e.preventDefault()
-        const type = e.dataTransfer.getData(
-          "application/mathflow-node",
-        ) as MathNodeType
+        const rawPayload = e.dataTransfer.getData("application/mathflow-node")
+        if (!rawPayload) return
+
+        let type: MathNodeType
+        let presetParams: Record<string, unknown> | undefined
+        try {
+          const parsed = JSON.parse(rawPayload) as {
+            type?: MathNodeType
+            presetParams?: Record<string, unknown>
+          }
+          type = parsed.type ?? (rawPayload as MathNodeType)
+          presetParams = parsed.presetParams
+        } catch {
+          type = rawPayload as MathNodeType
+        }
+
         if (!type || !reactFlowInstance.current) return
 
         const position = reactFlowInstance.current.screenToFlowPosition({
@@ -406,7 +427,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
           y: e.clientY,
         })
 
-        addNode(type, position)
+        addNode(type, position, presetParams)
       },
       [addNode],
     )
@@ -568,12 +589,12 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
             )}
           </Panel>
           <Panel position="bottom-left">
-            <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-card p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-md">
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-md">
               <button
                 onClick={undo}
                 disabled={!canUndo}
                 title="Undo (Ctrl+Z)"
-                className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-35"
+                className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-(--text-secondary) transition-all duration-150 hover:border-border hover:bg-(--bg-tertiary) hover:text-(--text-primary) disabled:cursor-not-allowed disabled:opacity-35"
               >
                 <MdUndo />
               </button>
@@ -582,7 +603,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
                 onClick={redo}
                 disabled={!canRedo}
                 title="Redo (Ctrl+Y)"
-                className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-35"
+                className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-(--text-secondary) transition-all duration-150 hover:border-border hover:bg-(--bg-tertiary) hover:text-(--text-primary) disabled:cursor-not-allowed disabled:opacity-35"
               >
                 <MdRedo />
               </button>

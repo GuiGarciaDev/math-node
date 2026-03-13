@@ -20,18 +20,15 @@ function ProjectsGridComponent({
       <button
         type="button"
         onClick={onCreateNew}
-        className="projects-card-hover group flex h-72 flex-col items-center justify-center gap-5 rounded-3xl border-2 border-dashed border-border text-muted-foreground transition-all hover:border-amber-300/50 hover:bg-rose-400/5"
+        className="group flex h-72 flex-col items-center justify-center gap-5 rounded-3xl border-2 border-dashed border-border text-muted-foreground transition-all hover:scale-102 hover:-translate-y-2 hover:cursor-pointer"
       >
         <div className="relative">
-          <div className="absolute inset-0 rounded-full bg-amber-300 opacity-0 blur-xl transition-opacity group-hover:opacity-20" />
-          <div className="projects-glass-panel relative flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-300/30 transition-all group-hover:scale-110 group-hover:border-transparent group-hover:bg-gradient-to-br group-hover:from-amber-300 group-hover:to-rose-400 group-hover:text-white">
+          <div className="bg-card/80 border border-border relative flex h-16 w-16 items-center justify-center rounded-2xl transition-all group-hover:scale-110 group-hover:border-transparent group-hover:bg-linear-to-br group-hover:from-green-300 group-hover:to-cyan-600 group-hover:text-white">
             <Plus className="h-7 w-7" />
           </div>
         </div>
         <div className="text-center">
-          <span className="block font-bold text-foreground transition-colors group-hover:text-rose-400">
-            Blank Canvas
-          </span>
+          <span className="block font-bold text-foreground">Blank Canvas</span>
           <span className="mt-1 block text-xs">Start from scratch</span>
         </div>
       </button>
@@ -39,14 +36,14 @@ function ProjectsGridComponent({
       {projects.map((item, index) => (
         <div
           key={item.id}
-          className="projects-fade-in"
-          style={{ animationDelay: `${0.45 + index * 0.08}s` }}
+          className="animate-projects-fade-in opacity-0"
+          style={{ animationDelay: `${0.2 + index * 0.08}s` }}
         >
           <ProjectCard
             item={item}
-            onOpen={onOpenProject ? () => onOpenProject(item.id) : undefined}
+            onOpen={onOpenProject ? () => onOpenProject(item.id) : () => {}}
             onDelete={
-              onDeleteProject ? () => onDeleteProject(item.id) : undefined
+              onDeleteProject ? () => onDeleteProject(item.id) : () => {}
             }
           />
         </div>

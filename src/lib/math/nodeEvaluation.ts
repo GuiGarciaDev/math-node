@@ -14,6 +14,26 @@ import {
   ln,
   logBase,
   compare,
+  makeVector2,
+  makeVector3,
+  dotProduct,
+  crossProduct,
+  vectorLength,
+  normalizeVector,
+  matrixMultiply,
+  matrixDeterminant,
+  matrixInverse2x2,
+  oscillator,
+  numericDerivative,
+  trapezoidalIntegral,
+  velocity,
+  acceleration,
+  force,
+  kineticEnergy,
+  potentialEnergy,
+  randomInRange,
+  type Vector2,
+  type Vector3,
   type ComparatorOperator,
 } from "./operators"
 import { parseLocalizedNumberInput } from "./numberInput"
@@ -48,6 +68,60 @@ function toNumber(value: unknown, fallback = 0): number {
   }
 
   return fallback
+}
+
+function toInt(value: unknown, fallback: number): number {
+  const parsed = Math.round(toNumber(value, fallback))
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function isVector2(value: unknown): value is Vector2 {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "x" in value &&
+    "y" in value &&
+    typeof (value as { x: unknown }).x === "number" &&
+    typeof (value as { y: unknown }).y === "number"
+  )
+}
+
+function isVector3(value: unknown): value is Vector3 {
+  return (
+    isVector2(value) &&
+    "z" in value &&
+    typeof (value as { z: unknown }).z === "number"
+  )
+}
+
+function toVector(value: unknown): Vector2 | Vector3 {
+  if (isVector3(value) || isVector2(value)) {
+    return value
+  }
+  throw new Error("Expected vector input")
+}
+
+function toVector3(value: unknown): Vector3 {
+  if (isVector3(value)) {
+    return value
+  }
+  throw new Error("Expected vector3 input")
+}
+
+function toMatrix(value: unknown): number[][] {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    !value.every(Array.isArray)
+  ) {
+    throw new Error("Expected matrix input")
+  }
+  const rows = value as unknown[]
+  const parsed = rows.map((row) => {
+    const cells = row as unknown[]
+    return cells.map((cell) => toNumber(cell, 0))
+  })
+  return parsed
 }
 
 export function evaluateConstant(params: {
@@ -162,4 +236,166 @@ export function evaluateComparator(
 ): boolean {
   const operator = String(operatorInput ?? "===") as ComparatorOperator
   return compare(toNumber(leftInput, 0), toNumber(rightInput, 0), operator)
+}
+
+export function evaluateTime(params: { elapsedSeconds?: unknown }): number {
+  return toNumber(params.elapsedSeconds, 0)
+}
+
+export function evaluateOscillator(
+  amplitudeInput: unknown,
+  frequencyInput: unknown,
+  phaseInput: unknown,
+  timeInput: unknown,
+): number {
+  return oscillator(
+    toNumber(amplitudeInput, 1),
+    toNumber(frequencyInput, 1),
+    toNumber(phaseInput, 0),
+    toNumber(timeInput, 0),
+  )
+}
+
+export function evaluateVector2(xInput: unknown, yInput: unknown): Vector2 {
+  return makeVector2(toNumber(xInput, 0), toNumber(yInput, 0))
+}
+
+export function evaluateVector3(
+  xInput: unknown,
+  yInput: unknown,
+  zInput: unknown,
+): Vector3 {
+  return makeVector3(
+    toNumber(xInput, 0),
+    toNumber(yInput, 0),
+    toNumber(zInput, 0),
+  )
+}
+
+export function evaluateDotProduct(aInput: unknown, bInput: unknown): number {
+  return dotProduct(toVector(aInput), toVector(bInput))
+}
+
+export function evaluateCrossProduct(
+  aInput: unknown,
+  bInput: unknown,
+): Vector3 {
+  return crossProduct(toVector3(aInput), toVector3(bInput))
+}
+
+export function evaluateVectorLength(vectorInput: unknown): number {
+  return vectorLength(toVector(vectorInput))
+}
+
+export function evaluateNormalize(vectorInput: unknown): Vector2 | Vector3 {
+  return normalizeVector(toVector(vectorInput))
+}
+
+export function evaluateMatrix(params: {
+  values?: unknown
+  matrix?: unknown
+  rows?: unknown
+  cols?: unknown
+}): number[][] {
+  const rawValues = params.values ?? params.matrix
+  if (rawValues !== undefined) {
+    return toMatrix(rawValues)
+  }
+
+  const rows = Math.max(1, toInt(params.rows, 2))
+  const cols = Math.max(1, toInt(params.cols, 2))
+  return Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => 0),
+  )
+}
+
+export function evaluateMatrixMultiply(
+  aInput: unknown,
+  bInput: unknown,
+): number[][] {
+  return matrixMultiply(toMatrix(aInput), toMatrix(bInput))
+}
+
+export function evaluateDeterminant(matrixInput: unknown): number {
+  return matrixDeterminant(toMatrix(matrixInput))
+}
+
+export function evaluateInverse(matrixInput: unknown): number[][] {
+  return matrixInverse2x2(toMatrix(matrixInput))
+}
+
+export function evaluateDerivativeNumeric(
+  functionValueInput: unknown,
+  functionValuePlusDeltaInput: unknown,
+  deltaXInput: unknown,
+): number {
+  return numericDerivative(
+    toNumber(functionValueInput, 0),
+    toNumber(functionValuePlusDeltaInput, 0),
+    toNumber(deltaXInput, 1e-3),
+  )
+}
+
+export function evaluateIntegralNumeric(
+  startInput: unknown,
+  endInput: unknown,
+  stepsInput: unknown,
+  functionAtInput: unknown,
+): number {
+  const value = toNumber(functionAtInput, 0)
+  return trapezoidalIntegral(
+    toNumber(startInput, 0),
+    toNumber(endInput, 1),
+    Math.max(1, toInt(stepsInput, 100)),
+    () => value,
+  )
+}
+
+export function evaluateVelocity(
+  positionInput: unknown,
+  timeInput: unknown,
+): number {
+  return velocity(toNumber(positionInput, 0), toNumber(timeInput, 1))
+}
+
+export function evaluateAcceleration(
+  velocityInput: unknown,
+  timeInput: unknown,
+): number {
+  return acceleration(toNumber(velocityInput, 0), toNumber(timeInput, 1))
+}
+
+export function evaluateForce(massInput: unknown, accelInput: unknown): number {
+  return force(toNumber(massInput, 0), toNumber(accelInput, 0))
+}
+
+export function evaluateKineticEnergy(
+  massInput: unknown,
+  velocityInput: unknown,
+): number {
+  return kineticEnergy(toNumber(massInput, 0), toNumber(velocityInput, 0))
+}
+
+export function evaluatePotentialEnergy(
+  massInput: unknown,
+  gravityInput: unknown,
+  heightInput: unknown,
+): number {
+  return potentialEnergy(
+    toNumber(massInput, 0),
+    toNumber(gravityInput, 9.81),
+    toNumber(heightInput, 0),
+  )
+}
+
+export function evaluateRandom(
+  minInput: unknown,
+  maxInput: unknown,
+  seedInput: unknown,
+): number {
+  return randomInRange(
+    toNumber(minInput, 0),
+    toNumber(maxInput, 1),
+    toInt(seedInput, 1),
+  )
 }

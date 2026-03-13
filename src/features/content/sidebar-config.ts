@@ -1,21 +1,17 @@
 import { LuPi } from "react-icons/lu"
 import type { SidebarCategory } from "../../types"
 import {
-  TbMathEqualGreater,
-  TbMathFunction,
   TbMathIntegral,
   TbMathSin,
   TbMathXDivideY,
   TbMatrix,
   TbNumber123,
   TbSquareRoot2,
-  TbVariable,
   TbXPowerY,
 } from "react-icons/tb"
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa"
-import { SiSagemath } from "react-icons/si"
 import { PiSigmaThin } from "react-icons/pi"
-import { BsGraphDown } from "react-icons/bs"
+import { BsStars } from "react-icons/bs"
 
 export const categories: SidebarCategory[] = [
   {
@@ -36,15 +32,9 @@ export const categories: SidebarCategory[] = [
         description: "pi, e",
       },
       {
-        type: "variable",
-        label: "Variable",
-        icon: TbVariable,
-        iconColor: "input",
-      },
-      {
-        type: "expression",
-        label: "Expression",
-        icon: TbMathFunction,
+        type: "time",
+        label: "Time",
+        icon: TbNumber123,
         iconColor: "input",
       },
     ],
@@ -97,41 +87,45 @@ export const categories: SidebarCategory[] = [
     items: [
       {
         type: "trigonometric",
-        label: "Trigonometric Function",
+        label: "Sin",
         icon: TbMathSin,
         iconColor: "trigonometry",
-        description: "sin, cos, tan, etc.",
-      },
-    ],
-  },
-  {
-    name: "Logarithmic",
-    color: "logarithmic",
-    items: [
-      {
-        type: "ln",
-        label: "ln",
-        icon: SiSagemath,
-        iconColor: "logarithmic",
+        presetParams: { operation: "sin" },
       },
       {
-        type: "log",
-        label: "log",
-        icon: SiSagemath,
-        iconColor: "logarithmic",
+        type: "trigonometric",
+        label: "Cos",
+        icon: TbMathSin,
+        iconColor: "trigonometry",
+        presetParams: { operation: "cos" },
       },
-    ],
-  },
-  {
-    name: "Logic",
-    color: "logic",
-    items: [
       {
-        type: "comparator",
-        label: "Comparator",
-        icon: TbMathEqualGreater,
-        iconColor: "logic",
-        description: "< > <= >= ===",
+        type: "trigonometric",
+        label: "Tan",
+        icon: TbMathSin,
+        iconColor: "trigonometry",
+        presetParams: { operation: "tan" },
+      },
+      {
+        type: "trigonometric",
+        label: "Asin",
+        icon: TbMathSin,
+        iconColor: "trigonometry",
+        presetParams: { operation: "asin" },
+      },
+      {
+        type: "trigonometric",
+        label: "Acos",
+        icon: TbMathSin,
+        iconColor: "trigonometry",
+        presetParams: { operation: "acos" },
+      },
+      {
+        type: "trigonometric",
+        label: "Atan",
+        icon: TbMathSin,
+        iconColor: "trigonometry",
+        presetParams: { operation: "atan" },
       },
     ],
   },
@@ -154,20 +148,128 @@ export const categories: SidebarCategory[] = [
     ],
   },
   {
-    name: "Display",
-    color: "display",
+    name: "Vectors",
+    color: "vectors",
     items: [
       {
-        type: "plot",
-        label: "Plot Function",
-        icon: BsGraphDown,
-        iconColor: "display",
+        type: "vector2",
+        label: "Vector2",
+        icon: TbNumber123,
+        iconColor: "vectors",
       },
+      {
+        type: "vector3",
+        label: "Vector3",
+        icon: TbNumber123,
+        iconColor: "vectors",
+      },
+      {
+        type: "dotProduct",
+        label: "Dot Product",
+        icon: FaTimes,
+        iconColor: "vectors",
+      },
+      {
+        type: "crossProduct",
+        label: "Cross Product",
+        icon: FaTimes,
+        iconColor: "vectors",
+      },
+      {
+        type: "normalize",
+        label: "Normalize",
+        icon: TbMathXDivideY,
+        iconColor: "vectors",
+      },
+      {
+        type: "length",
+        label: "Length",
+        icon: TbSquareRoot2,
+        iconColor: "vectors",
+      },
+    ],
+  },
+  {
+    name: "Matrices",
+    color: "matrices",
+    items: [
       {
         type: "matrix",
         label: "Matrix",
         icon: TbMatrix,
-        iconColor: "display",
+        iconColor: "matrices",
+      },
+      {
+        type: "matrixMultiply",
+        label: "Matrix Multiply",
+        icon: TbMatrix,
+        iconColor: "matrices",
+      },
+      {
+        type: "determinant",
+        label: "Determinant",
+        icon: TbMatrix,
+        iconColor: "matrices",
+      },
+      {
+        type: "inverse",
+        label: "Inverse",
+        icon: TbMatrix,
+        iconColor: "matrices",
+      },
+    ],
+  },
+  {
+    name: "Physics",
+    color: "physics",
+    items: [
+      {
+        type: "velocity",
+        label: "Velocity",
+        icon: TbNumber123,
+        iconColor: "physics",
+      },
+      {
+        type: "acceleration",
+        label: "Acceleration",
+        icon: TbNumber123,
+        iconColor: "physics",
+      },
+      {
+        type: "force",
+        label: "Force",
+        icon: FaTimes,
+        iconColor: "physics",
+      },
+      {
+        type: "kineticEnergy",
+        label: "Kinetic Energy",
+        icon: TbMathIntegral,
+        iconColor: "physics",
+      },
+      {
+        type: "potentialEnergy",
+        label: "Potential Energy",
+        icon: TbMathIntegral,
+        iconColor: "physics",
+      },
+    ],
+  },
+  {
+    name: "Signals",
+    color: "signals",
+    items: [
+      {
+        type: "oscillator",
+        label: "Oscillator",
+        icon: TbMathSin,
+        iconColor: "signals",
+      },
+      {
+        type: "random",
+        label: "Random",
+        icon: BsStars,
+        iconColor: "signals",
       },
     ],
   },

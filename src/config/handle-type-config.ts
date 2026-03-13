@@ -27,6 +27,18 @@ export const HANDLE_TYPE_CONFIG: Record<string, HandleTypeConfigEntry> = {
     colorKey: "matrix",
     label: "matrix",
   },
+  vector: {
+    colorKey: "vector",
+    label: "vector",
+  },
+  vector2: {
+    colorKey: "vector",
+    label: "vector2",
+  },
+  vector3: {
+    colorKey: "vector",
+    label: "vector3",
+  },
   function: {
     colorKey: "matrix",
     label: "function",

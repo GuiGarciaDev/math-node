@@ -24,6 +24,7 @@ export interface WorkflowInput extends WorkflowGraph {
 
 export interface Workflow extends WorkflowGraph, WorkflowAppearance {
   id: string
+  type: "workflow"
   name: string
   createdAt: number
   updatedAt: number
@@ -31,6 +32,7 @@ export interface Workflow extends WorkflowGraph, WorkflowAppearance {
 
 export interface WorkflowSummary extends WorkflowAppearance {
   id: string
+  type: "workflow"
   name: string
   createdAt: number
   updatedAt: number
@@ -41,6 +43,7 @@ function toSummary(record: WorkflowRecord): WorkflowSummary {
 
   return {
     id: record.id,
+    type: "workflow",
     name: record.name,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
@@ -142,6 +145,7 @@ export async function loadWorkflow(id: string): Promise<Workflow | null> {
 
   return {
     id: record.id,
+    type: "workflow",
     name: record.name,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,

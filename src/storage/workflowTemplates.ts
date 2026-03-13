@@ -2,6 +2,7 @@ import type { MathEdge, MathNode } from "../types"
 
 export interface WorkflowTemplate {
   id: string
+  type: "template"
   name: string
   description: string
   nodes: MathNode[]
@@ -29,6 +30,7 @@ function createNodeData(
 export const workflowTemplates: WorkflowTemplate[] = [
   {
     id: "template_quick_add",
+    type: "template",
     name: "Quick Add",
     description: "Two numeric inputs flowing into an addition node.",
     nodes: [
@@ -91,6 +93,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
   },
   {
     id: "template_derivative_plot",
+    type: "template",
     name: "Derivative Plot",
     description: "Differentiate a symbolic function and send it to a plot.",
     nodes: [
@@ -172,6 +175,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
   },
   {
     id: "template_power_chain",
+    type: "template",
     name: "Power Chain",
     description: "Multiply two numbers and raise the result to a power.",
     nodes: [

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react"
-import { useFlowStore } from "./store/flowStore.ts"
+import { useFlowStore } from "./store/flowStore"
 import { PlotChart } from "./nodes/PlotChart"
 
 export const GraphModal: React.FC = React.memo(() => {

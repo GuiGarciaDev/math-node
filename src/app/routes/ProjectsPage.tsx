@@ -23,19 +23,28 @@ import {
   createDefaultWorkflowAppearance,
   normalizeWorkflowAppearance,
   type WorkflowAppearance,
-  WORKFLOW_PRESET_OPTIONS,
   WORKFLOW_PREVIEW_OPTIONS,
 } from "@/utils/workflowAppearance"
 import { Routes } from "@/types/routes-types"
 import { useEffect, useCallback } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  ProjectsSort,
+  type ProjectsSortValue,
+} from "@/components/projects/ProjectsSort"
+
+type TabsValues = "RECENT" | "TEMPLATES"
+
+function compareAlphabetical(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { sensitivity: "base" })
+}
 
 export default function ProjectsPage() {
   const openWorkflowSession = useFlowStore((s) => s.openWorkflowSession)
-  const [tab, setTab] = useState<"recent" | "templates">("recent")
   const [searchText, setSearchText] = useState("")
-  const [previewFilter, setPreviewFilter] = useState<
-    "all" | "panel" | "orbit" | "bars" | "lattice"
-  >("all")
+  const [tab, setTab] = useState<TabsValues>("RECENT")
+  const [sortOrder, setSortOrder] =
+    useState<ProjectsSortValue>("mostRecentFirst")
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [workflows, setWorkflows] = useState<WorkflowSummary[]>([])
@@ -171,108 +180,98 @@ export default function ProjectsPage() {
   )
 
   const visibleProjects = useMemo<ProjectItem[]>(() => {
-    return workflows
-      .filter((workflow) =>
-        matchesSearch(`${workflow.name} ${workflow.tag}`, searchText),
-      )
-      .filter(
-        (workflow) =>
-          previewFilter === "all" || workflow.preview === previewFilter,
-      )
-      .map((workflow) => ({
-        id: workflow.id,
-        name: workflow.name,
-        tag: workflow.tag,
-        updatedAt: formatRelativeTime(workflow.updatedAt).replace(
-          "Edited ",
-          "",
-        ),
-        gradient: workflow.gradient,
-        tone: workflow.tone,
-        preview: workflow.preview,
-      }))
-  }, [previewFilter, searchText, workflows])
+    const filteredWorkflows = workflows.filter((workflow) =>
+      matchesSearch(`${workflow.name} ${workflow.tag}`, searchText),
+    )
+    const sortedWorkflows = [...filteredWorkflows].sort((a, b) => {
+      switch (sortOrder) {
+        case "alphabeticalAscending":
+          return compareAlphabetical(a.name, b.name)
+        case "alphabeticalDescending":
+          return compareAlphabetical(b.name, a.name)
+        case "leastRecentFirst":
+          return a.updatedAt - b.updatedAt
+        case "mostRecentFirst":
+        default:
+          return b.updatedAt - a.updatedAt
+      }
+    })
+
+    return sortedWorkflows.map((workflow) => ({
+      id: workflow.id,
+      type: workflow.type,
+      name: workflow.name,
+      tag: workflow.tag,
+      updatedAt: formatRelativeTime(workflow.updatedAt).replace("Edited ", ""),
+      preview: workflow.preview,
+    }))
+  }, [searchText, sortOrder, workflows])
 
   const visibleTemplates = useMemo<ProjectItem[]>(() => {
-    return workflowTemplates
-      .filter((template) =>
-        matchesSearch(`${template.name} ${template.description}`, searchText),
-      )
-      .map((template, index) => {
-        const preset =
-          WORKFLOW_PRESET_OPTIONS[index % WORKFLOW_PRESET_OPTIONS.length]
-        const preview =
-          WORKFLOW_PREVIEW_OPTIONS[index % WORKFLOW_PREVIEW_OPTIONS.length]
-        return {
-          id: template.id,
-          name: template.name,
-          tag: "TEMPLATE",
-          updatedAt: "Ready",
-          gradient: preset.gradient,
-          tone: preset.tone,
-          preview,
-          description: template.description,
-        }
-      })
-      .filter(
-        (template) =>
-          previewFilter === "all" || template.preview === previewFilter,
-      )
-  }, [previewFilter, searchText])
+    const filteredTemplates = workflowTemplates.filter((template) =>
+      matchesSearch(`${template.name} ${template.description}`, searchText),
+    )
+    const templateOrder = new Map(
+      workflowTemplates.map((template, index) => [template.id, index]),
+    )
+    const sortedTemplates = [...filteredTemplates].sort((a, b) => {
+      switch (sortOrder) {
+        case "alphabeticalAscending":
+          return compareAlphabetical(a.name, b.name)
+        case "alphabeticalDescending":
+          return compareAlphabetical(b.name, a.name)
+        case "leastRecentFirst":
+          return (templateOrder.get(a.id) ?? 0) - (templateOrder.get(b.id) ?? 0)
+        case "mostRecentFirst":
+        default:
+          return (templateOrder.get(b.id) ?? 0) - (templateOrder.get(a.id) ?? 0)
+      }
+    })
 
-  const activeItems = tab === "recent" ? visibleProjects : visibleTemplates
+    return sortedTemplates.map((template, index) => {
+      const preview =
+        WORKFLOW_PREVIEW_OPTIONS[index % WORKFLOW_PREVIEW_OPTIONS.length]
+      return {
+        id: template.id,
+        type: template.type,
+        name: template.name,
+        tag: "TEMPLATE",
+        updatedAt: "Ready",
+        preview,
+        description: template.description,
+      }
+    })
+  }, [searchText, sortOrder])
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
-      <HeroSection onLaunchStudio={() => void handleCreateWorkflow()} />
+      {/* <HeroSection onLaunchStudio={() => void handleCreateWorkflow()} /> */}
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl px-6 py-16">
-        <div className="projects-fade-in projects-stagger-4 mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-center">
-          <div className="flex items-center gap-8 border-b border-border md:border-none">
-            <button
-              type="button"
-              onClick={() => setTab("recent")}
-              className="group relative pb-4 text-lg font-bold text-foreground transition-colors md:pb-0"
-            >
-              <span className="relative z-10">Recent Workflows</span>
-              {tab === "recent" && (
-                <span className="absolute bottom-0 left-0 h-1 w-full rounded-t-full bg-gradient-to-r from-emerald-500 to-amber-300 shadow-[0_-2px_10px_rgba(251,191,36,0.3)]" />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("templates")}
-              className=" relative pb-4 text-lg font-medium text-muted-foreground transition-colors hover:text-amber-300 md:pb-0"
-            >
-              <span className="relative z-10">Templates</span>
-              {tab === "templates" && (
-                <span className="absolute bottom-0 left-0 h-1 w-full rounded-t-full bg-gradient-to-r from-emerald-500 to-amber-300 shadow-[0_-2px_10px_rgba(251,191,36,0.3)]" />
-              )}
-            </button>
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(value as TabsValues)}
+        className="relative flex flex-col z-10 mx-auto w-full max-w-7xl px-6 py-10"
+      >
+        <TabsList
+          variant={"line"}
+          className="projects-fade-in projects-stagger-4 mb-12 w-full flex flex-col justify-between gap-6 md:flex-row md:items-center"
+        >
+          <div>
+            <TabsTrigger value="RECENT">Recent projects</TabsTrigger>
+            <TabsTrigger value="TEMPLATES">Templates</TabsTrigger>
           </div>
 
-          <SearchBar
-            value={searchText}
-            onChange={setSearchText}
-            filterValue={previewFilter}
-            onFilterChange={(value) =>
-              setPreviewFilter(
-                value as "all" | "panel" | "orbit" | "bars" | "lattice",
-              )
-            }
-          />
-        </div>
-
-        {loading ? (
-          <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
-            Loading workflows...
+          <div className="flex gap-3">
+            <SearchBar value={searchText} onChange={setSearchText} />
+            <ProjectsSort value={sortOrder} onChange={setSortOrder} />
           </div>
-        ) : (
+        </TabsList>
+        <TabsContent value="RECENT" className="mt-6">
           <ProjectsGrid
-            projects={activeItems}
+            projects={visibleProjects}
             onCreateNew={() => void handleCreateWorkflow()}
             onOpenProject={(id) => {
-              if (tab === "recent") {
+              if (tab === "RECENT") {
                 void handleOpenWorkflow(id)
                 return
               }
@@ -280,15 +279,38 @@ export default function ProjectsPage() {
               void handleCreateFromTemplate(id)
             }}
             onDeleteProject={
-              tab === "recent"
+              tab === "RECENT"
                 ? (id) => {
                     void handleDeleteWorkflow(id)
                   }
                 : undefined
             }
           />
-        )}
-      </main>
+        </TabsContent>
+        <TabsContent value="TEMPLATES" className="mt-6">
+          <ProjectsGrid
+            projects={visibleTemplates}
+            onCreateNew={() => void handleCreateWorkflow()}
+            onOpenProject={(id) => {
+              if (tab === "RECENT") {
+                void handleOpenWorkflow(id)
+                return
+              }
+
+              void handleCreateFromTemplate(id)
+            }}
+            onDeleteProject={
+              tab === "RECENT"
+                ? (id) => {
+                    void handleDeleteWorkflow(id)
+                  }
+                : undefined
+            }
+          />
+        </TabsContent>
+      </Tabs>
+
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-6 py-16"></main>
     </div>
   )
 }

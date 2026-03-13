@@ -17,6 +17,7 @@ export type HandleColorKey =
   | "number"
   | "expression"
   | "matrix"
+  | "vector"
   | "muted"
   | "success"
 
@@ -32,6 +33,22 @@ export const categoryBorderTokens: Record<NodeCategory, BorderToken> = {
   trigonometry: {
     cssVar: "var(--category-trigonometry)",
     borderClass: "border-[var(--category-trigonometry)]",
+  },
+  vectors: {
+    cssVar: "var(--category-trigonometry)",
+    borderClass: "border-[var(--category-trigonometry)]",
+  },
+  matrices: {
+    cssVar: "var(--category-matrix)",
+    borderClass: "border-[var(--category-matrix)]",
+  },
+  physics: {
+    cssVar: "var(--category-arithmetic)",
+    borderClass: "border-[var(--category-arithmetic)]",
+  },
+  signals: {
+    cssVar: "var(--category-expression)",
+    borderClass: "border-[var(--category-expression)]",
   },
   logarithmic: {
     cssVar: "var(--category-logarithmic)",
@@ -87,6 +104,10 @@ export const handleColorTokens: Record<HandleColorKey, HandleToken> = {
   matrix: {
     cssVar: "var(--handle-category-matrix)",
     bgClass: "bg-[var(--handle-category-matrix)]!",
+  },
+  vector: {
+    cssVar: "var(--handle-category-expression)",
+    bgClass: "bg-[var(--handle-category-expression)]!",
   },
   muted: {
     cssVar: "var(--text-muted)",

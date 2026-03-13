@@ -9,7 +9,8 @@ export const MatrixNode: React.FC<NodeProps> = React.memo(
     const nodeData = data as unknown as MathNodeData
     const updateNodeParam = useFlowStore((s) => s.updateNodeParam)
 
-    const matrix = (nodeData.params.matrix as number[][]) ?? [[0]]
+    const matrix = (nodeData.params.values as number[][]) ??
+      (nodeData.params.matrix as number[][]) ?? [[0]]
     const rows = matrix.length
     const cols = matrix[0]?.length ?? 1
     const colsClass =
@@ -29,7 +30,7 @@ export const MatrixNode: React.FC<NodeProps> = React.memo(
       (row: number, col: number, value: string) => {
         const newMatrix = matrix.map((r) => [...r])
         newMatrix[row][col] = Number(value) || 0
-        updateNodeParam(id, "matrix", newMatrix)
+        updateNodeParam(id, "values", newMatrix)
       },
       [id, matrix, updateNodeParam],
     )
@@ -44,7 +45,7 @@ export const MatrixNode: React.FC<NodeProps> = React.memo(
           }
           newMatrix.push(row)
         }
-        updateNodeParam(id, "matrix", newMatrix)
+        updateNodeParam(id, "values", newMatrix)
         updateNodeParam(id, "rows", newRows)
         updateNodeParam(id, "cols", newCols)
       },

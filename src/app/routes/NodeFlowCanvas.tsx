@@ -7,6 +7,7 @@ import { Inspector } from "@/features/inspector/Inspector"
 import { Sidebar } from "@/features/sidebar/Sidebar"
 import { Routes } from "@/types/routes-types"
 import { ReactFlowProvider } from "@xyflow/react"
+import { LuPanelRight } from "react-icons/lu"
 
 interface NodeFlowCanvasProps {
   collapsed: boolean
@@ -20,7 +21,7 @@ export default function NodeFlowCanvas({
   const inspectorOpen = useFlowStore((s) => s.inspectorOpen)
   const toggleInspector = useFlowStore((s) => s.toggleInspector)
   return (
-    <div className="flex h-screen w-full flex-col transition-opacity duration-500">
+    <div className="flex h-screen w-full transition-opacity duration-500">
       <SidebarProvider className="relative flex flex-1 overflow-hidden">
         <Sidebar collapsed={collapsed} onRouteChange={setRoute} />
         <main className="relative flex flex-1 flex-col overflow-hidden">
@@ -33,13 +34,13 @@ export default function NodeFlowCanvas({
             <button
               onClick={toggleInspector}
               title={inspectorOpen ? "Hide Inspector" : "Show Inspector"}
-              className={`absolute right-0 top-3 z-10 flex h-10 w-6 items-center justify-center border border-[var(--border)] bg-[var(--bg-secondary)] text-xs text-[var(--text-muted)] transition-all duration-300 hover:text-[var(--text-primary)] ${
+              className={`absolute right-0 top-5 z-10 flex h-10 w-8 items-center justify-center border border-border bg-(--bg-secondary) text-xs text-(--text-muted) transition-all duration-300 hover:text-(--text-primary) ${
                 inspectorOpen
                   ? "rounded-bl-md rounded-tl-md border-r-0"
                   : "rounded-md"
               }`}
             >
-              {inspectorOpen ? "▶" : "◀"}
+              <LuPanelRight />
             </button>
           </div>
           {/* <Console /> */}

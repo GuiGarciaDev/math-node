@@ -6,12 +6,7 @@ import {
   useAnimationControls,
   useMotionValue,
 } from "framer-motion"
-import type {
-  MathNodeType,
-  SidebarNodeItem,
-  SidebarCategory,
-  SidebarTone,
-} from "../../types"
+import type { SidebarNodeItem, SidebarCategory, SidebarTone } from "../../types"
 import { useFlowStore } from "../flow/store/flowStore"
 import { categories } from "../content/sidebar-config"
 import MathFlowIcon from "../../components/math-flow-icon"
@@ -48,7 +43,7 @@ import { Routes } from "@/types/routes-types"
 
 interface SidebarProps {
   collapsed: boolean
-  onRouteChange: (route: Routes) => void
+  onRouteChange?: (route: Routes) => void
 }
 
 function SidebarNodeButton({
@@ -58,14 +53,14 @@ function SidebarNodeButton({
 }: {
   item: SidebarNodeItem
   collapsed: boolean
-  onDragStart: (event: React.DragEvent, type: MathNodeType) => void
+  onDragStart: (event: React.DragEvent, item: SidebarNodeItem) => void
 }) {
   const tone = getSidebarToneClasses(item.iconColor)
 
   const content = (
     <div
       draggable
-      onDragStart={(event) => onDragStart(event, item.type)}
+      onDragStart={(event) => onDragStart(event, item)}
       className={cn(
         "group flex select-none items-center overflow-hidden border border-transparent transition-all duration-200 ease-out active:cursor-grabbing",
         collapsed
@@ -326,7 +321,7 @@ function AnimatedCategoryGroup({
   category: SidebarCategory
   expanded: boolean
   onToggle: () => void
-  onDragStart: (event: React.DragEvent, type: MathNodeType) => void
+  onDragStart: (event: React.DragEvent, item: SidebarNodeItem) => void
 }) {
   return (
     <SidebarGroup className="p-0">
@@ -378,7 +373,7 @@ function AnimatedCategoryGroup({
             >
               {category.items.map((item) => (
                 <motion.div
-                  key={item.type}
+                  key={`${item.type}-${item.label}`}
                   variants={sidebarItemVariants}
                   style={{ willChange: "transform, opacity" }}
                 >
@@ -408,8 +403,14 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
     )
 
     const onDragStart = useCallback(
-      (e: React.DragEvent, nodeType: MathNodeType) => {
-        e.dataTransfer.setData("application/mathflow-node", nodeType)
+      (e: React.DragEvent, item: SidebarNodeItem) => {
+        e.dataTransfer.setData(
+          "application/mathflow-node",
+          JSON.stringify({
+            type: item.type,
+            presetParams: item.presetParams,
+          }),
+        )
         e.dataTransfer.effectAllowed = "move"
       },
       [],
@@ -465,7 +466,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  onClick={() => onRouteChange("PROJECTS_PAGE")}
+                  onClick={() => onRouteChange?.("PROJECTS_PAGE")}
                   className={cn(
                     "group flex min-w-0 items-center gap-3 rounded-[1.35rem] border border-transparent px-2 py-1.5 text-left transition-all duration-200 hover:bg-[var(--sidebar-accent)]",
                     collapsed ? "w-full justify-center px-0" : "flex-1",
@@ -547,7 +548,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
                         )}
                         {category.items.map((item) => (
                           <SidebarNodeButton
-                            key={`collapsed-${item.type}`}
+                            key={`collapsed-${item.type}-${item.label}`}
                             item={item}
                             collapsed
                             onDragStart={onDragStart}

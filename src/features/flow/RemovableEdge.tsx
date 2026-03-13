@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react"
 import { getBezierPath, type EdgeProps } from "@xyflow/react"
-import { useFlowStore } from "./store/flowStore.ts"
+import { useFlowStore } from "./store/flowStore"
 import { getHandleTypeConfig } from "../../config/handle-type-config"
 import { handleColorTokens } from "../../config/node-style-config"
 

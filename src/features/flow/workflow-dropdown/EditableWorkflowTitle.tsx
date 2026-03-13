@@ -84,7 +84,10 @@ export default function EditableWorkflowTitle({
               onPointerDown={(event) => event.stopPropagation()}
               onChange={(event) => setDraftValue(event.target.value)}
               onBlur={commit}
+              onKeyUp={(event) => event.stopPropagation()}
               onKeyDown={(event) => {
+                event.stopPropagation()
+
                 if (event.key === "Enter") {
                   event.preventDefault()
                   commit()

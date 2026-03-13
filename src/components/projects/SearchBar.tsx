@@ -1,61 +1,54 @@
-import { memo } from "react"
-import { Search, SlidersHorizontal } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import React, { memo } from "react"
+import { Search } from "lucide-react"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import { cn } from "@/lib/utils"
+import { AnimatePresence, motion } from "framer-motion"
 
 type SearchBarProps = {
   value: string
   onChange: (value: string) => void
-  filterValue: string
-  onFilterChange: (value: string) => void
 }
 
-function SearchBarComponent({
-  value,
-  onChange,
-  filterValue,
-  onFilterChange,
-}: SearchBarProps) {
-  return (
-    <div className="flex w-full flex-col items-center gap-4 sm:w-auto sm:flex-row">
-      <div className="group relative w-full sm:w-80">
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-300 to-rose-400 opacity-0 blur transition-opacity duration-300 group-focus-within:opacity-15" />
-        <div className="relative flex items-center">
-          <Search className="pointer-events-none absolute left-4 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-amber-300" />
-          <input
-            type="text"
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            placeholder="Search elegant graphs..."
-            className="h-11 w-full rounded-xl border border-border bg-card/90 pl-11 pr-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-amber-300"
-          />
-        </div>
-      </div>
+function SearchBarComponent({ value, onChange }: SearchBarProps) {
+  const [isOpened, setIsOpened] = React.useState(false)
 
-      <div className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-card/90 px-2 text-sm font-medium text-muted-foreground transition-colors hover:border-amber-300/50 hover:text-foreground">
-        <SlidersHorizontal className="ml-2 h-4 w-4" />
-        <Select value={filterValue} onValueChange={onFilterChange}>
-          <SelectTrigger className="h-9 w-[142px] border-0 bg-transparent px-2 shadow-none focus:ring-0">
-            <SelectValue placeholder="Filter" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="all">All types</SelectItem>
-              <SelectItem value="panel">Panel</SelectItem>
-              <SelectItem value="orbit">Orbit</SelectItem>
-              <SelectItem value="bars">Bars</SelectItem>
-              <SelectItem value="lattice">Lattice</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+  return (
+    <InputGroup className="w-auto border border-border rounded-sm overflow-hidden hover:brightness-125 transition-all duration-200">
+      <AnimatePresence initial={false}>
+        {isOpened && (
+          <motion.div
+            key="search-input"
+            className="overflow-hidden"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 224, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          >
+            <InputGroupInput
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+              placeholder="Search..."
+              className="w-56 px-4 pl-1"
+              autoFocus
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <InputGroupAddon
+        className={cn("w-8 shrink-0 cursor-pointer pr-2")}
+        role="button"
+        onClick={() => setIsOpened((prev) => !prev)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault()
+            setIsOpened((prev) => !prev)
+          }
+        }}
+        tabIndex={0}
+      >
+        <Search />
+      </InputGroupAddon>
+    </InputGroup>
   )
 }
 
