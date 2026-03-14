@@ -20,55 +20,18 @@ import type {
 import { RemovableEdge } from "./RemovableEdge"
 import { ContextMenu } from "./ContextMenu"
 import { InteractionToolbar } from "./InteractionToolbar"
-import { MdUndo, MdRedo } from "react-icons/md"
 import RunNodesDropdown from "./run-nodes-dropdown/RunNodesDropdown"
 import WorkflowHeaderDropdown from "./workflow-dropdown/WorkflowHeaderDropdown"
 import { Routes } from "@/types/routes-types"
-import ToggleThemeButton from "@/components/toggle-theme"
 import WorkflowAppearanceSheet from "./workflow-dropdown/WorkflowAppearanceSheet"
 import { saveWorkflow } from "@/storage/workflowRepository"
+import type { WorkflowAppearance } from "@/utils/workflowAppearance"
+import { useUIStore } from "./store/ui-store"
+import UndoRedoComponent from "@/components/canvas/UndoRedoComponent"
+import MinimapComponent from "@/components/canvas/MinimapComponent"
 
 const edgeTypes = {
   removable: RemovableEdge,
-}
-
-function cssVarColor(name: string, fallback: string): string {
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim()
-  return value || fallback
-}
-
-const minimapNodeColor = (node: FlowNode) => {
-  const category = node.data?.category
-  switch (category) {
-    case "input":
-      return cssVarColor("--category-number", "#22c55e")
-    case "arithmetic":
-      return cssVarColor("--category-arithmetic", "#f97316")
-    case "trigonometry":
-      return cssVarColor("--category-trigonometry", "#0ea5e9")
-    case "vectors":
-      return cssVarColor("--category-trigonometry", "#0ea5e9")
-    case "matrices":
-      return cssVarColor("--category-matrix", "#ec4899")
-    case "physics":
-      return cssVarColor("--category-arithmetic", "#f97316")
-    case "signals":
-      return cssVarColor("--category-expression", "#eab308")
-    case "logarithmic":
-      return cssVarColor("--category-logarithmic", "#8b5cf6")
-    case "logic":
-      return cssVarColor("--category-logic", "#14b8a6")
-    case "calculus":
-      return cssVarColor("--category-expression", "#eab308")
-    case "display":
-      return cssVarColor("--category-matrix", "#ec4899")
-    case "advanced":
-      return cssVarColor("--category-advanced", "#bc77f8")
-    default:
-      return cssVarColor("--text-muted", "#6b7280")
-  }
 }
 
 const edgeOptions = {
@@ -160,10 +123,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     const dispatchContextAction = useFlowStore((s) => s.dispatchContextAction)
     const removeEdgesByIds = useFlowStore((s) => s.removeEdgesByIds)
     const addNode = useFlowStore((s) => s.addNode)
-    const undo = useFlowStore((s) => s.undo)
-    const redo = useFlowStore((s) => s.redo)
-    const canUndo = useFlowStore((s) => s.historyPast.length > 0)
-    const canRedo = useFlowStore((s) => s.historyFuture.length > 0)
     const runPipeline = useFlowStore((s) => s.runPipeline)
     const resetNodeStats = useFlowStore((s) => s.resetNodeStats)
     const executionMode = useFlowStore((s) => s.executionMode)
@@ -179,6 +138,8 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     const setCurrentWorkflowAppearance = useFlowStore(
       (s) => s.setCurrentWorkflowAppearance,
     )
+    const isWorkflowSheetOpen = useUIStore((s) => s.isWorkflowSheetOpen)
+    const setIsWorkflowSheetOpen = useUIStore((s) => s.setWorkflowSheetOpen)
 
     const reactFlowInstance = useRef<ReactFlowInstance<
       MathNode,
@@ -474,12 +435,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     )
 
     const handleSaveAppearance = useCallback(
-      (appearance: {
-        tag: string
-        gradient: string
-        tone: string
-        preview: "panel" | "orbit" | "bars" | "lattice"
-      }) => {
+      (appearance: WorkflowAppearance) => {
         setCurrentWorkflowAppearance(appearance)
 
         if (!currentWorkflowId) return
@@ -546,7 +502,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
             variant={BackgroundVariant.Dots}
             gap={24}
             size={1}
-            color="var(--border)"
+            color="var(--foreground-muted)"
           />
           <Panel position="top-center" className="w-full pl-5 pr-8">
             <div className="flex justify-between">
@@ -563,14 +519,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
                   onToggleAutoRun={toggleAutoRun}
                   onResetNodeStats={resetNodeStats}
                 />
-
-                <WorkflowAppearanceSheet
-                  value={currentWorkflowAppearance}
-                  disabled={!currentWorkflowId}
-                  onSave={handleSaveAppearance}
-                />
-
-                <ToggleThemeButton />
               </div>
             </div>
           </Panel>
@@ -578,36 +526,10 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
             <InteractionToolbar />
           </Panel>
           <Panel position="bottom-right">
-            {!isNodeDragActive && (
-              <MiniMap
-                className="rounded-md border-2 border-border bg-background!"
-                nodeColor={minimapNodeColor}
-                maskColor="rgba(0, 0, 0, 0.5)"
-                pannable
-                zoomable
-              />
-            )}
+            {!isNodeDragActive && <MinimapComponent />}
           </Panel>
           <Panel position="bottom-left">
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-md">
-              <button
-                onClick={undo}
-                disabled={!canUndo}
-                title="Undo (Ctrl+Z)"
-                className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-(--text-secondary) transition-all duration-150 hover:border-border hover:bg-(--bg-tertiary) hover:text-(--text-primary) disabled:cursor-not-allowed disabled:opacity-35"
-              >
-                <MdUndo />
-              </button>
-
-              <button
-                onClick={redo}
-                disabled={!canRedo}
-                title="Redo (Ctrl+Y)"
-                className="button-pop flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-(--text-secondary) transition-all duration-150 hover:border-border hover:bg-(--bg-tertiary) hover:text-(--text-primary) disabled:cursor-not-allowed disabled:opacity-35"
-              >
-                <MdRedo />
-              </button>
-            </div>
+            <UndoRedoComponent />
           </Panel>
         </ReactFlow>
 
@@ -630,6 +552,14 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
           contextMenu={contextMenu}
           onClose={closeContextMenu}
           onAction={handleContextMenuAction}
+        />
+
+        <WorkflowAppearanceSheet
+          open={isWorkflowSheetOpen}
+          onOpenChange={setIsWorkflowSheetOpen}
+          value={currentWorkflowAppearance}
+          disabled={!currentWorkflowId}
+          onSave={handleSaveAppearance}
         />
       </div>
     )

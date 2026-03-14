@@ -8,6 +8,7 @@ import {
   saveWorkflow,
 } from "../workflowRepository"
 import { workflowDB } from "../db"
+import { WORKFLOW_ILLUSTRATION_IDS } from "@/utils/workflowAppearance"
 
 function createSimpleGraph() {
   const nodes: MathNode[] = [
@@ -43,25 +44,34 @@ describe("workflow database", () => {
   it("saves workflow records", async () => {
     const id = createWorkflowId()
     const graph = createSimpleGraph()
+    const illustration = WORKFLOW_ILLUSTRATION_IDS[3]
 
-    await saveWorkflow({ id, name: "My Workflow", ...graph })
+    await saveWorkflow({
+      id,
+      name: "My Workflow",
+      illustration,
+      ...graph,
+    })
 
     const stored = await workflowDB.workflows.get(id)
     expect(stored).toBeTruthy()
     expect(stored?.id).toBe(id)
     expect(stored?.name).toBe("My Workflow")
+    expect(stored?.illustration).toBe(illustration)
   })
 
   it("loads workflows and restores original structure", async () => {
     const id = createWorkflowId()
     const graph = createSimpleGraph()
+    const illustration = WORKFLOW_ILLUSTRATION_IDS[5]
 
-    await saveWorkflow({ id, name: "Load Test", ...graph })
+    await saveWorkflow({ id, name: "Load Test", illustration, ...graph })
 
     const loaded = await loadWorkflow(id)
     expect(loaded).not.toBeNull()
     expect(loaded?.nodes).toEqual(graph.nodes)
     expect(loaded?.edges).toEqual(graph.edges)
+    expect(loaded?.illustration).toBe(illustration)
   })
 
   it("deletes workflows", async () => {
@@ -77,12 +87,21 @@ describe("workflow database", () => {
 
   it("lists workflows", async () => {
     const graph = createSimpleGraph()
+    const illustration = WORKFLOW_ILLUSTRATION_IDS[0]
 
-    await saveWorkflow({ id: createWorkflowId(), name: "A", ...graph })
+    await saveWorkflow({
+      id: createWorkflowId(),
+      name: "A",
+      illustration,
+      ...graph,
+    })
     await saveWorkflow({ id: createWorkflowId(), name: "B", ...graph })
 
     const list = await listWorkflows()
     expect(list.length).toBe(2)
+    expect(
+      list.some((workflow) => workflow.illustration === illustration),
+    ).toBe(true)
   })
 
   it("saves large workflows (1000 nodes / 2000 edges)", async () => {

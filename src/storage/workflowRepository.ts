@@ -3,6 +3,7 @@ import { compressWorkflow, decompressWorkflow } from "./compression"
 import { workflowDB, type WorkflowRecord } from "./db"
 import {
   type WorkflowAppearance,
+  type WorkflowIllustrationId,
   normalizeWorkflowAppearance,
 } from "@/utils/workflowAppearance"
 
@@ -19,7 +20,7 @@ export interface WorkflowInput extends WorkflowGraph {
   tag?: string
   gradient?: string
   tone?: string
-  preview?: WorkflowAppearance["preview"]
+  illustration?: WorkflowIllustrationId
 }
 
 export interface Workflow extends WorkflowGraph, WorkflowAppearance {
@@ -50,7 +51,7 @@ function toSummary(record: WorkflowRecord): WorkflowSummary {
     tag: appearance.tag,
     gradient: appearance.gradient,
     tone: appearance.tone,
-    preview: appearance.preview,
+    illustration: appearance.illustration,
   }
 }
 
@@ -72,7 +73,7 @@ export async function saveWorkflow(
           tag: existing.tag,
           gradient: existing.gradient,
           tone: existing.tone,
-          preview: existing.preview,
+          illustration: existing.illustration,
         }
       : {}),
     ...workflow,
@@ -86,7 +87,7 @@ export async function saveWorkflow(
     tag: appearance.tag,
     gradient: appearance.gradient,
     tone: appearance.tone,
-    preview: appearance.preview,
+    illustration: appearance.illustration,
     data: compressWorkflow({
       nodes: workflow.nodes,
       edges: workflow.edges,
@@ -111,7 +112,7 @@ export async function updateWorkflow(
     tag: workflow.tag ?? existing.tag,
     gradient: workflow.gradient ?? existing.gradient,
     tone: workflow.tone ?? existing.tone,
-    preview: workflow.preview ?? existing.preview,
+    illustration: workflow.illustration ?? existing.illustration,
   })
 
   const record: WorkflowRecord = {
@@ -122,7 +123,7 @@ export async function updateWorkflow(
     tag: appearance.tag,
     gradient: appearance.gradient,
     tone: appearance.tone,
-    preview: appearance.preview,
+    illustration: appearance.illustration,
     data: compressWorkflow({
       nodes: workflow.nodes,
       edges: workflow.edges,
@@ -152,7 +153,7 @@ export async function loadWorkflow(id: string): Promise<Workflow | null> {
     tag: appearance.tag,
     gradient: appearance.gradient,
     tone: appearance.tone,
-    preview: appearance.preview,
+    illustration: appearance.illustration,
     nodes: graph.nodes,
     edges: graph.edges,
   }

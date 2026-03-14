@@ -1,26 +1,20 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
 
 interface EditableWorkflowTitleProps {
   value: string
   onCommit: (value: string) => void
-  onEditingChange?: (editing: boolean) => void
 }
 
 export default function EditableWorkflowTitle({
   value,
   onCommit,
-  onEditingChange,
 }: EditableWorkflowTitleProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [draftValue, setDraftValue] = useState(value)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const wrapperRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    onEditingChange?.(isEditing)
-  }, [isEditing, onEditingChange])
 
   useEffect(() => {
     if (!isEditing) return

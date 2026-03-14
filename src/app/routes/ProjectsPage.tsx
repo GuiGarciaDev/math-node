@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/projects/HeroSection"
 import { ProjectsGrid } from "@/components/projects/ProjectsGrid"
 import { SearchBar } from "@/components/projects/SearchBar"
 import type { ProjectItem } from "@/components/projects/ProjectCard"
+import { TEMPLATE_ILLUSTRATION_BY_TEMPLATE_ID } from "@/components/projects/WorkflowIllustrations"
 import "@/styles/projects-page.css"
 import {
   cloneTemplateGraph,
@@ -23,7 +24,6 @@ import {
   createDefaultWorkflowAppearance,
   normalizeWorkflowAppearance,
   type WorkflowAppearance,
-  WORKFLOW_PREVIEW_OPTIONS,
 } from "@/utils/workflowAppearance"
 import { Routes } from "@/types/routes-types"
 import { useEffect, useCallback } from "react"
@@ -203,7 +203,7 @@ export default function ProjectsPage() {
       name: workflow.name,
       tag: workflow.tag,
       updatedAt: formatRelativeTime(workflow.updatedAt).replace("Edited ", ""),
-      preview: workflow.preview,
+      illustration: workflow.illustration,
     }))
   }, [searchText, sortOrder, workflows])
 
@@ -228,16 +228,16 @@ export default function ProjectsPage() {
       }
     })
 
-    return sortedTemplates.map((template, index) => {
-      const preview =
-        WORKFLOW_PREVIEW_OPTIONS[index % WORKFLOW_PREVIEW_OPTIONS.length]
+    return sortedTemplates.map((template) => {
       return {
         id: template.id,
         type: template.type,
         name: template.name,
         tag: "TEMPLATE",
         updatedAt: "Ready",
-        preview,
+        illustration:
+          TEMPLATE_ILLUSTRATION_BY_TEMPLATE_ID[template.id] ??
+          "template-addition-flow",
         description: template.description,
       }
     })

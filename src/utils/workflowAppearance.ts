@@ -1,10 +1,17 @@
-export type WorkflowPreview = "panel" | "orbit" | "bars" | "lattice"
+export type WorkflowIllustrationId =
+  | "harmonic-oscillation"
+  | "orbital-mechanics"
+  | "magnetic-dipole"
+  | "hyperbolic-geometry"
+  | "double-slit-interference"
+  | "fibonacci-spiral"
+  | "spacetime-curvature"
 
 export type WorkflowAppearance = {
   tag: string
   gradient: string
   tone: string
-  preview: WorkflowPreview
+  illustration: WorkflowIllustrationId
 }
 
 export type AppearancePreset = {
@@ -15,11 +22,14 @@ export type AppearancePreset = {
 
 export const WORKFLOW_TAG_DEFAULT = "NODE PIPELINE"
 
-export const WORKFLOW_PREVIEW_OPTIONS: WorkflowPreview[] = [
-  "lattice",
-  "panel",
-  "orbit",
-  "bars",
+export const WORKFLOW_ILLUSTRATION_IDS: WorkflowIllustrationId[] = [
+  "harmonic-oscillation",
+  "orbital-mechanics",
+  "magnetic-dipole",
+  "hyperbolic-geometry",
+  "double-slit-interference",
+  "fibonacci-spiral",
+  "spacetime-curvature",
 ]
 
 export const WORKFLOW_PRESET_OPTIONS: AppearancePreset[] = [
@@ -60,13 +70,24 @@ export function getRandomAppearancePreset(): AppearancePreset {
   return WORKFLOW_PRESET_OPTIONS[index]
 }
 
+export function getRandomIllustrationId(): WorkflowIllustrationId {
+  const index = Math.floor(Math.random() * WORKFLOW_ILLUSTRATION_IDS.length)
+  return WORKFLOW_ILLUSTRATION_IDS[index]
+}
+
+export function isValidWorkflowIllustrationId(
+  value: string | null | undefined,
+): value is WorkflowIllustrationId {
+  return WORKFLOW_ILLUSTRATION_IDS.includes(value as WorkflowIllustrationId)
+}
+
 export function createDefaultWorkflowAppearance(): WorkflowAppearance {
   const preset = getRandomAppearancePreset()
   return {
     tag: WORKFLOW_TAG_DEFAULT,
     gradient: preset.gradient,
     tone: preset.tone,
-    preview: WORKFLOW_PREVIEW_OPTIONS[0],
+    illustration: getRandomIllustrationId(),
   }
 }
 
@@ -79,6 +100,8 @@ export function normalizeWorkflowAppearance(
     tag: appearance?.tag?.trim() || WORKFLOW_TAG_DEFAULT,
     gradient: appearance?.gradient || fallback.gradient,
     tone: appearance?.tone || fallback.tone,
-    preview: appearance?.preview || fallback.preview,
+    illustration: isValidWorkflowIllustrationId(appearance?.illustration)
+      ? appearance.illustration
+      : fallback.illustration,
   }
 }

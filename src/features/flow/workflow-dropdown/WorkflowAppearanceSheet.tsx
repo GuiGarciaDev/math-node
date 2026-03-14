@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import {
   Sheet,
   SheetContent,
@@ -6,71 +6,48 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { FaRegCircleCheck } from "react-icons/fa6"
+import { AnimatePresence, motion } from "framer-motion"
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { SlidersHorizontal } from "lucide-react"
-import {
-  WORKFLOW_PRESET_OPTIONS,
-  WORKFLOW_PREVIEW_OPTIONS,
-  type WorkflowAppearance,
-} from "@/utils/workflowAppearance"
+  ProjectIllustrationPreview,
+  WORKFLOW_ILLUSTRATION_OPTIONS,
+} from "@/components/projects/WorkflowIllustrations"
+import { type WorkflowAppearance } from "@/utils/workflowAppearance"
 
 type WorkflowAppearanceSheetProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
   value: WorkflowAppearance
   disabled?: boolean
   onSave: (next: WorkflowAppearance) => void
 }
 
 export default function WorkflowAppearanceSheet({
+  open,
+  onOpenChange,
   value,
   disabled,
   onSave,
 }: WorkflowAppearanceSheetProps) {
-  const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<WorkflowAppearance>(value)
-
-  const selectedPresetId = useMemo(() => {
-    const match = WORKFLOW_PRESET_OPTIONS.find(
-      (preset) =>
-        preset.gradient === draft.gradient && preset.tone === draft.tone,
-    )
-
-    return match?.id ?? "custom"
-  }, [draft.gradient, draft.tone])
 
   return (
     <Sheet
       open={open}
       onOpenChange={(nextOpen) => {
-        setOpen(nextOpen)
+        onOpenChange(nextOpen)
         if (nextOpen) {
           setDraft(value)
         }
       }}
     >
-      <SheetTrigger asChild>
-        <Button
-          variant="icon"
-          size="icon"
-          disabled={disabled}
-          title="Workflow card style"
-          className="h-10 w-10 rounded-xl bg-card text-card-foreground shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md duration-150 hover:border-accent hover:translate-0 disabled:cursor-not-allowed"
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-        </Button>
-      </SheetTrigger>
-
-      <SheetContent side="right" className="w-110 sm:max-w-110">
+      <SheetContent
+        side="right"
+        className="w-110 sm:max-w-110 flex flex-col h-screen"
+      >
         <SheetHeader>
           <SheetTitle>Workflow card settings</SheetTitle>
           <SheetDescription>
@@ -78,93 +55,85 @@ export default function WorkflowAppearanceSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-5 px-4">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Tag</label>
-            <Input
-              className="rounded-md"
-              value={draft.tag}
-              onChange={(event) =>
-                setDraft((prev) => ({ ...prev, tag: event.target.value }))
-              }
-              placeholder="NODE PIPELINE"
-              maxLength={30}
-            />
-          </div>
+        <div className="px-4 flex-1 min-h-0 overflow-hidden">
+          <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
+            <label className="text-sm font-medium">Illustration</label>
+            <ScrollArea className="min-h-0 flex-1 pr-2">
+              <div className="grid grid-cols-1 gap-2">
+                {WORKFLOW_ILLUSTRATION_OPTIONS.map((illustration) => {
+                  const selected = draft.illustration === illustration.id
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Preset</label>
-            <Select
-              value={selectedPresetId}
-              onValueChange={(value) => {
-                const selected = WORKFLOW_PRESET_OPTIONS.find(
-                  (preset) => preset.id === value,
-                )
-                if (!selected) return
-
-                setDraft((prev) => ({
-                  ...prev,
-                  gradient: selected.gradient,
-                  tone: selected.tone,
-                }))
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a style" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {WORKFLOW_PRESET_OPTIONS.map((preset) => (
-                    <SelectItem key={preset.id} value={preset.id}>
-                      {preset.id}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Preview shape</label>
-            <Select
-              value={draft.preview}
-              onValueChange={(value) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  preview: value as WorkflowAppearance["preview"],
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select preview shape" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {WORKFLOW_PREVIEW_OPTIONS.map((preview) => (
-                    <SelectItem key={preview} value={preview}>
-                      {preview}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+                  return (
+                    <button
+                      key={illustration.id}
+                      type="button"
+                      onClick={() =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          illustration: illustration.id,
+                        }))
+                      }
+                      className={
+                        "relative rounded-lg border text-left transition-all " +
+                        (selected
+                          ? "border-2 border-accent bg-accent/10 text-accent"
+                          : "border-border hover:border-accent")
+                      }
+                    >
+                      <AnimatePresence>
+                        {selected ? (
+                          <motion.span
+                            key="selected-badge"
+                            initial={{ opacity: 0, scale: 0.75, y: -4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.75, y: -4 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            className="bg-transparent absolute right-2 top-2 z-10 rounded-full border-none p-0.5 text-accent shadow-sm"
+                            aria-hidden="true"
+                          >
+                            <FaRegCircleCheck className="h-4 w-4" />
+                          </motion.span>
+                        ) : null}
+                      </AnimatePresence>
+                      <div className="group h-20 overflow-hidden rounded-t-lg">
+                        <ProjectIllustrationPreview
+                          illustration={illustration.id}
+                          className="h-full w-full"
+                        />
+                      </div>
+                      <div
+                        className={
+                          "px-3 py-2 text-xs " +
+                          (selected ? "text-accent" : "text-muted-foreground")
+                        }
+                      >
+                        {illustration.label}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </ScrollArea>
           </div>
         </div>
 
-        <SheetFooter>
+        <SheetFooter className="shrink-0">
           <Button
+            className="rounded-md"
             variant={"secondary"}
             onClick={() => {
               setDraft(value)
-              setOpen(false)
+              onOpenChange(false)
             }}
           >
             Cancel
           </Button>
           <Button
+            className="rounded-md"
+            variant={"default"}
             onClick={() => {
-              onSave({ ...draft, tag: draft.tag.trim() || "NODE PIPELINE" })
-              setOpen(false)
+              onSave(draft)
+              onOpenChange(false)
             }}
           >
             Save

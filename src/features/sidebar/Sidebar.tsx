@@ -62,20 +62,15 @@ function SidebarNodeButton({
       draggable
       onDragStart={(event) => onDragStart(event, item)}
       className={cn(
-        "group flex select-none items-center overflow-hidden border border-transparent transition-all duration-200 ease-out active:cursor-grabbing",
-        collapsed
-          ? "h-11 w-11 cursor-grab justify-center rounded-2xl bg-[color-mix(in_srgb,var(--sidebar-background)_88%,white_2%)] shadow-[0_10px_24px_rgba(0,0,0,0.14)] hover:-translate-y-0.5 hover:border-[var(--sidebar-ring)] hover:bg-[var(--sidebar-accent)]"
-          : "cursor-grab gap-3 rounded-2xl px-3 py-1 hover:-translate-y-0.5 hover:border-[var(--sidebar-border)] hover:bg-[color-mix(in_srgb,var(--sidebar-accent)_82%,transparent)] hover:shadow-[0_16px_28px_rgba(0,0,0,0.16)]",
+        "group flex select-none rounded-sm items-center overflow-hidden border border-transparent transition-all duration-200 ease-out active:cursor-grabbing hover:bg-sidebar-accent/60 cursor-grab",
+        collapsed ? "h-11 w-11 justify-center" : "gap-3 px-3 py-1",
       )}
       title={collapsed ? item.label : (item.description ?? item.label)}
     >
       <span
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-xl font-semibold transition-transform duration-200 group-hover:scale-110",
+          "flex shrink-0 items-center h-9 w-9 justify-center rounded-xl font-semibold transition-transform duration-200 group-hover:scale-110",
           tone.text,
-          collapsed
-            ? "h-9 w-9 text-base"
-            : "h-9 w-9 bg-[color-mix(in_srgb,var(--sidebar-background)_42%,transparent)] text-sm",
         )}
       >
         <item.icon />
@@ -83,11 +78,9 @@ function SidebarNodeButton({
 
       {!collapsed && (
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-[var(--sidebar-foreground)]">
-            {item.label}
-          </span>
+          <span className="block truncate text-sm">{item.label}</span>
           {item.description && (
-            <span className="block truncate text-[11px] text-[var(--muted-foreground)]">
+            <span className="block truncate text-[11px] text-muted-foreground">
               {item.description}
             </span>
           )}
@@ -247,14 +240,14 @@ function SidebarSearchInput({
         ref={inputLayerRef}
         className="relative inline-block w-full align-top"
       >
-        <FiSearch className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-sm text-[var(--muted-foreground)]" />
+        <FiSearch className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-sm text-muted-foreground" />
         <Input
           value={value}
           onChange={onChange}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholder="Search nodes, formulas, and actions"
-          className="pr-14 pl-11 text-[13px]"
+          className="pr-14 pl-11 text-[13px] bg-input border border-border rounded-md"
         />
         <motion.div
           className="pointer-events-none absolute z-20"
@@ -304,9 +297,6 @@ function SidebarSearchInput({
             </svg>
           )}
         </motion.div>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-lg border border-[var(--border)] bg-[var(--sidebar-background)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-          /
-        </span>
       </div>
     </div>
   )
@@ -328,20 +318,20 @@ function AnimatedCategoryGroup({
       <button
         type="button"
         onClick={onToggle}
-        className="flex items-center justify-between rounded-xl px-1 py-1 text-left transition-colors duration-200 hover:text-[var(--sidebar-foreground)]"
+        className="flex items-center justify-between rounded-xl px-1 py-1 text-left transition-colors duration-200"
       >
         <div>
           <SidebarGroupLabel className="mb-1 h-auto px-0 text-[12px] group-data-[collapsible=icon]:mt-0 group-data-[collapsible=icon]:opacity-100">
             <CategoryLabel tone={category.color}>{category.name}</CategoryLabel>
           </SidebarGroupLabel>
-          <p className="ml-4 text-[11px] text-[var(--muted-foreground)]">
+          <p className="ml-4 text-[11px] text-muted-foreground">
             {category.items.length} node
             {category.items.length === 1 ? "" : "s"}
           </p>
         </div>
 
         <motion.span
-          className="flex h-7 w-7 items-center justify-center rounded-xl border border-[var(--sidebar-border)] bg-[color-mix(in_srgb,var(--sidebar-background)_80%,white_2%)] text-[var(--muted-foreground)]"
+          className="flex h-7 w-7 items-center justify-center rounded-sm hover:bg-sidebar-accent border border-sidebar-border text-muted-foreground transition-colors duration-200 outline-none"
           variants={chevronVariants}
           initial={false}
           custom={{ itemCount: category.items.length }}
@@ -498,7 +488,10 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
                   size="icon"
                   onClick={toggleSidebar}
                   aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                  className={cn(collapsed && "h-10 w-10")}
+                  className={cn(
+                    "rounded-md shadow-2xs",
+                    collapsed && "h-10 w-10",
+                  )}
                 >
                   {collapsed ? (
                     <MdKeyboardDoubleArrowRight />

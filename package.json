@@ -24,6 +24,7 @@
     "clsx": "^2.1.1",
     "dexie": "^4.2.1",
     "framer-motion": "^12.35.1",
+    "html-to-image": "^1.11.13",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.577.0",
     "lz-string": "^1.5.0",

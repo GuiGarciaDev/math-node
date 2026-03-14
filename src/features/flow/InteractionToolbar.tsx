@@ -36,7 +36,7 @@ export const InteractionToolbar: React.FC = React.memo(() => {
 
   return (
     <TooltipProvider>
-      <div className="absolute left-3 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-1.5 rounded-[1.4rem] border border-[var(--border)] bg-[color-mix(in_srgb,var(--card)_92%,transparent)] p-2 shadow-[0_16px_34px_rgba(0,0,0,0.22)] backdrop-blur-md">
+      <div className="absolute left-3 top-1/2 z-40 p-2 -translate-y-1/2 flex flex-col gap-1.5 rounded-lg bg-card border border-border ">
         {items.map((item) => {
           const active = item.mode ? interactionMode === item.mode : false
 
@@ -55,10 +55,10 @@ export const InteractionToolbar: React.FC = React.memo(() => {
                     }
                   }}
                   className={cn(
-                    "h-9 w-9 rounded-xl border-transparent shadow-none",
+                    "h-9 w-9 rounded-md border-transparent shadow-none",
                     active
-                      ? "scale-[1.03] border-[color-mix(in_srgb,var(--primary)_24%,transparent)] bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-[var(--foreground)]"
-                      : "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]",
+                      ? "scale-[1.03] border-primary/60 bg-primary/30"
+                      : "hover:brightness-125 hover:text-foreground",
                   )}
                 >
                   <item.icon />

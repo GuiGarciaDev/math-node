@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest"
 import type { MathEdge, MathNode } from "../../types"
 import { workflowDB } from "../db"
 import { createWorkflowId, saveWorkflow } from "../workflowRepository"
+import { WORKFLOW_ILLUSTRATION_IDS } from "@/utils/workflowAppearance"
 
 describe("workflow repository integration", () => {
   beforeEach(async () => {
@@ -10,6 +11,7 @@ describe("workflow repository integration", () => {
 
   it("stores compressed data in IndexedDB records", async () => {
     const id = createWorkflowId()
+    const illustration = WORKFLOW_ILLUSTRATION_IDS[1]
     const nodes: MathNode[] = [
       {
         id: "node_1",
@@ -32,6 +34,7 @@ describe("workflow repository integration", () => {
     const workflow = {
       id,
       name: "Compression Integration",
+      illustration,
       nodes,
       edges,
     }
@@ -46,5 +49,6 @@ describe("workflow repository integration", () => {
         edges: workflow.edges,
       }),
     )
+    expect(stored?.illustration).toBe(illustration)
   })
 })

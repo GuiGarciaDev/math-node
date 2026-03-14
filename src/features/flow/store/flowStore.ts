@@ -635,7 +635,7 @@ interface FlowState {
     tag?: string
     gradient?: string
     tone?: string
-    preview?: WorkflowAppearance["preview"]
+    illustration?: WorkflowAppearance["illustration"]
   }) => void
   setCurrentWorkflowName: (name: string) => void
   setCurrentWorkflowAppearance: (
@@ -1732,7 +1732,7 @@ export const useFlowStore = create<FlowState>()(
               tag: workflow.tag,
               gradient: workflow.gradient,
               tone: workflow.tone,
-              preview: workflow.preview,
+              illustration: workflow.illustration,
             })
           })
           .catch(() => {
@@ -1781,7 +1781,7 @@ useFlowStore.subscribe((state, previous) => {
       tag: state.currentWorkflowAppearance.tag,
       gradient: state.currentWorkflowAppearance.gradient,
       tone: state.currentWorkflowAppearance.tone,
-      preview: state.currentWorkflowAppearance.preview,
+      illustration: state.currentWorkflowAppearance.illustration,
     })
   } catch {
     // Ignore autosave failures to avoid interrupting editor interactions.

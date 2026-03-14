@@ -25,6 +25,10 @@ export function createAutosave(
       name: workflow.name || activeWorkflowName,
       nodes: workflow.nodes,
       edges: workflow.edges,
+      tag: workflow.tag,
+      gradient: workflow.gradient,
+      tone: workflow.tone,
+      illustration: workflow.illustration,
     })
   }, AUTOSAVE_DELAY_MS)
 }

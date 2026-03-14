@@ -2,6 +2,10 @@ import { memo, useState } from "react"
 import { Clock, EllipsisVertical, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
+  ProjectIllustrationPreview,
+  type IllustrationId,
+} from "./WorkflowIllustrations"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -16,7 +20,7 @@ export type ProjectItem = {
   name: string
   tag: string
   updatedAt: string
-  preview: "panel" | "orbit" | "bars" | "lattice"
+  illustration?: IllustrationId
   description?: string
 }
 
@@ -32,6 +36,8 @@ function ProjectCardComponent({ item, onOpen, onDelete }: ProjectCardProps) {
   const handleDropdownOpenChange = (open: boolean) => {
     setIsCardDropdownOpen(open)
   }
+
+  console.log(item)
 
   return (
     <article
@@ -52,8 +58,17 @@ function ProjectCardComponent({ item, onOpen, onDelete }: ProjectCardProps) {
         }}
         className="group/img bg-gray-500/20 flex flex-1 n hover:cursor-pointer rounded-t-lg overflow-hidden"
       >
-        <div className="flex flex-1 items-center justify-center bg-cyan-800/60 p-6 overflow-hidde group-hover/img:scale-110 transition-transform">
-          Nodes Preview
+        <div className="group relative flex flex-1 items-center justify-center overflow-hidden p-0 transition-transform group-hover/img:scale-110">
+          {item.illustration ? (
+            <ProjectIllustrationPreview
+              illustration={item.illustration}
+              className="h-full w-full"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-cyan-800/60 p-6 text-xs text-muted-foreground">
+              Nodes Preview
+            </div>
+          )}
         </div>
       </div>
 

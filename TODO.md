@@ -9,6 +9,8 @@ fixes:
 [] Graph labels are not aligned with the XY axis.
 
 working:
+[] Fix style of inspector sheet
+[] Fix scissors mode
 
 Completed:
 [x] Number node dont accept number with decimal case and the execution causes error. The sidebar value input of the node accepts "." or "," but it throw "invalid number" error after execution.

@@ -1,4 +1,5 @@
 import Dexie, { type Table } from "dexie"
+import type { WorkflowIllustrationId } from "@/utils/workflowAppearance"
 
 export interface WorkflowRecord {
   id: string
@@ -9,7 +10,7 @@ export interface WorkflowRecord {
   tag?: string
   gradient?: string
   tone?: string
-  preview?: "panel" | "orbit" | "bars" | "lattice"
+  illustration?: WorkflowIllustrationId
 }
 
 class WorkflowDB extends Dexie {
@@ -22,6 +23,12 @@ class WorkflowDB extends Dexie {
     })
     this.version(2).stores({
       workflows: "id, name, updatedAt, tag, preview",
+    })
+    this.version(3).stores({
+      workflows: "id, name, updatedAt, tag, preview, illustration",
+    })
+    this.version(4).stores({
+      workflows: "id, name, updatedAt, tag, illustration",
     })
   }
 }
