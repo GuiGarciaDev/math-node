@@ -1,5 +1,4 @@
 import { SidebarProvider } from "@/components/ui/sidebar"
-import { Console } from "@/features/console/Console"
 import { FlowCanvas } from "@/features/flow/FlowCanvas"
 import { FlowShortcuts } from "@/features/flow/FlowShortcuts"
 import { useFlowStore } from "@/features/flow/store/flowStore"
@@ -47,25 +46,17 @@ export default function NodeFlowCanvas({
 
           {/* <div
             className={`min-h-full shrink-0 overflow-hidden transition-[width] duration-300 ${
-              inspectorOpen ? "w-72" : "w-0"
+              inspectorOpen ? "w-64" : "w-0"
             }`}
           >
-            <div className="h-full min-h-full w-72">
+            <div className="h-full min-h-full w-64">
               <Inspector />
             </div>
           </div> */}
         </main>
       </SidebarProvider>
 
-      <div
-        className={`min-h-full shrink-0 overflow-hidden transition-[width] duration-300 ${
-          inspectorOpen ? "w-72" : "w-0"
-        }`}
-      >
-        <div className="h-full min-h-full w-72">
-          <Inspector />
-        </div>
-      </div>
+      <Inspector />
     </div>
   )
 }

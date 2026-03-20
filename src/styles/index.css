@@ -71,6 +71,7 @@
   --handle-category-boolean: #fef08a;
 
   --status-success: oklch(51.354% 0.10112 156.097);
+  --status-error: var(--destructive);
 }
 
 .dark {
@@ -140,6 +141,7 @@
   --handle-category-boolean: #fef08a;
 
   --status-success: oklch(51.354% 0.10112 156.097);
+  --status-error: var(--destructive);
 }
 
 @theme inline {
@@ -209,6 +211,7 @@
   --category-boolean: var(--category-boolean);
   
   --status-success: var(--status-success);
+  --status-error: var(--status-error);
 
   --animate-projects-slide-beam: projects-slide-beam 12s infinite linear;
   --animate-projects-fade-in: projects-fade-in 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;

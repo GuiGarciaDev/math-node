@@ -1,16 +1,12 @@
 features:
-[] Add precision properties in the operation nodes like ADD to control how many cases we want.
 [] Improve design of graphs.
 [] Inside the input of some operation nodes, implement a almost hidden label to round the output number like this 0,00078 ~ 0. the ~ 0 almost not visible.
 [] Create the presets feature with a button in the header to save the current state of flowcanvas as a new preset. Allow user to load presets. (Maybe a dropdown in the presets button in the toolbar with option like navigate presets and save/create preset)
 
 fixes:
-[] Make the nodes not draggable when entry input is focused.
 [] Graph labels are not aligned with the XY axis.
 
 working:
-[] Fix style of inspector sheet
-[] Fix scissors mode
 
 Completed:
 [x] Number node dont accept number with decimal case and the execution causes error. The sidebar value input of the node accepts "." or "," but it throw "invalid number" error after execution.
@@ -38,3 +34,7 @@ Completed:
 [x] Add a button to restart node stats after run the pipeline.
 [x] After select one node, place a button out and at the top of the node to allow the user run the pipeline from this node.
 [x] Allow user change the name of the aggrouped nodes when double click in the group node or through a button in the context menu
+[x] Make the nodes not draggable when entry input is focused.
+[x] Fix style of inspector sheet
+[] Fix scissors mode
+[x] Add precision properties in the operation nodes like ADD to control how many cases we want.

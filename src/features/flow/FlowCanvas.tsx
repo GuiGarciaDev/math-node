@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import {
   ReactFlow,
-  MiniMap,
   Background,
   BackgroundVariant,
   type Node as FlowNode,
@@ -29,6 +28,9 @@ import type { WorkflowAppearance } from "@/utils/workflowAppearance"
 import { useUIStore } from "./store/ui-store"
 import UndoRedoComponent from "@/components/canvas/UndoRedoComponent"
 import MinimapComponent from "@/components/canvas/MinimapComponent"
+import { HiScissors } from "react-icons/hi2"
+
+const STATIC_SCISSOR_ANGLE = 45
 
 const edgeTypes = {
   removable: RemovableEdge,
@@ -53,6 +55,12 @@ function isPaneEventTarget(target: EventTarget | null): boolean {
   const element = target as HTMLElement | null
   if (!element) return false
   return Boolean(element.closest(".react-flow__pane"))
+}
+
+function isNodeInputTarget(target: EventTarget | null): boolean {
+  const element = target as HTMLElement | null
+  if (!element) return false
+  return Boolean(element.closest(".node-input"))
 }
 
 function collectEdgeIdsAlongCutLine(
@@ -146,14 +154,23 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
       MathEdge
     > | null>(null)
     const containerRef = useRef<HTMLDivElement | null>(null)
-    const [cutStart, setCutStart] = useState<{ x: number; y: number } | null>(
-      null,
-    )
-    const [cutCurrent, setCutCurrent] = useState<{
-      x: number
-      y: number
-    } | null>(null)
     const [isNodeDragActive, setIsNodeDragActive] = useState(false)
+    const [isNodeInputFocused, setIsNodeInputFocused] = useState(false)
+    const cutLineRef = useRef<SVGLineElement | null>(null)
+    const cutCursorRef = useRef<HTMLDivElement | null>(null)
+    const cutStartRef = useRef<{ x: number; y: number } | null>(null)
+    const cutCurrentRef = useRef<{ x: number; y: number } | null>(null)
+    const isCuttingRef = useRef(false)
+    const cursorMotionRef = useRef({
+      currentX: 0,
+      currentY: 0,
+      currentAngle: STATIC_SCISSOR_ANGLE,
+      targetX: 0,
+      targetY: 0,
+      targetAngle: STATIC_SCISSOR_ANGLE,
+      visible: false,
+    })
+    const animationFrameRef = useRef<number | null>(null)
     const [contextMenu, setContextMenu] = useState<ContextMenuState>({
       visible: false,
       x: 0,
@@ -180,6 +197,30 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
       },
       [],
     )
+
+    useEffect(() => {
+      const container = containerRef.current
+      if (!container) return
+
+      const handleFocusIn = (event: FocusEvent) => {
+        if (!isNodeInputTarget(event.target)) return
+        setIsNodeInputFocused(true)
+      }
+
+      const handleFocusOut = () => {
+        window.requestAnimationFrame(() => {
+          setIsNodeInputFocused(isNodeInputTarget(document.activeElement))
+        })
+      }
+
+      container.addEventListener("focusin", handleFocusIn)
+      container.addEventListener("focusout", handleFocusOut)
+
+      return () => {
+        container.removeEventListener("focusin", handleFocusIn)
+        container.removeEventListener("focusout", handleFocusOut)
+      }
+    }, [])
 
     const onNodeClick = useCallback(
       (event: React.MouseEvent) => {
@@ -268,15 +309,70 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
       [closeContextMenu, openContextMenu, selectedNodeIds],
     )
 
-    const cutLine = useMemo(() => {
-      if (!cutStart || !cutCurrent) return null
-      return {
-        x1: cutStart.x,
-        y1: cutStart.y,
-        x2: cutCurrent.x,
-        y2: cutCurrent.y,
+    const clearCutLine = useCallback(() => {
+      cutStartRef.current = null
+      cutCurrentRef.current = null
+      isCuttingRef.current = false
+
+      const lineElement = cutLineRef.current
+      if (lineElement) {
+        lineElement.setAttribute("x1", "0")
+        lineElement.setAttribute("y1", "0")
+        lineElement.setAttribute("x2", "0")
+        lineElement.setAttribute("y2", "0")
+        lineElement.style.opacity = "0"
       }
-    }, [cutCurrent, cutStart])
+    }, [])
+
+    useEffect(() => {
+      if (interactionMode === "cut") return
+      clearCutLine()
+      cursorMotionRef.current.visible = false
+      if (cutCursorRef.current) {
+        cutCursorRef.current.style.opacity = "0"
+      }
+
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+    }, [clearCutLine, interactionMode])
+
+    useEffect(() => {
+      if (interactionMode !== "cut") return
+
+      const animate = () => {
+        const cursorElement = cutCursorRef.current
+
+        if (cursorElement) {
+          const motion = cursorMotionRef.current
+
+          if (motion.visible) {
+            const deltaX = motion.targetX - motion.currentX
+            const deltaY = motion.targetY - motion.currentY
+            motion.currentX += deltaX * 0.35
+            motion.currentY += deltaY * 0.35
+            motion.currentAngle = STATIC_SCISSOR_ANGLE
+
+            cursorElement.style.opacity = "1"
+            cursorElement.style.transform = `translate(${motion.currentX}px, ${motion.currentY}px) rotate(${motion.currentAngle}deg)`
+          } else {
+            cursorElement.style.opacity = "0"
+          }
+        }
+
+        animationFrameRef.current = window.requestAnimationFrame(animate)
+      }
+
+      animationFrameRef.current = window.requestAnimationFrame(animate)
+
+      return () => {
+        if (animationFrameRef.current !== null) {
+          cancelAnimationFrame(animationFrameRef.current)
+          animationFrameRef.current = null
+        }
+      }
+    }, [interactionMode])
 
     const onPaneMouseDown = useCallback(
       (event: React.MouseEvent) => {
@@ -287,74 +383,128 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
         const bounds = containerRef.current?.getBoundingClientRect()
         if (!bounds) return
         closeContextMenu()
-        setCutStart({
+        const startPoint = {
           x: event.clientX - bounds.left,
           y: event.clientY - bounds.top,
-        })
-        setCutCurrent({
-          x: event.clientX - bounds.left,
-          y: event.clientY - bounds.top,
-        })
+        }
+
+        clearCutLine()
+        isCuttingRef.current = true
+        cutStartRef.current = startPoint
+        cutCurrentRef.current = startPoint
+
+        const lineElement = cutLineRef.current
+        if (lineElement) {
+          lineElement.setAttribute("x1", String(startPoint.x))
+          lineElement.setAttribute("y1", String(startPoint.y))
+          lineElement.setAttribute("x2", String(startPoint.x))
+          lineElement.setAttribute("y2", String(startPoint.y))
+          lineElement.style.opacity = "1"
+        }
+
+        const motion = cursorMotionRef.current
+        motion.currentX = startPoint.x
+        motion.currentY = startPoint.y
+        motion.targetX = startPoint.x
+        motion.targetY = startPoint.y
+        motion.currentAngle = STATIC_SCISSOR_ANGLE
+        motion.targetAngle = STATIC_SCISSOR_ANGLE
+        motion.visible = true
       },
-      [closeContextMenu, interactionMode],
+      [clearCutLine, closeContextMenu, interactionMode],
     )
 
     const onPaneMouseMove = useCallback(
       (event: React.MouseEvent) => {
-        if (!isPaneEventTarget(event.target)) return
-        if (interactionMode !== "cut" || !cutStart) return
-        event.preventDefault()
+        if (interactionMode !== "cut") return
+
         const bounds = containerRef.current?.getBoundingClientRect()
         if (!bounds) return
-        setCutCurrent({
+
+        event.preventDefault()
+
+        const currentPoint = {
           x: event.clientX - bounds.left,
           y: event.clientY - bounds.top,
-        })
+        }
+
+        const motion = cursorMotionRef.current
+        motion.targetX = currentPoint.x
+        motion.targetY = currentPoint.y
+        motion.targetAngle = STATIC_SCISSOR_ANGLE
+        motion.visible = true
+
+        if (isCuttingRef.current) {
+          cutCurrentRef.current = currentPoint
+          const lineElement = cutLineRef.current
+          if (lineElement) {
+            lineElement.setAttribute("x2", String(currentPoint.x))
+            lineElement.setAttribute("y2", String(currentPoint.y))
+          }
+        }
       },
-      [cutStart, interactionMode],
+      [interactionMode],
     )
 
     const onPaneMouseUp = useCallback(
       (event: React.MouseEvent) => {
-        if (!isPaneEventTarget(event.target)) return
         if (interactionMode === "cut") {
           event.preventDefault()
         }
 
-        if (interactionMode !== "cut" || !cutLine) {
-          setCutStart(null)
-          setCutCurrent(null)
+        if (interactionMode !== "cut" || !isCuttingRef.current) {
+          clearCutLine()
           return
         }
 
         const bounds = containerRef.current?.getBoundingClientRect()
         if (!bounds) {
-          setCutStart(null)
-          setCutCurrent(null)
+          clearCutLine()
+          return
+        }
+
+        const startPoint = cutStartRef.current
+        const currentPoint = cutCurrentRef.current
+
+        if (!startPoint || !currentPoint) {
+          clearCutLine()
           return
         }
 
         const cutLength = Math.hypot(
-          cutLine.x2 - cutLine.x1,
-          cutLine.y2 - cutLine.y1,
+          currentPoint.x - startPoint.x,
+          currentPoint.y - startPoint.y,
         )
+
         if (cutLength < 4) {
-          setCutStart(null)
-          setCutCurrent(null)
+          clearCutLine()
           return
         }
 
-        const edgeIdsToRemove = collectEdgeIdsAlongCutLine(cutLine, bounds)
+        const edgeIdsToRemove = collectEdgeIdsAlongCutLine(
+          {
+            x1: startPoint.x,
+            y1: startPoint.y,
+            x2: currentPoint.x,
+            y2: currentPoint.y,
+          },
+          bounds,
+        )
 
         if (edgeIdsToRemove.length > 0) {
           removeEdgesByIds(edgeIdsToRemove)
         }
 
-        setCutStart(null)
-        setCutCurrent(null)
+        clearCutLine()
       },
-      [cutLine, interactionMode, removeEdgesByIds],
+      [clearCutLine, interactionMode, removeEdgesByIds],
     )
+
+    const onContainerMouseLeave = useCallback(() => {
+      if (interactionMode !== "cut") return
+      cursorMotionRef.current.visible = false
+      clearCutLine()
+    }, [clearCutLine, interactionMode])
 
     // Drag and drop from sidebar
     const onDragOver = useCallback((e: React.DragEvent) => {
@@ -460,7 +610,8 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     return (
       <div
         ref={containerRef}
-        className={`relative h-full w-full ${interactionMode === "cut" ? "cursor-crosshair" : "cursor-default"}`}
+        onMouseLeave={onContainerMouseLeave}
+        className={`relative h-full w-full ${interactionMode === "cut" ? "cursor-none" : "cursor-default"}`}
       >
         <ReactFlow
           nodes={nodes}
@@ -487,10 +638,11 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
           defaultEdgeOptions={edgeOptions}
           connectionLineStyle={connectionLineStyle}
           panOnDrag={interactionMode === "pan"}
-          nodesDraggable={interactionMode === "select"}
+          nodesDraggable={interactionMode === "select" && !isNodeInputFocused}
           elementsSelectable={interactionMode === "select"}
           selectionOnDrag={interactionMode === "select"}
           nodesConnectable={interactionMode !== "cut"}
+          noDragClassName="node-input"
           multiSelectionKeyCode="Shift"
           fitView
           fitViewOptions={{ padding: 0.2 }}
@@ -533,19 +685,35 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
           </Panel>
         </ReactFlow>
 
-        {cutLine && (
-          <svg className="pointer-events-none absolute inset-0 z-30 h-full w-full">
-            <line
-              x1={cutLine.x1}
-              y1={cutLine.y1}
-              x2={cutLine.x2}
-              y2={cutLine.y2}
-              stroke="var(--status-error)"
-              strokeWidth={2}
-              strokeDasharray="6 4"
-              strokeLinecap="round"
-            />
-          </svg>
+        {interactionMode === "cut" && (
+          <>
+            <svg className="pointer-events-none absolute inset-0 z-30 h-full w-full">
+              <line
+                ref={cutLineRef}
+                x1={0}
+                y1={0}
+                x2={0}
+                y2={0}
+                fill="none"
+                stroke="var(--status-error)"
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                strokeLinecap="round"
+                style={{ opacity: 0 }}
+              />
+            </svg>
+
+            <div
+              ref={cutCursorRef}
+              className="pointer-events-none absolute left-0 top-0 z-40 text-(--status-error) opacity-0"
+              style={{
+                transform: "translate(0px, 0px) rotate(45deg)",
+                transformOrigin: "50% 50%",
+              }}
+            >
+              <HiScissors className="h-5 w-5 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_0_8px_rgba(255,80,80,0.45)]" />
+            </div>
+          </>
         )}
 
         <ContextMenu

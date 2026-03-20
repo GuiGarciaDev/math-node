@@ -4,6 +4,13 @@ import type { MathNodeData } from "../../../types"
 import { NodeShell } from "./NodeShell"
 import { useFlowStore } from "../store/flowStore"
 import { parseLocalizedNumberInput } from "../../../lib/math/numberInput"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const AVAILABLE_CONSTANTS = [
   { key: "pi", label: "π", value: Math.PI },
@@ -72,8 +79,8 @@ export const ConstantNode: React.FC<NodeProps> = React.memo(
       : 6
 
     const handleConstantChange = useCallback(
-      (e: React.ChangeEvent<HTMLSelectElement>) => {
-        updateNodeParam(id, "constantKey", e.target.value)
+      (value: string) => {
+        updateNodeParam(id, "constantKey", value)
       },
       [id, updateNodeParam],
     )
@@ -95,17 +102,21 @@ export const ConstantNode: React.FC<NodeProps> = React.memo(
         <div className="flex flex-col gap-2">
           <label className="flex flex-col gap-1 text-[10px] uppercase tracking-[0.08em] text-[var(--text-dim)]">
             Constant
-            <select
+            <Select
               value={selectedConstant.key}
-              onChange={handleConstantChange}
-              className="node-input rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 text-xs text-[var(--text-primary)] outline-none"
+              onValueChange={handleConstantChange}
             >
-              {AVAILABLE_CONSTANTS.map((entry) => (
-                <option key={entry.key} value={entry.key}>
-                  {entry.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="node-input h-8 border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 text-xs text-[var(--text-primary)] ring-offset-0 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AVAILABLE_CONSTANTS.map((entry) => (
+                  <SelectItem key={entry.key} value={entry.key}>
+                    {entry.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
 
           <label className="flex flex-col gap-1 text-[10px] uppercase tracking-[0.08em] text-[var(--text-dim)]">

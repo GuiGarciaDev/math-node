@@ -45,7 +45,7 @@ export default function RunNodesDropdown({
   const isAutoRun = executionMode === "auto"
 
   return (
-    <div className="pointer-events-auto flex items-center rounded-md border border-border bg-card text-card-foreground transition-all duration-200 hover:border-accent">
+    <div className="mr-30 pointer-events-auto flex items-center rounded-md border border-border bg-card text-card-foreground transition-all duration-200 hover:border-accent">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

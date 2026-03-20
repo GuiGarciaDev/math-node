@@ -3,6 +3,13 @@ import type { NodeProps } from "@xyflow/react"
 import type { MathNodeData } from "../../../types"
 import { NodeShell } from "./NodeShell"
 import { useFlowStore } from "../store/flowStore"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 function formatNumber(value: unknown, fallback: string): string {
   if (typeof value !== "number") return fallback
@@ -19,15 +26,15 @@ export const TrigonometricNode: React.FC<NodeProps> = React.memo(
     const unit = String(nodeData.params.unit ?? "rad")
 
     const onOperationChange = useCallback(
-      (e: React.ChangeEvent<HTMLSelectElement>) => {
-        updateNodeParam(id, "operation", e.target.value)
+      (value: string) => {
+        updateNodeParam(id, "operation", value)
       },
       [id, updateNodeParam],
     )
 
     const onUnitChange = useCallback(
-      (e: React.ChangeEvent<HTMLSelectElement>) => {
-        updateNodeParam(id, "unit", e.target.value)
+      (value: string) => {
+        updateNodeParam(id, "unit", value)
       },
       [id, updateNodeParam],
     )
@@ -36,26 +43,28 @@ export const TrigonometricNode: React.FC<NodeProps> = React.memo(
       <NodeShell data={nodeData} selected={selected}>
         <div className="flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
-            <select
-              value={operation}
-              onChange={onOperationChange}
-              className="node-input rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] outline-none"
-            >
-              <option value="sin">sin</option>
-              <option value="cos">cos</option>
-              <option value="tan">tan</option>
-              <option value="asin">asin</option>
-              <option value="acos">acos</option>
-              <option value="atan">atan</option>
-            </select>
-            <select
-              value={unit}
-              onChange={onUnitChange}
-              className="node-input rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] outline-none"
-            >
-              <option value="deg">deg</option>
-              <option value="rad">rad</option>
-            </select>
+            <Select value={operation} onValueChange={onOperationChange}>
+              <SelectTrigger className="node-input h-8 border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] ring-offset-0 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sin">sin</SelectItem>
+                <SelectItem value="cos">cos</SelectItem>
+                <SelectItem value="tan">tan</SelectItem>
+                <SelectItem value="asin">asin</SelectItem>
+                <SelectItem value="acos">acos</SelectItem>
+                <SelectItem value="atan">atan</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={unit} onValueChange={onUnitChange}>
+              <SelectTrigger className="node-input h-8 border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] ring-offset-0 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="deg">deg</SelectItem>
+                <SelectItem value="rad">rad</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div
             className={`rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs ${
@@ -135,8 +144,8 @@ export const ComparatorNode: React.FC<NodeProps> = React.memo(
     const operator = String(nodeData.params.operator ?? "===")
 
     const onOperatorChange = useCallback(
-      (e: React.ChangeEvent<HTMLSelectElement>) => {
-        updateNodeParam(id, "operator", e.target.value)
+      (value: string) => {
+        updateNodeParam(id, "operator", value)
       },
       [id, updateNodeParam],
     )
@@ -144,17 +153,18 @@ export const ComparatorNode: React.FC<NodeProps> = React.memo(
     return (
       <NodeShell data={nodeData} selected={selected}>
         <div className="flex flex-col gap-2">
-          <select
-            value={operator}
-            onChange={onOperatorChange}
-            className="node-input rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] outline-none"
-          >
-            <option value="<">&lt;</option>
-            <option value=">">&gt;</option>
-            <option value="<=">&lt;=</option>
-            <option value=">=">&gt;=</option>
-            <option value="===">===</option>
-          </select>
+          <Select value={operator} onValueChange={onOperatorChange}>
+            <SelectTrigger className="node-input h-8 border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] ring-offset-0 focus:ring-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="<">&lt;</SelectItem>
+              <SelectItem value=">">&gt;</SelectItem>
+              <SelectItem value="<=">&lt;=</SelectItem>
+              <SelectItem value=">=">&gt;=</SelectItem>
+              <SelectItem value="===">===</SelectItem>
+            </SelectContent>
+          </Select>
 
           <div
             className={`rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs ${

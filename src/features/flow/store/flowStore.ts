@@ -38,6 +38,66 @@ import {
   normalizeWorkflowAppearance,
 } from "@/utils/workflowAppearance"
 
+const MATRIX_MIN_DIMENSION = 1
+const MATRIX_MAX_DIMENSION = 6
+
+function clampMatrixDimension(value: unknown, fallback: number): number {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) {
+    return fallback
+  }
+
+  return Math.max(
+    MATRIX_MIN_DIMENSION,
+    Math.min(MATRIX_MAX_DIMENSION, Math.round(parsed)),
+  )
+}
+
+function normalizeMatrixValues(raw: unknown): number[][] {
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return [[0]]
+  }
+
+  const rows = raw
+    .filter((row) => Array.isArray(row))
+    .map((row) =>
+      (row as unknown[]).map((cell) => {
+        const parsed = Number(cell)
+        return Number.isFinite(parsed) ? parsed : 0
+      }),
+    )
+
+  if (rows.length === 0) {
+    return [[0]]
+  }
+
+  const safeColumnCount = Math.max(
+    MATRIX_MIN_DIMENSION,
+    ...rows.map((row) => row.length || MATRIX_MIN_DIMENSION),
+  )
+
+  return rows.map((row) => {
+    const next = [...row]
+    while (next.length < safeColumnCount) {
+      next.push(0)
+    }
+    return next
+  })
+}
+
+function resizeMatrixValues(
+  matrix: number[][],
+  targetRows: number,
+  targetCols: number,
+): number[][] {
+  return Array.from({ length: targetRows }, (_, rowIndex) =>
+    Array.from(
+      { length: targetCols },
+      (_, colIndex) => matrix[rowIndex]?.[colIndex] ?? 0,
+    ),
+  )
+}
+
 // ─── Node Factory ─────────────────────────────────────────
 
 const nodeDefaults: Record<
@@ -860,14 +920,59 @@ export const useFlowStore = create<FlowState>()(
         const { nodes, executionMode } = state
         const newNodes = nodes.map((node) =>
           node.id === nodeId
-            ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  params: { ...node.data.params, [key]: value },
-                  dirty: true,
-                },
-              }
+            ? (() => {
+                let nextParams: Record<string, unknown> = {
+                  ...node.data.params,
+                  [key]: value,
+                }
+
+                if (node.type === "matrix") {
+                  const normalizedKey = key.toLowerCase()
+                  const touchesMatrixShape =
+                    normalizedKey === "rows" ||
+                    normalizedKey === "row" ||
+                    normalizedKey === "cols" ||
+                    normalizedKey === "col" ||
+                    normalizedKey === "values" ||
+                    normalizedKey === "matrix"
+
+                  if (touchesMatrixShape) {
+                    const baseMatrix = normalizeMatrixValues(
+                      nextParams.values ?? nextParams.matrix,
+                    )
+                    const currentRows = baseMatrix.length
+                    const currentCols = baseMatrix[0]?.length ?? 1
+                    const targetRows = clampMatrixDimension(
+                      nextParams.rows ?? nextParams.row,
+                      currentRows,
+                    )
+                    const targetCols = clampMatrixDimension(
+                      nextParams.cols ?? nextParams.col,
+                      currentCols,
+                    )
+
+                    nextParams = {
+                      ...nextParams,
+                      values: resizeMatrixValues(
+                        baseMatrix,
+                        targetRows,
+                        targetCols,
+                      ),
+                      rows: targetRows,
+                      cols: targetCols,
+                    }
+                  }
+                }
+
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    params: nextParams,
+                    dirty: true,
+                  },
+                }
+              })()
             : node,
         )
         set({ nodes: newNodes, ...withRecordedHistory(state) })

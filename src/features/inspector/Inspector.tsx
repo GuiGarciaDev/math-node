@@ -1,24 +1,23 @@
-import React, { useMemo } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useFlowStore } from "../flow/store/flowStore"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarProvider,
+} from "@/components/ui/sidebar"
+import { categories } from "@/features/content/sidebar-config"
+import { cn } from "@/lib/utils"
+import { getSidebarToneClasses } from "@/lib/theme"
 
-const categoryIconClass: Record<string, string> = {
-  input:
-    "bg-[color-mix(in_srgb,var(--category-number)_14%,transparent)] border-[color-mix(in_srgb,var(--category-number)_28%,transparent)]",
-  arithmetic:
-    "bg-[color-mix(in_srgb,var(--category-arithmetic)_14%,transparent)] border-[color-mix(in_srgb,var(--category-arithmetic)_28%,transparent)]",
-  trigonometry:
-    "bg-[color-mix(in_srgb,var(--category-trigonometry)_14%,transparent)] border-[color-mix(in_srgb,var(--category-trigonometry)_28%,transparent)]",
-  logarithmic:
-    "bg-[color-mix(in_srgb,var(--category-logarithmic)_14%,transparent)] border-[color-mix(in_srgb,var(--category-logarithmic)_28%,transparent)]",
-  logic:
-    "bg-[color-mix(in_srgb,var(--category-logic)_14%,transparent)] border-[color-mix(in_srgb,var(--category-logic)_28%,transparent)]",
-  calculus:
-    "bg-[color-mix(in_srgb,var(--category-expression)_14%,transparent)] border-[color-mix(in_srgb,var(--category-expression)_28%,transparent)]",
-  display:
-    "bg-[color-mix(in_srgb,var(--category-matrix)_14%,transparent)] border-[color-mix(in_srgb,var(--category-matrix)_28%,transparent)]",
-  advanced:
-    "bg-[color-mix(in_srgb,var(--category-advanced)_14%,transparent)] border-[color-mix(in_srgb,var(--category-advanced)_28%,transparent)]",
-}
+const nodeItems = categories.flatMap((category) =>
+  category.items.map((item) => ({
+    type: item.type,
+    label: item.label,
+    icon: item.icon,
+    tone: item.iconColor,
+  })),
+)
 
 const statusClass: Record<string, string> = {
   idle: "text-[var(--text-muted)]",
@@ -42,10 +41,30 @@ const statusLabel: Record<string, string> = {
 }
 
 const sectionTitleClass =
-  "text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-dim)]"
+  "text-[10px] font-semibold uppercase tracking-[0.14em] text-(--text-dim)"
 
-const shellClass =
-  "h-full w-full shrink-0 border-l border-[var(--border)] bg-[var(--bg-secondary)] shadow-[-10px_0_30px_var(--shadow)] backdrop-blur-xl"
+const INSPECTOR_MIN_WIDTH = 260
+const INSPECTOR_MAX_WIDTH = 320
+
+function clampInspectorWidth(width: number): number {
+  return Math.min(INSPECTOR_MAX_WIDTH, Math.max(INSPECTOR_MIN_WIDTH, width))
+}
+
+function parseInspectorInput(raw: string, currentValue: unknown): unknown {
+  if (typeof currentValue === "number") {
+    const parsed = Number(raw)
+    return Number.isFinite(parsed) ? parsed : currentValue
+  }
+
+  if (typeof currentValue === "boolean") {
+    const normalized = raw.trim().toLowerCase()
+    if (["true", "1", "yes", "on"].includes(normalized)) return true
+    if (["false", "0", "no", "off"].includes(normalized)) return false
+    return currentValue
+  }
+
+  return raw
+}
 
 export const Inspector: React.FC = React.memo(() => {
   const selectedNodeId = useFlowStore((s) => s.selectedNodeId)
@@ -53,6 +72,11 @@ export const Inspector: React.FC = React.memo(() => {
   const nodes = useFlowStore((s) => s.nodes)
   const computedValues = useFlowStore((s) => s.computedValues)
   const updateNodeParam = useFlowStore((s) => s.updateNodeParam)
+  const inspectorOpen = useFlowStore((s) => s.inspectorOpen)
+  const toggleInspector = useFlowStore((s) => s.toggleInspector)
+  const [inspectorWidth, setInspectorWidth] = useState(288)
+  const [isResizing, setIsResizing] = useState(false)
+  const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null)
 
   const selectedNode = useMemo(
     () => nodes.find((n) => n.id === selectedNodeId),
@@ -64,6 +88,67 @@ export const Inspector: React.FC = React.memo(() => {
     [computedValues, selectedNodeId],
   )
 
+  const selectedNodeMeta = useMemo(() => {
+    if (!selectedNode) return null
+
+    return (
+      nodeItems.find(
+        (item) =>
+          item.type === selectedNode.type &&
+          item.label.toLowerCase() === selectedNode.data.label.toLowerCase(),
+      ) ?? nodeItems.find((item) => item.type === selectedNode.type)
+    )
+  }, [selectedNode])
+
+  const onResizeStart = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      event.preventDefault()
+      resizeRef.current = {
+        startX: event.clientX,
+        startWidth: inspectorWidth,
+      }
+      setIsResizing(true)
+    },
+    [inspectorWidth],
+  )
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const onMouseMove = (event: MouseEvent) => {
+      const resizeState = resizeRef.current
+      if (!resizeState) return
+
+      const delta = resizeState.startX - event.clientX
+      setInspectorWidth(clampInspectorWidth(resizeState.startWidth + delta))
+    }
+
+    const onMouseUp = () => {
+      setIsResizing(false)
+      resizeRef.current = null
+    }
+
+    window.addEventListener("mousemove", onMouseMove)
+    window.addEventListener("mouseup", onMouseUp)
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove)
+      window.removeEventListener("mouseup", onMouseUp)
+    }
+  }, [isResizing])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    document.body.style.cursor = "col-resize"
+    document.body.style.userSelect = "none"
+
+    return () => {
+      document.body.style.cursor = ""
+      document.body.style.userSelect = ""
+    }
+  }, [isResizing])
+
   const formatValue = (val: unknown): string => {
     if (val === undefined || val === null) return "—"
     if (typeof val === "number") return val.toFixed(4)
@@ -74,193 +159,172 @@ export const Inspector: React.FC = React.memo(() => {
     return JSON.stringify(val)
   }
 
-  if (selectedNodeIds.length > 1) {
-    return (
-      <aside className={shellClass}>
-        <div className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-tertiary)_68%,transparent)] px-3 py-3">
-          <span className="text-xs font-semibold text-[var(--text-primary)]">
-            Properties
-          </span>
-        </div>
-        <div className="flex h-[calc(100%-44px)] items-center justify-center p-6">
-          <div className="text-center">
-            <div className="text-sm text-[var(--text-primary)]">
-              {selectedNodeIds.length} nodes selected
-            </div>
-            <div className="mt-2 text-[11px] leading-relaxed text-[var(--text-muted)]">
-              Use context menu or shortcuts for bulk actions:
-              <br />
-              Delete, Copy, Duplicate, Group.
-            </div>
+  const dynamicContent = () => {
+    const selectedTone = selectedNodeMeta?.tone ?? "input"
+    const toneClasses = getSidebarToneClasses(selectedTone)
+
+    if (selectedNodeIds.length > 1) {
+      return (
+        <div className="space-y-3 rounded-xl bg-(--bg-secondary) p-4 text-center">
+          <div className="text-sm font-medium text-(--text-primary)">
+            {selectedNodeIds.length} Nodes Selected
+          </div>
+          <div className="text-[11px] leading-relaxed text-(--text-muted)">
+            Use context menu or shortcuts for bulk actions:
+            <br />
+            Delete, Copy, Duplicate, Group.
           </div>
         </div>
-      </aside>
-    )
-  }
+      )
+    }
 
-  if (!selectedNode) {
-    return (
-      <aside className={shellClass}>
-        <div className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-tertiary)_68%,transparent)] px-3 py-3">
-          <span className="text-xs font-semibold text-[var(--text-primary)]">
-            Properties
-          </span>
-        </div>
-        <div className="flex h-[calc(100%-44px)] items-center justify-center p-6">
-          <p className="text-center text-xs text-[var(--text-dim)]">
-            Select a node to view its properties
+    if (!selectedNode) {
+      return (
+        <div className="space-y-3 rounded-xl bg-(--bg-secondary) p-5 text-center">
+          <p className="text-sm font-medium text-(--text-primary)">
+            Nothing selected
+          </p>
+          <p className="text-xs text-(--text-muted)">
+            Select a node on the canvas to inspect parameters, ports, and
+            execution results.
           </p>
         </div>
-      </aside>
-    )
-  }
+      )
+    }
 
-  const { data } = selectedNode
+    const { data } = selectedNode
+    const NodeIcon = selectedNodeMeta?.icon
+    const categoryName = selectedNodeMeta?.tone
+      ? `${selectedNodeMeta.tone[0].toUpperCase()}${selectedNodeMeta.tone.slice(1)}`
+      : data.category
 
-  return (
-    <aside className={shellClass}>
-      <div className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-tertiary)_68%,transparent)] px-3 py-3">
-        <span className="text-xs font-semibold text-[var(--text-primary)]">
-          Properties
-        </span>
-      </div>
-
-      <div className="flex h-[calc(100%-44px)] flex-col gap-5 overflow-y-auto p-4">
-        <div>
-          <div className="mb-1 flex items-center gap-3">
+    return (
+      <div className="flex h-full flex-col gap-3 p-2">
+        <div className="rounded-xl bg-(--bg-secondary) p-2.5">
+          <div className="flex items-center gap-3">
             <div
-              className={`flex h-8 w-8 items-center justify-center rounded-md border text-base ${
-                categoryIconClass[data.category] ?? categoryIconClass.input
-              }`}
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-xl ring-1",
+                toneClasses.soft,
+                toneClasses.text,
+                toneClasses.ring,
+              )}
             >
-              {data.category === "calculus"
-                ? "∂"
-                : data.category === "display"
-                  ? "📊"
-                  : data.category === "trigonometry"
-                    ? "∿"
-                    : data.category === "logarithmic"
-                      ? "log"
-                      : data.category === "logic"
-                        ? "⊨"
-                        : "🔢"}
+              {NodeIcon ? <NodeIcon className="text-base" /> : "#"}
             </div>
-            <div>
-              <h2 className="text-sm font-medium text-[var(--text-primary)]">
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-semibold text-(--text-primary)">
                 {data.label}
               </h2>
-              <p className="font-mono text-[10px] text-[var(--text-dim)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-(--text-dim)">
                 ID: {selectedNode.id}
               </p>
             </div>
           </div>
+          <div className="mt-2 flex items-center gap-2">
+            <span className={cn("h-2 w-2 rounded-full", toneClasses.bg)} />
+            <span className="text-[10px] uppercase tracking-[0.12em] text-(--text-muted)">
+              {categoryName}
+            </span>
+          </div>
         </div>
 
-        <div className="h-px bg-[var(--border)]" />
-
         {Object.keys(data.params).length > 0 && (
-          <div className="flex flex-col gap-3">
+          <div className="rounded-xl bg-(--bg-secondary) p-2.5">
             <h3 className={sectionTitleClass}>Parameters</h3>
-            {Object.entries(data.params).map(([key, value]) => {
-              if (
-                typeof value === "object" &&
-                value !== null &&
-                !Array.isArray(value)
-              )
-                return null
-              if (Array.isArray(value) && Array.isArray(value[0])) return null
+            <div className="mt-2 space-y-2.5">
+              {Object.entries(data.params).map(([key, value]) => {
+                if (
+                  typeof value === "object" &&
+                  value !== null &&
+                  !Array.isArray(value)
+                )
+                  return null
+                if (Array.isArray(value) && Array.isArray(value[0])) return null
 
-              return (
-                <div key={key} className="flex flex-col gap-1">
-                  <label className="text-[11px] capitalize text-[var(--text-secondary)]">
-                    {key}
-                  </label>
-                  <input
-                    type="text"
-                    value={
-                      Array.isArray(value)
-                        ? value.join(", ")
-                        : String(value ?? "")
-                    }
-                    onChange={(e) => {
-                      const raw = e.target.value
-                      if (
-                        (selectedNode.type === "numberInput" ||
-                          selectedNode.type === "constant") &&
-                        key === "value"
-                      ) {
-                        updateNodeParam(selectedNode.id, key, raw)
-                        return
+                return (
+                  <div key={key} className="flex flex-col gap-1">
+                    <label className="text-[11px] capitalize text-(--text-secondary)">
+                      {key}
+                    </label>
+                    <input
+                      type="text"
+                      value={
+                        Array.isArray(value)
+                          ? value.join(", ")
+                          : String(value ?? "")
                       }
-                      const asNum = Number(raw)
-                      updateNodeParam(
-                        selectedNode.id,
-                        key,
-                        isNaN(asNum) ? raw : asNum,
-                      )
-                    }}
-                    className="node-input w-full rounded-md border border-[var(--border)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] outline-none"
-                  />
-                </div>
-              )
-            })}
+                      onChange={(e) => {
+                        const raw = e.target.value
+                        updateNodeParam(
+                          selectedNode.id,
+                          key,
+                          parseInspectorInput(raw, value),
+                        )
+                      }}
+                      className="node-input w-full rounded-md border border-border bg-input px-2 py-1.5 font-mono text-xs text-(--text-primary) outline-none focus:border-border"
+                    />
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
-        <div className="h-px bg-[var(--border)]" />
-
-        <div className="flex flex-col gap-2">
+        <div className="rounded-xl bg-(--bg-secondary) p-2.5">
           <h3 className={sectionTitleClass}>Ports</h3>
 
-          {data.inputs.length > 0 && (
-            <div>
-              <span className="text-[10px] text-[var(--text-dim)]">Inputs</span>
-              {data.inputs.map((port) => (
-                <div
-                  key={port.name}
-                  className="flex items-center justify-between py-1 text-[11px]"
-                >
-                  <span className="text-[var(--text-secondary)]">
-                    {port.label}
-                  </span>
-                  <span className="rounded bg-[var(--bg-tertiary)] px-1.5 py-[1px] font-mono text-[10px] text-[var(--text-dim)]">
-                    {port.type}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="mt-2 space-y-2.5">
+            {data.inputs.length > 0 && (
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.12em] text-(--text-dim)">
+                  Inputs
+                </span>
+                {data.inputs.map((port) => (
+                  <div
+                    key={port.name}
+                    className="flex items-center justify-between py-1 text-[11px]"
+                  >
+                    <span className="text-(--text-secondary)">
+                      {port.label}
+                    </span>
+                    <span className="rounded bg-(--bg-tertiary) px-1.5 py-px font-mono text-[10px] text-(--text-dim)">
+                      {port.type}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
 
-          {data.outputs.length > 0 && (
-            <div>
-              <span className="text-[10px] text-[var(--text-dim)]">
-                Outputs
-              </span>
-              {data.outputs.map((port) => (
-                <div
-                  key={port.name}
-                  className="flex items-center justify-between py-1 text-[11px]"
-                >
-                  <span className="text-[var(--text-secondary)]">
-                    {port.label}
-                  </span>
-                  <span className="rounded bg-[var(--bg-tertiary)] px-1.5 py-[1px] font-mono text-[10px] text-[var(--text-dim)]">
-                    {port.type}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+            {data.outputs.length > 0 && (
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.12em] text-(--text-dim)">
+                  Outputs
+                </span>
+                {data.outputs.map((port) => (
+                  <div
+                    key={port.name}
+                    className="flex items-center justify-between py-1 text-[11px]"
+                  >
+                    <span className="text-(--text-secondary)">
+                      {port.label}
+                    </span>
+                    <span className="rounded bg-(--bg-tertiary) px-1.5 py-px font-mono text-[10px] text-(--text-dim)">
+                      {port.type}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="h-px bg-[var(--border)]" />
-
-        <div className="flex flex-col gap-2">
+        <div className="rounded-xl bg-(--bg-secondary) p-2.5">
           <h3 className={sectionTitleClass}>Execution</h3>
 
-          <div className="flex flex-col gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] p-3">
+          <div className="mt-2 flex flex-col gap-2 rounded-xl bg-(--bg-input) p-2.5">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="text-[var(--text-dim)]">Status</span>
+              <span className="text-(--text-dim)">Status</span>
               <span
                 className={`flex items-center gap-1 ${statusClass[data.status] ?? statusClass.idle}`}
               >
@@ -273,12 +337,12 @@ export const Inspector: React.FC = React.memo(() => {
 
             {computed && (
               <div className="flex items-center justify-between text-[11px]">
-                <span className="text-[var(--text-dim)]">Value</span>
+                <span className="text-(--text-dim)">Value</span>
                 <span
-                  className={`max-w-[150px] truncate whitespace-nowrap font-mono text-[11px] ${
+                  className={`max-w-40 truncate whitespace-nowrap font-mono text-[11px] ${
                     computed.error
-                      ? "text-[var(--status-error)]"
-                      : "text-[var(--text-primary)]"
+                      ? "text-(--status-error)"
+                      : "text-(--text-primary)"
                   }`}
                 >
                   {computed.error ?? formatValue(computed.value)}
@@ -288,7 +352,38 @@ export const Inspector: React.FC = React.memo(() => {
           </div>
         </div>
       </div>
-    </aside>
+    )
+  }
+
+  return (
+    <SidebarProvider
+      className="contents"
+      style={
+        { "--sidebar-width": `${inspectorWidth}px` } as React.CSSProperties
+      }
+      open={inspectorOpen}
+      onOpenChange={toggleInspector}
+    >
+      <Sidebar side="right" className="relative">
+        <div
+          className="absolute left-0 top-0 z-30 h-full w-2 -translate-x-1/2 cursor-col-resize"
+          onMouseDown={onResizeStart}
+          aria-label="Resize inspector"
+          title="Drag to resize inspector"
+        />
+        <SidebarHeader className="bg-sidebar px-4 py-4">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-sidebar-primary" />
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-sidebar-foreground">
+              Inspector
+            </span>
+          </div>
+        </SidebarHeader>
+        <SidebarContent className="min-h-0 overflow-y-auto bg-sidebar px-2 pb-2">
+          {dynamicContent()}
+        </SidebarContent>
+      </Sidebar>
+    </SidebarProvider>
   )
 })
 
