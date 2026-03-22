@@ -29,6 +29,14 @@ import { useUIStore } from "./store/ui-store"
 import UndoRedoComponent from "@/components/canvas/UndoRedoComponent"
 import MinimapComponent from "@/components/canvas/MinimapComponent"
 import { HiScissors } from "react-icons/hi2"
+import { LuPanelRight } from "react-icons/lu"
+import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const STATIC_SCISSOR_ANGLE = 45
 
@@ -148,6 +156,8 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
     )
     const isWorkflowSheetOpen = useUIStore((s) => s.isWorkflowSheetOpen)
     const setIsWorkflowSheetOpen = useUIStore((s) => s.setWorkflowSheetOpen)
+    const inspectorOpen = useFlowStore((s) => s.inspectorOpen)
+    const toggleInspector = useFlowStore((s) => s.toggleInspector)
 
     const reactFlowInstance = useRef<ReactFlowInstance<
       MathNode,
@@ -656,7 +666,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
             size={1}
             color="var(--foreground-muted)"
           />
-          <Panel position="top-center" className="w-full pl-5 pr-8">
+          <Panel position="top-center" className="w-full px-4">
             <div className="flex justify-between">
               <WorkflowHeaderDropdown
                 workflowName={currentWorkflowName}
@@ -671,6 +681,27 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = React.memo(
                   onToggleAutoRun={toggleAutoRun}
                   onResetNodeStats={resetNodeStats}
                 />
+                <TooltipProvider delayDuration={500}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={toggleInspector}
+                        // title={
+                        //   inspectorOpen ? "Hide Inspector" : "Show Inspector"
+                        // }
+                        className={cn(
+                          `flex h-10 items-center rounded-md justify-center border border-border bg-card text-md transition-all duration-300 px-3 hover:brightness-125 cursor-pointer`,
+                          inspectorOpen && "bg-primary/30",
+                        )}
+                      >
+                        <LuPanelRight />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent align="center">
+                      {inspectorOpen ? "Hide Inspector" : "Show Inspector"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </Panel>

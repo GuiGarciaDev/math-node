@@ -702,6 +702,7 @@ interface FlowState {
     appearance: Partial<WorkflowAppearance>,
   ) => void
   toggleConsole: () => void
+  setInspectorOpen: (open: boolean) => void
   toggleInspector: () => void
   showLanding: () => void
   openGraphModal: (payload: {
@@ -1799,6 +1800,7 @@ export const useFlowStore = create<FlowState>()(
           }),
         })),
       toggleConsole: () => set({ consoleOpen: !get().consoleOpen }),
+      setInspectorOpen: (open) => set({ inspectorOpen: open }),
       toggleInspector: () => set({ inspectorOpen: !get().inspectorOpen }),
       showLanding: () => set({ appStarted: false }),
       openGraphModal: (payload) => set({ graphModal: payload }),

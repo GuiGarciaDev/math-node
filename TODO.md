@@ -36,5 +36,5 @@ Completed:
 [x] Allow user change the name of the aggrouped nodes when double click in the group node or through a button in the context menu
 [x] Make the nodes not draggable when entry input is focused.
 [x] Fix style of inspector sheet
-[] Fix scissors mode
+[x] Fix scissors mode
 [x] Add precision properties in the operation nodes like ADD to control how many cases we want.

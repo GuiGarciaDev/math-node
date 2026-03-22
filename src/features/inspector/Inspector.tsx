@@ -73,7 +73,7 @@ export const Inspector: React.FC = React.memo(() => {
   const computedValues = useFlowStore((s) => s.computedValues)
   const updateNodeParam = useFlowStore((s) => s.updateNodeParam)
   const inspectorOpen = useFlowStore((s) => s.inspectorOpen)
-  const toggleInspector = useFlowStore((s) => s.toggleInspector)
+  const setInspectorOpen = useFlowStore((s) => s.setInspectorOpen)
   const [inspectorWidth, setInspectorWidth] = useState(288)
   const [isResizing, setIsResizing] = useState(false)
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null)
@@ -362,26 +362,28 @@ export const Inspector: React.FC = React.memo(() => {
         { "--sidebar-width": `${inspectorWidth}px` } as React.CSSProperties
       }
       open={inspectorOpen}
-      onOpenChange={toggleInspector}
+      onOpenChange={setInspectorOpen}
     >
-      <Sidebar side="right" className="relative">
-        <div
-          className="absolute left-0 top-0 z-30 h-full w-2 -translate-x-1/2 cursor-col-resize"
-          onMouseDown={onResizeStart}
-          aria-label="Resize inspector"
-          title="Drag to resize inspector"
-        />
-        <SidebarHeader className="bg-sidebar px-4 py-4">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-sidebar-primary" />
-            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-sidebar-foreground">
-              Inspector
-            </span>
-          </div>
-        </SidebarHeader>
-        <SidebarContent className="min-h-0 overflow-y-auto bg-sidebar px-2 pb-2">
-          {dynamicContent()}
-        </SidebarContent>
+      <Sidebar side="right">
+        <div className="relative h-full">
+          <div
+            className="absolute left-0 top-0 z-30 h-full w-2 -translate-x-1/2 cursor-col-resize"
+            onMouseDown={onResizeStart}
+            aria-label="Resize inspector"
+            title="Drag to resize inspector"
+          />
+          <SidebarHeader className="bg-sidebar px-4 py-4">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-sidebar-primary" />
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-sidebar-foreground">
+                Inspector
+              </span>
+            </div>
+          </SidebarHeader>
+          <SidebarContent className="min-h-0 overflow-y-auto bg-sidebar px-2 pb-2">
+            {dynamicContent()}
+          </SidebarContent>
+        </div>
       </Sidebar>
     </SidebarProvider>
   )

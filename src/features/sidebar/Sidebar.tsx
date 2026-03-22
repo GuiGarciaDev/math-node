@@ -442,7 +442,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
         <aside
           className={cn(
             "flex h-full min-h-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-300 ease-out",
-            collapsed ? "w-[88px]" : "w-[320px]",
+            collapsed ? "w-15" : "w-70",
           )}
           data-collapsible={collapsed ? "icon" : ""}
         >
@@ -458,7 +458,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
                   type="button"
                   onClick={() => onRouteChange?.("PROJECTS_PAGE")}
                   className={cn(
-                    "group flex min-w-0 items-center gap-3 rounded-[1.35rem] border border-transparent px-2 py-1.5 text-left transition-all duration-200 hover:bg-[var(--sidebar-accent)]",
+                    "group flex min-w-0 items-center gap-3 rounded-[1.35rem] border border-transparent px-2 py-1.5 text-left transition-all duration-200 hover:bg-sidebar-accent",
                     collapsed ? "w-full justify-center px-0" : "flex-1",
                   )}
                   title="Return to home page"
@@ -466,10 +466,10 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
                   <MathFlowIcon />
                   {!collapsed && (
                     <div className="min-w-0">
-                      <div className="truncate text-base font-semibold tracking-[-0.03em] text-[var(--sidebar-foreground)]">
+                      <div className="truncate text-base font-semibold tracking-[-0.03em] text-sidebar-foreground">
                         MathFlow
                       </div>
-                      <div className="truncate text-[11px] uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
+                      <div className="truncate text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                         Node Studio
                       </div>
                     </div>
@@ -507,7 +507,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
           </SidebarHeader>
 
           {!collapsed && (
-            <div className="border-b border-[var(--sidebar-border)] px-3 pb-3">
+            <div className="border-b border-sidebar-border px-3 pb-3">
               <SidebarSearchInput
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}

@@ -4,27 +4,53 @@ import { useUIStore } from "@/features/flow/store/ui-store"
 import { Routes } from "@/types/routes-types"
 import NodeFlowCanvas from "./routes/NodeFlowCanvas"
 import ProjectsPage from "./routes/ProjectsPage"
+import IntroductionModal from "../components/modals/IntroductionModal"
 
 const App: React.FC = () => {
   const sidebarOpen = useFlowStore((s) => s.sidebarOpen)
   const currentRoute = useUIStore((s) => s.route)
+  const hasHydrated = useUIStore((s) => s.hasHydrated)
+  const hasSeenIntroModal = useUIStore((s) => s.hasSeenIntroModal)
+  const isIntroModalOpen = useUIStore((s) => s.isIntroModalOpen)
+  const openIntroModal = useUIStore((s) => s.openIntroModal)
 
   function handleRouteChange(route: Routes) {
     useUIStore.setState({ route })
   }
 
+  React.useEffect(() => {
+    if (!hasHydrated || hasSeenIntroModal || isIntroModalOpen) {
+      return
+    }
+
+    openIntroModal()
+  }, [hasHydrated, hasSeenIntroModal, isIntroModalOpen, openIntroModal])
+
+  let page: React.ReactNode
+
   switch (currentRoute) {
     case "PROJECTS_PAGE":
-      return <ProjectsPage />
+      page = <ProjectsPage />
+      break
     case "FLOW_CANVAS_PAGE":
-      return (
+      page = (
         <NodeFlowCanvas collapsed={sidebarOpen} setRoute={handleRouteChange} />
       )
+      break
     case "SETTINGS":
-      return <div></div>
+      page = <div></div>
+      break
     default:
-      return <div></div>
+      page = <div></div>
+      break
   }
+
+  return (
+    <>
+      {page}
+      <IntroductionModal />
+    </>
+  )
 
   // return (
   //   //   {isSettingsRoute && (
