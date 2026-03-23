@@ -1,6 +1,5 @@
 import { memo, useRef } from "react"
 import { Activity, ArrowRight, BookOpen, InfinityIcon, Zap } from "lucide-react"
-import ToggleThemeButton from "@/components/toggle-theme"
 import { HeroCanvas } from "./HeroCanvas"
 import { FloatingCard } from "./FloatingCard"
 import {
@@ -78,10 +77,6 @@ function HeroSectionComponent({ onLaunchStudio }: HeroSectionProps) {
           className="animate-[spin_70s_linear_infinite_reverse] opacity-30"
         />
       </svg>
-
-      <div className="absolute right-8 top-6 z-50">
-        <ToggleThemeButton />
-      </div>
 
       <div className="pointer-events-none absolute inset-0 z-10">
         <FloatingCard speed={0.05} className="right-[12%] top-24 w-72 h-48">
