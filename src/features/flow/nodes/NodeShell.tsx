@@ -90,7 +90,7 @@ export const TypedHandle: React.FC<TypedHandleProps> = React.memo(
           type={side === "left" ? "target" : "source"}
           position={side === "left" ? Position.Left : Position.Right}
           id={port.name}
-          className={`top-1/2 h-2.5! w-2.5! rounded-full border-blue-300/80! shadow-none ${side === "left" ? "left-0" : "right-0!"} ${handleColorClass}`}
+          className={`node-input top-1/2 h-2.5! w-2.5! rounded-full border-blue-300/80! shadow-none ${side === "left" ? "left-0" : "right-0!"} ${handleColorClass}`}
         />
       </div>
     )
